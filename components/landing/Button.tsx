@@ -68,7 +68,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
   },
   text: {
-    fontSize: 16,
+    fontSize: 18,
     fontFamily: 'InstrumentSans',
   },
   primaryText: {
@@ -77,6 +77,7 @@ const styles = StyleSheet.create({
   },
   secondaryText: {
     color: '#000000',
+    fontWeight: 'bold'
   },
 });
 

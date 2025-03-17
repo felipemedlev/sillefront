@@ -12,6 +12,7 @@ import { useRouter } from 'expo-router';
 
 // import Logo from '../../components/Logo';
 import Logo from '../../assets/images/Logo.svg';
+import FondoFinal from '../../assets/images/FondoFinal.svg';
 import TopShape from '../../components/layout/TopShape';
 import PaginationIndicator from '../../components/landing/PaginationIndicator';
 import Button from '../../components/landing/Button';
@@ -96,7 +97,13 @@ export default function LandingScreen() {
 
   return (
     <View style={styles.container}>
-      <TopShape />
+      <FondoFinal
+        width={width}
+        height="auto"
+        style={styles.backgroundSvg}
+        preserveAspectRatio="xMidYMid meet"
+      />
+
       <ScrollView
         ref={scrollViewRef}
         horizontal
@@ -108,7 +115,7 @@ export default function LandingScreen() {
         {landingData.map((page, index) => (
           <View key={index} style={styles.pageContainer}>
             <View style={styles.logoContainer}>
-              <Logo width={100} height="auto" preserveAspectRatio="xMidYMid meet" />
+              <Logo width={width*0.31} height="auto" preserveAspectRatio="xMidYMid meet" />
               <Text style={styles.slogan}>Descubre perfumes con AI</Text>
             </View>
             <Image
@@ -155,6 +162,7 @@ export default function LandingScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    position: 'relative',
     backgroundColor: '#FFFEFC',
   },
   pageContainer: {
@@ -162,24 +170,30 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
   },
+  backgroundSvg: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    zIndex: -1, // Send it to the background
+  },
   logoContainer: {
-    marginTop: (height * 0.24) * 0.2, // Positioned inside the top shape
+    marginTop: (height * 0.02), // Positioned inside the top shape
     alignItems: 'center',
     zIndex: 1,
   },
   slogan: {
     fontFamily: 'InstrumentSerifItalic',
-    fontSize: 16,
+    fontSize: 28,
     marginTop: 5,
     textAlign: 'center',
   },
   mainImage: {
     width: width * 0.7,
-    height: height * 0.2,
+    height: height * 0.25,
     marginTop: 30,
   },
   contentContainer: {
-    width: width * 0.8,
+    width: width * 0.85,
     alignItems: 'center',
     marginTop: 10,
     flexGrow: 1, // Ensure it can expand
@@ -188,19 +202,20 @@ const styles = StyleSheet.create({
   title: {
     fontFamily: 'InstrumentSans',
     fontWeight: 'bold',
-    fontSize: 22,
+    fontSize: 24,
     lineHeight: 22*1.2,
     textAlign: 'center',
     marginBottom: 15,
   },
   descriptionWrapper: {
     width: '100%', // Allow full width
-    minHeight: 60, // Ensures text area has enough space
+    minHeight: 40, // Ensures text area has enough space
     justifyContent: 'center', // Ensures text is aligned properly
   },
   description: {
     fontFamily: 'InstrumentSans',
-    fontSize: 16,
+    fontWeight: 'regular',
+    fontSize: 18,
     lineHeight: 16 * 1.4, // Increase for better readability
     textAlign: 'center',
     color: '#333333',
@@ -210,7 +225,7 @@ const styles = StyleSheet.create({
   linkText: {
     fontFamily: 'InstrumentSans',
     fontSize: 16,
-    color: '#0066CC',
+    color: '#71A983',
     textDecorationLine: 'underline',
   },
   bottomContainer: {

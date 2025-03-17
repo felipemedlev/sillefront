@@ -45,30 +45,34 @@ const DecantPopup = ({ visible, onClose }: DecantPopupProps) => {
       <TouchableWithoutFeedback onPress={onClose}>
         <View style={styles.overlay}>
           <TouchableWithoutFeedback>
-            <Animated.View
-              style={[
-                styles.popupContainer,
-                { opacity: fadeAnim }
-              ]}
-            >
+            <Animated.View style={[styles.popupContainer, { opacity: fadeAnim }]}>
+
+              {/* Header with Title and Close Button */}
               <View style={styles.header}>
                 <Text style={styles.title}>¿Qué es un decant?</Text>
                 <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-                  <Text style={styles.closeButtonText}>✕</Text>
+                  <Text style={styles.closeButtonText}>x</Text>
                 </TouchableOpacity>
               </View>
 
-              <Image
-                source={require('../../assets/images/decant-general.png')}
-                style={styles.image}
-                resizeMode="contain"
-              />
+              {/* Image & Description Layout */}
+              <View style={styles.contentContainer}>
+                {/* Left Side - Image */}
+                <Image
+                  source={require('../../assets/images/decant-general.png')}
+                  style={styles.image}
+                  resizeMode="contain"
+                />
 
-              <Text style={styles.description}>
-                Un decant es una muestra de perfume original transferida a un frasco más pequeño.
-                Esto te permite probar diferentes fragancias sin tener que comprar botellas completas.
-                Nuestros decants vienen en tamaños de 3, 5 o 10 ml, perfectos para descubrir nuevas fragancias.
-              </Text>
+                {/* Right Side - Text */}
+                <View style={styles.textContainer}>
+                  <Text style={styles.description}>
+                    Un <Text style={styles.bold}>decant</Text> es una muestra de perfume original transferida a un frasco más pequeño.{"\n\n"}
+                    Contamos con formatos de <Text style={styles.bold}>3, 5 o 10 ml</Text>, perfectos para descubrir nuevas fragancias.
+                  </Text>
+                </View>
+              </View>
+
             </Animated.View>
           </TouchableWithoutFeedback>
         </View>
@@ -77,7 +81,7 @@ const DecantPopup = ({ visible, onClose }: DecantPopupProps) => {
   );
 };
 
-const { width } = Dimensions.get('window');
+const { width, height } = Dimensions.get('window');
 
 const styles = StyleSheet.create({
   overlay: {
@@ -87,11 +91,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   popupContainer: {
-    width: width * 0.85,
+    width: width * 0.9,
     backgroundColor: '#FFFFFF',
     borderRadius: 20,
     padding: 20,
-    alignItems: 'center',
   },
   header: {
     width: '100%',
@@ -113,17 +116,28 @@ const styles = StyleSheet.create({
     fontSize: 22,
     color: '#000000',
   },
+  contentContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
   image: {
-    width: '80%',
-    height: 150,
-    marginVertical: 15,
+    width: width * 0.3,  // 30% of screen width
+    height: height * 0.25, // 30% of screen height
+    marginRight: width * 0.01, // Add spacing relative to width
+  },
+  textContainer: {
+    flex: 1, // Takes remaining space
   },
   description: {
     fontFamily: 'InstrumentSans',
-    fontSize: 16,
-    lineHeight: 24,
-    textAlign: 'center',
+    fontSize: width * 0.04, // Scales based on screen width
+    lineHeight: width * 0.06,
+    textAlign: 'left',
     color: '#333333',
+  },
+  bold: {
+    fontWeight: 'bold',
   },
 });
 

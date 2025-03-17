@@ -1,39 +1,42 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { useFonts } from 'expo-font';
+import React, { useEffect, useState } from 'react';
+import { View, ActivityIndicator } from 'react-native';
 import { Stack } from 'expo-router';
-import * as SplashScreen from 'expo-splash-screen';
+import * as Font from 'expo-font';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect } from 'react';
-import 'react-native-reanimated';
-
-import { useColorScheme } from '@/hooks/useColorScheme';
-
-// Prevent the splash screen from auto-hiding before asset loading is complete.
-SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
-  const [loaded] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
-  });
+  const [fontsLoaded, setFontsLoaded] = useState(false);
 
   useEffect(() => {
-    if (loaded) {
-      SplashScreen.hideAsync();
-    }
-  }, [loaded]);
+    const loadFonts = async () => {
+      await Font.loadAsync({
+        // This path assumes assets is at the root level (sibling to app folder)
+        'InstrumentSans': require('../assets/fonts/InstrumentSans-Regular.ttf'),
+        'InstrumentSerif': require('../assets/fonts/InstrumentSerif-Regular.ttf'),
+        'InstrumentSerifItalic': require('../assets/fonts/InstrumentSerif-Italic.ttf'),
+      });
+      setFontsLoaded(true);
+    };
 
-  if (!loaded) {
-    return null;
+    loadFonts();
+  }, []);
+
+  if (!fontsLoaded) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#FFFEFC' }}>
+        <ActivityIndicator size="large" color="#000000" />
+      </View>
+    );
   }
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="+not-found" />
-      </Stack>
-      <StatusBar style="auto" />
-    </ThemeProvider>
+    <>
+      <StatusBar style="dark" />
+      <Stack screenOptions={{
+        headerShown: false,
+        contentStyle: { backgroundColor: '#FFFEFC' },
+        animation: 'fade',
+      }} />
+    </>
   );
 }

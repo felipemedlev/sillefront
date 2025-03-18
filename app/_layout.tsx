@@ -9,13 +9,16 @@ export default function RootLayout() {
 
   useEffect(() => {
     const loadFonts = async () => {
-      await Font.loadAsync({
-        // This path assumes assets is at the root level (sibling to app folder)
-        'InstrumentSans': require('../assets/fonts/InstrumentSans-Regular.ttf'),
-        'InstrumentSerif': require('../assets/fonts/InstrumentSerif-Regular.ttf'),
-        'InstrumentSerifItalic': require('../assets/fonts/InstrumentSerif-Italic.ttf'),
-      });
-      setFontsLoaded(true);
+      try {
+        await Font.loadAsync({
+          'InstrumentSans': require('../assets/fonts/InstrumentSans-Regular.ttf'),
+          'InstrumentSerif': require('../assets/fonts/InstrumentSerif-Regular.ttf'),
+          'InstrumentSerifItalic': require('../assets/fonts/InstrumentSerif-Italic.ttf'),
+        });
+        setFontsLoaded(true);
+      } catch (error) {
+        console.error("Error loading fonts:", error);
+      }
     };
 
     loadFonts();

@@ -7,6 +7,7 @@ import {
   Image,
   ScrollView,
   TouchableOpacity,
+  Platform
 } from 'react-native';
 import { useRouter } from 'expo-router';
 
@@ -24,6 +25,8 @@ export default function LandingScreen() {
   const [currentPage, setCurrentPage] = useState(0);
   const [showDecantPopup, setShowDecantPopup] = useState(false);
   const scrollViewRef = useRef<ScrollView>(null);
+  const logoWidth = Platform.OS === 'web' && width > 768 ? width * 0.15 : width * 0.3;
+  const svgHeight = Platform.OS === 'web' ? '26%' : '20%';
 
   const handlePrimaryButtonPress = () => {
     if (currentPage < 2) {
@@ -98,9 +101,8 @@ export default function LandingScreen() {
     <View style={styles.container}>
       <FondoFinal
         width={width}
-        height="auto"
-        style={styles.backgroundSvg}
-        preserveAspectRatio="xMidYMid meet"
+        style={[styles.backgroundSvg, { height: svgHeight }]} // Apply dynamic height
+        preserveAspectRatio="none"
       />
 
       <ScrollView
@@ -114,7 +116,7 @@ export default function LandingScreen() {
         {landingData.map((page, index) => (
           <View key={index} style={styles.pageContainer}>
             <View style={styles.logoContainer}>
-              <Logo width={width*0.31} height="auto" preserveAspectRatio="xMidYMid meet" />
+              <Logo width={logoWidth} height="auto" preserveAspectRatio="xMidYMid meet" />
               <Text style={styles.slogan}>Descubre perfumes con AI</Text>
             </View>
             <Image
@@ -173,7 +175,8 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 0,
     left: 0,
-    zIndex: -1, // Send it to the background
+    width: '100%', // Ensure full width
+    zIndex: -1,    // Send to background
   },
   logoContainer: {
     marginTop: (height * 0.02), // Positioned inside the top shape

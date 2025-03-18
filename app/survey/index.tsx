@@ -1,12 +1,12 @@
-// app/onboarding/survey/[id].tsx
-import React, { useEffect } from 'react';
+// app/survey/[id].tsx
+import React, { useEffect, useMemo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSurveyContext } from '../../context/SurveyContext';
 import { Ionicons } from '@expo/vector-icons';
 
 // Survey questions data
-const surveyQuestions = [
+const surveyQuestions = useMemo(() => [
   { id: '1', accord: 'Citrus', description: 'Fresh, zesty scents like lemon, orange, and grapefruit' },
   { id: '2', accord: 'Floral', description: 'Scents of various flowers like rose, jasmine, and lily' },
   { id: '3', accord: 'Fruity', description: 'Sweet, juicy scents like apple, peach, and berry' },
@@ -18,8 +18,7 @@ const surveyQuestions = [
   { id: '9', accord: 'Gourmand', description: 'Sweet, edible scents like chocolate, caramel, and coffee' },
   { id: '10', accord: 'Leather', description: 'Rich, warm scents reminiscent of leather goods' },
   { id: '11', accord: 'Powdery', description: 'Soft, comforting scents like talcum powder and iris' },
-  { id: '12', accord: 'Animalic', description: 'Rich, musky scents derived from animal sources or synthetics' },
-];
+], []);
 
 export default function SurveyQuestion() {
   const { id } = useLocalSearchParams();
@@ -27,21 +26,21 @@ export default function SurveyQuestion() {
   const questionIndex = parseInt(questionId) - 1;
   const router = useRouter();
   const { setAnswer, answers } = useSurveyContext();
-  
+
   const question = surveyQuestions[questionIndex];
-  
+
   // If question not found, redirect to first question
   useEffect(() => {
     if (!question) {
       router.replace('./survey/1');
     }
   }, [question, router]);
-  
+
   if (!question) return null;
-  
+
   const handleRate = (rating: number) => {
     setAnswer(question.accord, rating);
-    
+
     // Navigate to next question or completion screen
     const nextQuestionId = parseInt(questionId) + 1;
     if (nextQuestionId <= surveyQuestions.length) {
@@ -50,35 +49,12 @@ export default function SurveyQuestion() {
       router.push('./survey/complete');
     }
   };
-  
+
   // Current rating if already answered
   const currentRating = answers[question.accord] || 0;
-  
+
   return (
     <View style={styles.container}>
-      <Text style={styles.questionNumber}>Question {questionId} of {surveyQuestions.length}</Text>
-      <Text style={styles.question}>How much do you like {question.accord.toLowerCase()} scents?</Text>
-      <Text style={styles.description}>{question.description}</Text>
-      
-      <View style={styles.ratingContainer}>
-        {[1, 2, 3, 4, 5].map((rating) => (
-          <TouchableOpacity
-            key={rating}
-            style={[
-              styles.ratingButton,
-              currentRating === rating && styles.selectedRating
-            ]}
-            onPress={() => handleRate(rating)}
-          >
-            <Text style={styles.ratingText}>{rating}</Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-      
-      <View style={styles.labelContainer}>
-        <Text style={styles.ratingLabel}>Dislike</Text>
-        <Text style={styles.ratingLabel}>Love</Text>
-      </View>
     </View>
   );
 }

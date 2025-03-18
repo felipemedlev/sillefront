@@ -1,9 +1,7 @@
-// app/onboarding/survey/[id].tsx
 import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSurveyContext } from '../../context/SurveyContext';
-import { Ionicons } from '@expo/vector-icons';
 
 // Survey questions data
 const surveyQuestions = [
@@ -26,55 +24,58 @@ export default function SurveyQuestion() {
   const questionId = typeof id === 'string' ? id : '1';
   const questionIndex = parseInt(questionId) - 1;
   const router = useRouter();
-  const { setAnswer, answers } = useSurveyContext();
-  
+  const { setAnswer, answers } = useSurveyContext(); // Use the context hook
+
   const question = surveyQuestions[questionIndex];
-  
-  // If question not found, redirect to first question
+
+  // Redirect if question not found
   useEffect(() => {
-    if (!question) {
-      router.replace('./survey/1');
+    if (!question && questionId !== 'complete') {
+      router.replace('/survey/1');
     }
-  }, [question, router]);
-  
+  }, [question, questionId, router]);
+
   if (!question) return null;
-  
+
   const handleRate = (rating: number) => {
     setAnswer(question.accord, rating);
-    
+  
     // Navigate to next question or completion screen
     const nextQuestionId = parseInt(questionId) + 1;
     if (nextQuestionId <= surveyQuestions.length) {
-      router.push(`./survey/${nextQuestionId}`);
+      router.push(`/survey/${nextQuestionId}`);
     } else {
-      router.push('./survey/complete');
+      router.push('/survey/complete');
     }
   };
-  
+
   // Current rating if already answered
   const currentRating = answers[question.accord] || 0;
-  
+
   return (
     <View style={styles.container}>
       <Text style={styles.questionNumber}>Question {questionId} of {surveyQuestions.length}</Text>
       <Text style={styles.question}>How much do you like {question.accord.toLowerCase()} scents?</Text>
       <Text style={styles.description}>{question.description}</Text>
-      
+
       <View style={styles.ratingContainer}>
         {[1, 2, 3, 4, 5].map((rating) => (
           <TouchableOpacity
             key={rating}
             style={[
               styles.ratingButton,
-              currentRating === rating && styles.selectedRating
+              currentRating === rating && styles.selectedRating,
             ]}
             onPress={() => handleRate(rating)}
+            activeOpacity={0.7} // Better button feedback
           >
-            <Text style={styles.ratingText}>{rating}</Text>
+            <Text style={[styles.ratingText, currentRating === rating && styles.selectedRatingText]}>
+              {rating}
+            </Text>
           </TouchableOpacity>
         ))}
       </View>
-      
+
       <View style={styles.labelContainer}>
         <Text style={styles.ratingLabel}>Dislike</Text>
         <Text style={styles.ratingLabel}>Love</Text>
@@ -127,6 +128,9 @@ const styles = StyleSheet.create({
   ratingText: {
     fontSize: 20,
     fontWeight: 'bold',
+  },
+  selectedRatingText: {
+    color: '#6200EE',
   },
   labelContainer: {
     flexDirection: 'row',

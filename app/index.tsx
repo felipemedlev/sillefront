@@ -1,23 +1,27 @@
-import React, { useEffect } from 'react';
-import { View, StyleSheet } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { View, StyleSheet, Animated } from 'react-native';
 import { useRouter } from 'expo-router';
 import Logo from '../assets/images/Logo.svg';
 
 export default function SplashScreen() {
   const router = useRouter();
+  const fadeAnim = useRef(new Animated.Value(1)).current; // Initial opacity is 1
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      router.replace('./landing');
-    }, 2000); // Show splash screen for 2 seconds
-
-    return () => clearTimeout(timer);
-  }, [router]);
+    // Start fade-out animation
+    Animated.timing(fadeAnim, {
+      toValue: 0, // Fades out completely
+      duration: 1000, // 1 second fade duration
+      useNativeDriver: true, // Optimize animation
+    }).start(() => {
+      router.replace('./landing'); // Navigate after fade-out
+    });
+  }, [fadeAnim, router]);
 
   return (
-    <View style={styles.container}>
+    <Animated.View style={[styles.container, { opacity: fadeAnim }]}>
       <Logo width={100} height="auto" preserveAspectRatio="xMidYMid meet" />
-    </View>
+    </Animated.View>
   );
 }
 

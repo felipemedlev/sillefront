@@ -13,7 +13,6 @@ import { useRouter } from 'expo-router';
 // import Logo from '../../components/Logo';
 import Logo from '../../assets/images/Logo.svg';
 import FondoFinal from '../../assets/images/FondoFinal.svg';
-import TopShape from '../../components/layout/TopShape';
 import PaginationIndicator from '../../components/landing/PaginationIndicator';
 import Button from '../../components/landing/Button';
 import DecantPopup from '../../components/landing/DecantPopup';
@@ -32,7 +31,7 @@ export default function LandingScreen() {
       scrollViewRef.current?.scrollTo({ x: width * (currentPage + 1), animated: true });
     } else {
       // On last page, navigate to survey
-      router.push('/survey');
+      router.push('/survey/1');
     }
   };
 

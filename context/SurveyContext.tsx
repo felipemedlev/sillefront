@@ -24,7 +24,7 @@ const SurveyContext = createContext<SurveyContextType | undefined>(undefined);
 
 export const SurveyProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [answers, setAnswers] = useState<SurveyAnswers>({});
-  
+
   // Calculate progress
   const progress = Object.keys(answers).length / 12; // Assuming 12 questions
   const isComplete = progress === 1;

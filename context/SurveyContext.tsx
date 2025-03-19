@@ -8,12 +8,12 @@ export type Accord = {
 };
 
 export type SurveyAnswers = {
-  [key: string]: number; // Key is accord ID, value is rating 1-5
+  [key: string]: number | string; // Key is accord ID, value is rating 1-5 or gender string
 };
 
 type SurveyContextType = {
   answers: SurveyAnswers;
-  setAnswer: (accordId: string, rating: number) => void;
+  setAnswer: (accordId: string, rating: number | string) => void;
   resetSurvey: () => void;
   saveAllAnswers: () => Promise<void>;
   progress: number;
@@ -26,11 +26,11 @@ export const SurveyProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [answers, setAnswers] = useState<SurveyAnswers>({});
 
   // Calculate progress
-  const progress = Object.keys(answers).length / 12; // Assuming 12 questions
+  const progress = Object.keys(answers).length / 13; // Updated to 13 questions (1 gender + 12 accords)
   const isComplete = progress === 1;
 
   // Set a survey answer
-  const setAnswer = (accordId: string, rating: number) => {
+  const setAnswer = (accordId: string, rating: number | string) => {
     setAnswers((prev) => ({ ...prev, [accordId]: rating }));
   };
 

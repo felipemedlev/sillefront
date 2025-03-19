@@ -5,33 +5,55 @@ import { useSurveyContext } from '../../context/SurveyContext';
 import Logo from '../../assets/images/Logo.svg';
 import { Ionicons } from '@expo/vector-icons';
 
-// Survey questions data
-const surveyQuestions = [
-  { id: '1', accord: 'Dulces', description: 'Fresh, zesty scents like lemon, orange, and grapefruit' },
-  { id: '2', accord: 'Cítricos', description: 'Scents of various flowers like rose, jasmine, and lily' },
-  { id: '3', accord: 'Amaderados', description: 'Sweet, juicy scents like apple, peach, and berry' },
-  { id: '4', accord: 'Florales', description: 'Fresh, natural scents like grass, leaves, and stems' },
-  { id: '5', accord: 'Avainillados', description: 'Warm, earthy scents like sandalwood, cedar, and pine' },
-  { id: '6', accord: 'Tabaco', description: 'Rich, warm scents like vanilla, amber, and musk' },
-  { id: '7', accord: 'Lavanda', description: 'Warm, pungent scents like cinnamon, clove, and pepper' },
-  { id: '8', accord: 'Frutales', description: 'Fresh, clean scents reminiscent of the ocean or rainfall' },
-  { id: '9', accord: 'Acanelados', description: 'Sweet, edible scents like chocolate, caramel, and coffee' },
-  { id: '10', accord: 'Especiados', description: 'Rich, warm scents reminiscent of leather goods' },
-  { id: '11', accord: 'Acuerados', description: 'Soft, comforting scents like talcum powder and iris' },
+type QuestionType = {
+  id: string;
+  type?: 'gender';
+  accord?: string;
+  description?: string;
+  question?: string;
+  options?: Array<{
+    id: string;
+    label: string;
+    emoji: string;
+  }>;
+};
+
+const surveyQuestions: QuestionType[] = [
+  {
+    id: '1',
+    type: 'gender',
+    question: '¿Qué tipo de fragancias buscas?',
+    options: [
+      { id: 'male', label: 'Masculinas', emoji: '👨' },
+      { id: 'unisex', label: 'Unisex', emoji: '👥' },
+      { id: 'female', label: 'Femeninas', emoji: '👩' },
+    ]
+  },
+  { id: '2', accord: 'Dulces', description: 'Fresh, zesty scents like lemon, orange, and grapefruit' },
+  { id: '3', accord: 'Cítricos', description: 'Scents of various flowers like rose, jasmine, and lily' },
+  { id: '4', accord: 'Amaderados', description: 'Sweet, juicy scents like apple, peach, and berry' },
+  { id: '5', accord: 'Florales', description: 'Fresh, natural scents like grass, leaves, and stems' },
+  { id: '6', accord: 'Avainillados', description: 'Warm, earthy scents like sandalwood, cedar, and pine' },
+  { id: '7', accord: 'Tabaco', description: 'Rich, warm scents like vanilla, amber, and musk' },
+  { id: '8', accord: 'Lavanda', description: 'Warm, pungent scents like cinnamon, clove, and pepper' },
+  { id: '9', accord: 'Frutales', description: 'Fresh, clean scents reminiscent of the ocean or rainfall' },
+  { id: '10', accord: 'Acanelados', description: 'Sweet, edible scents like chocolate, caramel, and coffee' },
+  { id: '11', accord: 'Especiados', description: 'Rich, warm scents reminiscent of leather goods' },
+  { id: '12', accord: 'Acuerados', description: 'Soft, comforting scents like talcum powder and iris' },
 ];
 
 const imageMap = {
-  1: require('../../assets/images/survey1.png'),
-  2: require('../../assets/images/survey2.png'),
-  3: require('../../assets/images/survey3.png'),
-  4: require('../../assets/images/survey4.png'),
-  5: require('../../assets/images/survey5.png'),
-  6: require('../../assets/images/survey6.png'),
-  7: require('../../assets/images/survey7.png'),
-  8: require('../../assets/images/survey8.png'),
-  9: require('../../assets/images/survey9.png'),
-  10: require('../../assets/images/survey10.png'),
-  11: require('../../assets/images/survey11.png'),
+  2: require('../../assets/images/survey1.png'),
+  3: require('../../assets/images/survey2.png'),
+  4: require('../../assets/images/survey3.png'),
+  5: require('../../assets/images/survey4.png'),
+  6: require('../../assets/images/survey5.png'),
+  7: require('../../assets/images/survey6.png'),
+  8: require('../../assets/images/survey7.png'),
+  9: require('../../assets/images/survey8.png'),
+  10: require('../../assets/images/survey9.png'),
+  11: require('../../assets/images/survey10.png'),
+  12: require('../../assets/images/survey11.png'),
 };
 
 const emojiRatings = ['😖', '😒', '😐', '🙂', '😍'];
@@ -44,7 +66,7 @@ export default function SurveyQuestion() {
   const router = useRouter();
   const { setAnswer, answers } = useSurveyContext();
   const question = surveyQuestions[questionIndex];
-  const animatedScale = useRef(new Animated.Value(1)).current;
+  const animatedScales = useRef(emojiRatings.map(() => new Animated.Value(1))).current;
 
   // Redirect if question not found
   useEffect(() => {
@@ -63,15 +85,36 @@ export default function SurveyQuestion() {
 
   if (!question) return null;
 
-  const handleRate = (rating: number) => {
-    Animated.sequence([
-      Animated.timing(animatedScale, { toValue: 1.2, duration: 100, useNativeDriver: true }),
-      Animated.timing(animatedScale, { toValue: 1, duration: 100, useNativeDriver: true }),
-    ]).start(() => {
-      setAnswer(question.accord, rating);
+  const handleRate = (rating: number | string) => {
+    if (question.type === 'gender') {
+      // Handle gender selection
+      setAnswer('gender', rating as string);
       const nextQuestionId = parseInt(questionId) + 1;
       router.push(nextQuestionId <= surveyQuestions.length ? `/survey/${nextQuestionId}` : '/survey/complete');
-    });
+    } else {
+      // Handle regular rating
+      const index = (rating as number) - 1;
+      Animated.sequence([
+        Animated.spring(animatedScales[index], {
+          toValue: 0.8,
+          useNativeDriver: true,
+          tension: 200,
+          friction: 10,
+        }),
+        Animated.spring(animatedScales[index], {
+          toValue: 1,
+          useNativeDriver: true,
+          tension: 200,
+          friction: 10,
+        }),
+      ]).start(() => {
+        if (question.accord) {
+          setAnswer(question.accord, rating as number);
+        }
+        const nextQuestionId = parseInt(questionId) + 1;
+        router.push(nextQuestionId <= surveyQuestions.length ? `/survey/${nextQuestionId}` : '/survey/complete');
+      });
+    }
   };
 
   const handleNoAnswer = () => {
@@ -80,51 +123,97 @@ export default function SurveyQuestion() {
     router.push(nextQuestionId <= surveyQuestions.length ? `/survey/${nextQuestionId}` : '/survey/complete');
   };
 
+  const handlePressIn = (index: number) => {
+    // Implement the logic for pressing in
+  };
+
+  const handlePressOut = (index: number) => {
+    // Implement the logic for pressing out
+  };
 
   return (
     <View style={[styles.container, { backgroundColor: `#F${questionIndex}EECF` }]}>
       {/* Header with Logo and Back Button */}
       <View style={styles.header}>
-      <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-        <Ionicons name="chevron-back" size={32} color="#000000" />
-      </TouchableOpacity>
+        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+          <Ionicons name="chevron-back" size={32} color="#000000" />
+        </TouchableOpacity>
         <View style={styles.logoContainer}>
           <Logo width={100} height="auto" preserveAspectRatio="xMidYMid meet" />
         </View>
       </View>
 
       {/* Accord Image */}
-      <View style={styles.imageContainer}>
-        <View style={styles.imageWrapper}>
-          <Image
-            source={imageMap[parseInt(questionId, 10) as keyof typeof imageMap]}
-            style={styles.image}
-            resizeMode="contain"
-          />
+      {question.type !== 'gender' && (
+        <View style={styles.imageContainer}>
+          <View style={styles.imageWrapper}>
+            <Image
+              source={imageMap[parseInt(questionId, 10) as keyof typeof imageMap]}
+              style={styles.image}
+              resizeMode="contain"
+            />
+          </View>
         </View>
-      </View>
+      )}
 
       {/* Question */}
-      <Text style={styles.question}>Te gustan los aromas {question.accord.toLowerCase()}?</Text>
-      <Text style={styles.description}>{question.description}</Text>
+      <Text style={styles.question}>
+        {question.type === 'gender'
+          ? (question.question || '¿Qué tipo de fragancias buscas?')
+          : `Te gustan los aromas ${question.accord?.toLowerCase() || ''}?`}
+      </Text>
+      {question.type !== 'gender' && question.description && (
+        <Text style={styles.description}>{question.description}</Text>
+      )}
 
-      {/* Emoji Ratings */}
-      <View style={styles.ratingContainer}>
-        {emojiRatings.map((emoji, index) => (
-          <TouchableOpacity
-            key={index}
-            style={[styles.ratingButton, answers[question.accord] === index + 1 && styles.selectedRating]}
-            onPress={() => handleRate(index + 1)}
-          >
-            <Text style={styles.ratingText}>{emoji}</Text>
-          </TouchableOpacity>
-        ))}
-      </View>
+      {/* Gender Selection or Emoji Ratings */}
+      {question.type === 'gender' ? (
+        <View style={styles.genderContainer}>
+          {question.options?.map((option) => (
+            <TouchableOpacity
+              key={option.id}
+              style={[
+                styles.genderButton,
+                answers['gender'] === option.id && styles.selectedGender
+              ]}
+              onPress={() => handleRate(option.id)}
+            >
+              <Text style={styles.genderEmoji}>{option.emoji}</Text>
+              <Text style={styles.genderLabel}>{option.label}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      ) : (
+        <View style={styles.ratingContainer}>
+          {emojiRatings.map((emoji, index) => (
+            <Animated.View
+              key={index}
+              style={{
+                transform: [{ scale: animatedScales[index] }],
+              }}
+            >
+              <TouchableOpacity
+                style={[
+                  styles.ratingButton,
+                  question.accord && answers[question.accord] === index + 1 && styles.selectedRating,
+                ]}
+                onPress={() => handleRate(index + 1)}
+                onPressIn={() => handlePressIn(index)}
+                onPressOut={() => handlePressOut(index)}
+              >
+                <Text style={styles.ratingText}>{emoji}</Text>
+              </TouchableOpacity>
+            </Animated.View>
+          ))}
+        </View>
+      )}
 
       {/* "No sé" option */}
-      <TouchableOpacity style={styles.noAnswerButton} onPress={handleNoAnswer}>
-        <Text style={styles.noAnswerText}>🙄 No sé</Text>
-      </TouchableOpacity>
+      {question.type !== 'gender' && (
+        <TouchableOpacity style={styles.noAnswerButton} onPress={handleNoAnswer}>
+          <Text style={styles.noAnswerText}>🙄 No sé</Text>
+        </TouchableOpacity>
+      )}
     </View>
   );
 }
@@ -140,40 +229,45 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginTop: 40,
-    position: 'relative', // Add this to ensure proper positioning context
+    position: 'relative',
+    justifyContent: 'center',
   },
   backButton: {
-    // Remove position: 'absolute'
-    padding: 0, // Add padding to increase the touchable area
-    zIndex: 1, // Ensure it's above other elements
-    left: 0, // Keep it on the left side
+    position: 'absolute',
+    left: 0,
+    padding: 10,
+    zIndex: 1,
   },
   logoContainer: {
-    flex: 1,
-    alignItems: 'center', // Centers the logo horizontally
+    width: '100%',
+    alignItems: 'center',
   },
   imageContainer: {
     marginTop: 40,
     alignItems: 'center',
+    width: '100%',
   },
   imageWrapper: {
-    width: screenHeight * 0.2, // 20% of screen height
-    height: screenHeight * 0.2,
-    borderRadius: screenHeight * 0.1, // Keep it circular
+    width: screenHeight * 0.28,
+    height: screenHeight * 0.28,
+    borderRadius: screenHeight * 0.14,
     backgroundColor: 'white',
     borderWidth: 1,
     borderColor: '#ccc',
     justifyContent: 'center',
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   image: {
-    width: '90%',  // Fit inside wrapper
-    height: '90%', // Scale proportionally
-  },
-  accordImage: {
-    width: 80,
-    height: 80,
-    resizeMode: 'contain',
+    width: '70%',
+    height: '70%',
   },
   question: {
     fontSize: 24,
@@ -217,5 +311,46 @@ const styles = StyleSheet.create({
   noAnswerText: {
     fontSize: 24,
     color: '#888',
+  },
+  genderContainer: {
+    width: '100%',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 20,
+    marginTop: 20,
+  },
+  genderButton: {
+    width: 100,
+    height: 100,
+    borderRadius: 15,
+    backgroundColor: '#f0f0f0',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#f0f0f0',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 3,
+  },
+  selectedGender: {
+    backgroundColor: '#8E44AD',
+    borderColor: '#6C3483',
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    elevation: 5,
+  },
+  genderEmoji: {
+    fontSize: 40,
+    marginBottom: 8,
+  },
+  genderLabel: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#000000',
   },
 });

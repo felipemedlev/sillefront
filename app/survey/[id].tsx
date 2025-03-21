@@ -1,5 +1,5 @@
-import React, { useEffect, useMemo, useRef } from 'react';
-import { View, Dimensions, Text, StyleSheet, TouchableOpacity, Image, Animated } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { View, Dimensions, Text, StyleSheet, TouchableOpacity, Image, Animated, useWindowDimensions } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSurveyContext } from '../../context/SurveyContext';
 import Logo from '../../assets/images/Logo.svg';
@@ -29,17 +29,17 @@ const surveyQuestions: QuestionType[] = [
       { id: 'female', label: 'Femeninas', emoji: '👩' },
     ]
   },
-  { id: '2', accord: 'Dulces', description: 'Fresh, zesty scents like lemon, orange, and grapefruit' },
-  { id: '3', accord: 'Cítricos', description: 'Scents of various flowers like rose, jasmine, and lily' },
-  { id: '4', accord: 'Amaderados', description: 'Sweet, juicy scents like apple, peach, and berry' },
-  { id: '5', accord: 'Florales', description: 'Fresh, natural scents like grass, leaves, and stems' },
-  { id: '6', accord: 'Avainillados', description: 'Warm, earthy scents like sandalwood, cedar, and pine' },
-  { id: '7', accord: 'Tabaco', description: 'Rich, warm scents like vanilla, amber, and musk' },
-  { id: '8', accord: 'Lavanda', description: 'Warm, pungent scents like cinnamon, clove, and pepper' },
-  { id: '9', accord: 'Frutales', description: 'Fresh, clean scents reminiscent of the ocean or rainfall' },
-  { id: '10', accord: 'Acanelados', description: 'Sweet, edible scents like chocolate, caramel, and coffee' },
-  { id: '11', accord: 'Especiados', description: 'Rich, warm scents reminiscent of leather goods' },
-  { id: '12', accord: 'Acuerados', description: 'Soft, comforting scents like talcum powder and iris' },
+  { id: '2', accord: 'Dulces', description: 'Aromas comestibles como chocolate o caramelo' },
+  { id: '3', accord: 'Cítricos', description: 'Notas frescas como limón o naranja' },
+  { id: '4', accord: 'Amaderados', description: 'Aromas cálidos como cedro o sándalo' },
+  { id: '5', accord: 'Florales', description: 'Esencias de flores como rosa o jazmín' },
+  { id: '6', accord: 'Avainillados', description: 'Toques dulces y cálidos de vainilla' },
+  { id: '7', accord: 'Tabaco', description: 'Aromas intensos y cálidos como el tabaco' },
+  { id: '8', accord: 'Lavanda', description: 'Aroma herbal fresco y relajante' },
+  { id: '9', accord: 'Frutales', description: 'Aromas jugosos como manzana o durazno' },
+  { id: '10', accord: 'Acanelados', description: 'Notas especiadas dulces como canela' },
+  { id: '11', accord: 'Especiados', description: 'Toques cálidos como clavo o pimienta' },
+  { id: '12', accord: 'Acuerados', description: 'Aromas intensos tipo cuero' },
 ];
 
 const imageMap = {
@@ -58,6 +58,7 @@ const imageMap = {
 
 const emojiRatings = ['😖', '😒', '😐', '🙂', '😍'];
 const screenHeight = Dimensions.get('window').height;
+const DESKTOP_BREAKPOINT = 768;
 
 export default function SurveyQuestion() {
   const { id } = useLocalSearchParams();
@@ -67,6 +68,11 @@ export default function SurveyQuestion() {
   const { setAnswer, answers } = useSurveyContext();
   const question = surveyQuestions[questionIndex];
   const animatedScales = useRef(emojiRatings.map(() => new Animated.Value(1))).current;
+  const { width } = useWindowDimensions();
+  const isDesktop = width >= DESKTOP_BREAKPOINT;
+
+  const [fadeAnim] = useState(new Animated.Value(0));
+  const [slideAnim] = useState(new Animated.Value(50));
 
   // Redirect if question not found
   useEffect(() => {
@@ -75,13 +81,28 @@ export default function SurveyQuestion() {
     }
   }, [question, questionId, router]);
 
-  if (!question) return null;
-
   useEffect(() => {
     if (!question) {
       router.replace('/survey/1');
     }
   }, [question, router]);
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.spring(fadeAnim, {
+        toValue: 1,
+        useNativeDriver: true,
+        tension: 50,
+        friction: 7,
+      }),
+      Animated.spring(slideAnim, {
+        toValue: 0,
+        useNativeDriver: true,
+        tension: 50,
+        friction: 7,
+      }),
+    ]).start();
+  }, []);
 
   if (!question) return null;
 
@@ -93,32 +114,18 @@ export default function SurveyQuestion() {
       router.push(nextQuestionId <= surveyQuestions.length ? `/survey/${nextQuestionId}` : '/survey/complete');
     } else {
       // Handle regular rating
-      const index = (rating as number) - 1;
-      Animated.sequence([
-        Animated.spring(animatedScales[index], {
-          toValue: 0.8,
-          useNativeDriver: true,
-          tension: 200,
-          friction: 10,
-        }),
-        Animated.spring(animatedScales[index], {
-          toValue: 1,
-          useNativeDriver: true,
-          tension: 200,
-          friction: 10,
-        }),
-      ]).start(() => {
-        if (question.accord) {
-          setAnswer(question.accord, rating as number);
-        }
-        const nextQuestionId = parseInt(questionId) + 1;
-        router.push(nextQuestionId <= surveyQuestions.length ? `/survey/${nextQuestionId}` : '/survey/complete');
-      });
+      if (question.accord) {
+        setAnswer(question.accord, rating as number);
+      }
+      const nextQuestionId = parseInt(questionId) + 1;
+      router.push(nextQuestionId <= surveyQuestions.length ? `/survey/${nextQuestionId}` : '/survey/complete');
     }
   };
 
   const handleNoAnswer = () => {
-    setAnswer(question.accord, -1); // Assigning a default 'no answer' value
+    if (question.accord) {
+      setAnswer(question.accord, -1);
+    }
     const nextQuestionId = parseInt(questionId) + 1;
     router.push(nextQuestionId <= surveyQuestions.length ? `/survey/${nextQuestionId}` : '/survey/complete');
   };
@@ -135,11 +142,21 @@ export default function SurveyQuestion() {
     <View style={[styles.container, { backgroundColor: `#F${questionIndex}EECF` }]}>
       {/* Header with Logo and Back Button */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+        <TouchableOpacity
+          onPress={() => {
+            const currentId = typeof questionId === 'string' ? parseInt(questionId) : 1;
+            if (currentId > 1) {
+              router.push(`/survey/${currentId - 1}`);
+            } else {
+              router.push('/landing');
+            }
+          }}
+          style={styles.backButton}
+        >
           <Ionicons name="chevron-back" size={32} color="#000000" />
         </TouchableOpacity>
         <View style={styles.logoContainer}>
-          <Logo width={100} height="auto" preserveAspectRatio="xMidYMid meet" />
+          <Logo width={isDesktop ? 160 : 120} height="auto" preserveAspectRatio="xMidYMid meet" />
         </View>
       </View>
 
@@ -157,63 +174,77 @@ export default function SurveyQuestion() {
       )}
 
       {/* Question */}
-      <Text style={styles.question}>
-        {question.type === 'gender'
-          ? (question.question || '¿Qué tipo de fragancias buscas?')
-          : `Te gustan los aromas ${question.accord?.toLowerCase() || ''}?`}
-      </Text>
-      {question.type !== 'gender' && question.description && (
-        <Text style={styles.description}>{question.description}</Text>
-      )}
+      <Animated.View style={[styles.content, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
+        {question.type === 'gender' ? (
+          <Text style={[styles.questionGender, isDesktop && styles.desktopQuestionGender]}>
+            {question.question || '¿Qué tipo de fragancias buscas?'}
+          </Text>
+        ) : (
+          <Text style={[styles.question, isDesktop && styles.desktopQuestion]}>
+            {`Te gustan los aromas ${question.accord?.toLowerCase() || ''}?`}
+          </Text>
+        )}
 
-      {/* Gender Selection or Emoji Ratings */}
-      {question.type === 'gender' ? (
-        <View style={styles.genderContainer}>
-          {question.options?.map((option) => (
-            <TouchableOpacity
-              key={option.id}
-              style={[
-                styles.genderButton,
-                answers['gender'] === option.id && styles.selectedGender
-              ]}
-              onPress={() => handleRate(option.id)}
-            >
-              <Text style={styles.genderEmoji}>{option.emoji}</Text>
-              <Text style={styles.genderLabel}>{option.label}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      ) : (
-        <View style={styles.ratingContainer}>
-          {emojiRatings.map((emoji, index) => (
-            <Animated.View
-              key={index}
-              style={{
-                transform: [{ scale: animatedScales[index] }],
-              }}
-            >
-              <TouchableOpacity
-                style={[
-                  styles.ratingButton,
-                  question.accord && answers[question.accord] === index + 1 && styles.selectedRating,
-                ]}
-                onPress={() => handleRate(index + 1)}
-                onPressIn={() => handlePressIn(index)}
-                onPressOut={() => handlePressOut(index)}
+        {/* Description (only for non-gender questions) */}
+        {question.type !== 'gender' && question.description && (
+          <Text style={styles.description}>{question.description}</Text>
+        )}
+
+        {/* Gender Selection or Emoji Ratings */}
+        {question.type === 'gender' ? (
+          <View style={[styles.genderContainer, isDesktop && styles.desktopGenderContainer]}>
+            {question.options?.map((option) => (
+              <View key={option.id} style={[styles.optionContainer, isDesktop && styles.desktopOptionContainer]}>
+                <TouchableOpacity
+                  style={[
+                    styles.genderButton,
+                    answers['gender'] === option.id && styles.selectedGender,
+                    isDesktop && styles.desktopGenderButton
+                  ]}
+                  onPress={() => handleRate(option.id)}
+                >
+                  <Text style={[styles.genderEmoji, isDesktop && styles.desktopGenderEmoji]}>{option.emoji}</Text>
+                </TouchableOpacity>
+                <Text style={[styles.genderLabel, isDesktop && styles.desktopGenderLabel]}>{option.label}</Text>
+              </View>
+            ))}
+          </View>
+        ) : (
+          <View style={[styles.ratingContainer, isDesktop && styles.desktopRatingContainer]}>
+            {emojiRatings.map((emoji, index) => (
+              <Animated.View
+                key={index}
+                style={{
+                  transform: [{ scale: animatedScales[index] }],
+                }}
               >
-                <Text style={styles.ratingText}>{emoji}</Text>
-              </TouchableOpacity>
-            </Animated.View>
-          ))}
-        </View>
-      )}
+                <TouchableOpacity
+                  style={[
+                    styles.ratingButton,
+                    question.accord && answers[question.accord] === index + 1 && styles.selectedRating,
+                    isDesktop && styles.desktopRatingButton
+                  ]}
+                  onPress={() => handleRate(index + 1)}
+                  onPressIn={() => handlePressIn(index)}
+                  onPressOut={() => handlePressOut(index)}
+                >
+                  <Text style={[styles.ratingText, isDesktop && styles.desktopRatingText]}>{emoji}</Text>
+                </TouchableOpacity>
+              </Animated.View>
+            ))}
+          </View>
+        )}
 
-      {/* "No sé" option */}
-      {question.type !== 'gender' && (
-        <TouchableOpacity style={styles.noAnswerButton} onPress={handleNoAnswer}>
-          <Text style={styles.noAnswerText}>🙄 No sé</Text>
-        </TouchableOpacity>
-      )}
+        {/* "No sé" option */}
+        {question.type !== 'gender' && (
+          <TouchableOpacity
+            style={[styles.noAnswerButton, isDesktop && styles.desktopNoAnswerButton]}
+            onPress={handleNoAnswer}
+          >
+            <Text style={[styles.noAnswerText, isDesktop && styles.desktopNoAnswerText]}>🙄 No sé</Text>
+          </TouchableOpacity>
+        )}
+      </Animated.View>
     </View>
   );
 }
@@ -269,11 +300,31 @@ const styles = StyleSheet.create({
     width: '70%',
     height: '70%',
   },
+  content: {
+    flex: 1,
+    padding: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   question: {
     fontSize: 24,
     fontWeight: 'bold',
     textAlign: 'center',
     marginTop: 20,
+  },
+  desktopQuestion: {
+    fontSize: 32,
+    marginBottom: 10,
+  },
+  questionGender: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginTop: '10%',
+  },
+  desktopQuestionGender: {
+    fontSize: 32,
+    marginTop: '10%',
   },
   description: {
     fontSize: 16,
@@ -286,6 +337,9 @@ const styles = StyleSheet.create({
     gap: 13,
     marginBottom: 20,
   },
+  desktopRatingContainer: {
+    gap: 20,
+  },
   ratingButton: {
     width: 20,
     height: 20,
@@ -297,6 +351,11 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: '#f0f0f0',
   },
+  desktopRatingButton: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+  },
   selectedRating: {
     backgroundColor: '#8E44AD',
     borderColor: '#6C3483',
@@ -304,11 +363,22 @@ const styles = StyleSheet.create({
   ratingText: {
     fontSize: 32,
   },
+  desktopRatingText: {
+    fontSize: 32,
+  },
   noAnswerButton: {
     marginTop: 10,
     padding: 10,
   },
+  desktopNoAnswerButton: {
+    marginTop: 10,
+    padding: 10,
+  },
   noAnswerText: {
+    fontSize: 24,
+    color: '#888',
+  },
+  desktopNoAnswerText: {
     fontSize: 24,
     color: '#888',
   },
@@ -317,11 +387,26 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     gap: 20,
-    marginTop: 20,
+    marginTop: '10%',
+  },
+  desktopGenderContainer: {
+    gap: 40,
+  },
+  optionContainer: {
+    alignItems: 'center',  // Centers items (emoji & text) horizontally
+    justifyContent: 'center', // Ensures proper alignment
+    gap: 10,
+    marginVertical: 10,  // Adds spacing between options
+  },
+  desktopOptionContainer: {
+    alignItems: 'center',  // Centers items (emoji & text) horizontally
+    justifyContent: 'center', // Ensures proper alignment
+    gap: 10,
+    marginVertical: 10,  // Adds spacing between options
   },
   genderButton: {
-    width: 100,
-    height: 100,
+    width: 80,
+    height: 80,
     borderRadius: 15,
     backgroundColor: '#f0f0f0',
     justifyContent: 'center',
@@ -337,6 +422,11 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
     elevation: 3,
   },
+  desktopGenderButton: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+  },
   selectedGender: {
     backgroundColor: '#8E44AD',
     borderColor: '#6C3483',
@@ -348,7 +438,16 @@ const styles = StyleSheet.create({
     fontSize: 40,
     marginBottom: 8,
   },
+  desktopGenderEmoji: {
+    fontSize: 40,
+    marginBottom: 8,
+  },
   genderLabel: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#000000',
+  },
+  desktopGenderLabel: {
     fontSize: 16,
     fontWeight: 'bold',
     color: '#000000',

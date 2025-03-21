@@ -38,9 +38,8 @@ export default function HomeScreen() {
     <View style={styles.container}>
       <Animated.View style={[styles.content, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
         <View style={styles.logoContainer}>
-          <Logo width={isDesktop ? 160 : 120} height={isDesktop ? 160 : 120} />
+          <Logo width={isDesktop ? 160 : 120} height="auto" preserveAspectRatio="xMidYMid meet" />
         </View>
-        <Text style={[styles.welcomeText, isDesktop && styles.desktopWelcomeText]}>Bienvenido</Text>
 
         {/* Tab Navigation */}
         <View style={[styles.tabContainer, isDesktop && styles.desktopTabContainer]}>

@@ -48,10 +48,22 @@ export default function RootLayout() {
       <StatusBar style="dark" translucent={true} />
       <Stack screenOptions={{
         headerShown: false,
-        contentStyle: { backgroundColor: '#FFFEFC' },
+        // Remove the backgroundColor from contentStyle to prevent interference
+        contentStyle: {
+          flex: 1 // Keep flex: 1 to ensure proper layout
+        },
         animation: 'fade',
       }}>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen 
+          name="(tabs)" 
+          options={{ 
+            headerShown: false,
+            // Remove any background color here as well
+            contentStyle: {
+              flex: 1
+            }
+          }} 
+        />
         <Stack.Screen name="landing" options={{ headerShown: false }} />
         <Stack.Screen name="survey" options={{ headerShown: false }} />
         <Stack.Screen name="auth" options={{ headerShown: false }} />

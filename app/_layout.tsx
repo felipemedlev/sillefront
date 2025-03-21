@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { View, ActivityIndicator, Platform } from 'react-native';
-import { Stack } from 'expo-router';
+import { Stack, useRouter, useSegments } from 'expo-router';
 import * as Font from 'expo-font';
 import { StatusBar } from 'expo-status-bar';
 
 export default function RootLayout() {
   const [fontsLoaded, setFontsLoaded] = useState(false);
+  const router = useRouter();
+  const segments = useSegments();
 
   useEffect(() => {
     const loadFonts = async () => {
@@ -24,6 +26,15 @@ export default function RootLayout() {
     loadFonts();
   }, []);
 
+  useEffect(() => {
+    if (!fontsLoaded) return;
+
+    const currentPath = segments[0] as string;
+    if (currentPath === 'home') {
+      router.replace('/(tabs)');
+    }
+  }, [segments, fontsLoaded]);
+
   if (!fontsLoaded) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#FFFEFC' }}>
@@ -39,7 +50,12 @@ export default function RootLayout() {
         headerShown: false,
         contentStyle: { backgroundColor: '#FFFEFC' },
         animation: 'fade',
-      }} />
+      }}>
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="landing" options={{ headerShown: false }} />
+        <Stack.Screen name="survey" options={{ headerShown: false }} />
+        <Stack.Screen name="auth" options={{ headerShown: false }} />
+      </Stack>
     </>
   );
 }

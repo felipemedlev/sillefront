@@ -2,52 +2,63 @@
 import React from 'react';
 import { View, StyleSheet, Platform, Dimensions } from 'react-native';
 import { Tabs } from 'expo-router';
-import { Svg, Path } from 'react-native-svg';
 import { Ionicons } from '@expo/vector-icons';
 import FondoFinal from '../../assets/images/FondoFinal.svg';
 
 const DESKTOP_BREAKPOINT = 768;
 
 export default function TabsLayout() {
-  const { width, height } = Dimensions.get('window');
+  const { width } = Dimensions.get('window');
   const isDesktop = width >= DESKTOP_BREAKPOINT;
-  const svgHeight = Platform.OS === 'web' ? '26%' : '20%';
+  const svgHeight = Platform.OS === 'web' ? 300 : 200;
 
   return (
     <View style={styles.container}>
-      {/* Background SVG wrapper */}
-      <View style={styles.svgBackground}>
-        <Svg width="100%" height="300" viewBox="0 0 100 100" preserveAspectRatio="none">
-          <Path
-            d="M0 0 Q 50 40 100 0 L100 0 L0 0"
-            fill="#e9e3db"
-          />
-        </Svg>
-      </View>
-
       {/* Content container */}
       <View style={styles.content}>
         <Tabs
           screenOptions={{
             headerShown: false,
+            tabBarShowLabel: false,
             tabBarStyle: {
               position: 'absolute',
               ...(Platform.OS === 'web' ? {
-                top: isDesktop ? 20 : 10,
-                left: isDesktop ? 50 : 10,
-                right: isDesktop ? 50 : 10,
+                ...(isDesktop ? {
+                  top: 20,
+                  left: 50,
+                  right: 50,
+                  height: 50,
+                  borderRadius: 43,
+                  paddingTop: 0,
+                } : {
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
+                  height: 50,
+                  borderTopWidth: 1,
+                  borderTopColor: '#E5E5E5',
+                  borderRadius: 0,
+                  paddingTop: 0,
+                  backgroundColor: '#FFFFFF',
+                  shadowColor: '#000',
+                  shadowOffset: {
+                    width: 0,
+                    height: -2,
+                  },
+                  shadowOpacity: 0.05,
+                  shadowRadius: 4,
+                  elevation: 5,
+                }),
               } : {
                 bottom: 20,
                 left: 10,
                 right: 10,
+                height: 70,
+                borderRadius: 43,
+                paddingTop: 10,
               }),
               elevation: 0,
               backgroundColor: '#FFFFFF',
-              borderTopWidth: 1,
-              borderTopColor: '#CAC9C9',
-              borderRadius: isDesktop ? 43 : 43,
-              height: isDesktop ? 60 : 70,
-              paddingTop: isDesktop ? 0 : 10,
               shadowColor: '#000',
               shadowOffset: {
                 width: 0,
@@ -55,6 +66,7 @@ export default function TabsLayout() {
               },
               shadowOpacity: 0.1,
               shadowRadius: 2,
+              zIndex: 999,
               ...Platform.select({
                 ios: {
                   shadowColor: '#000',
@@ -69,19 +81,26 @@ export default function TabsLayout() {
                   elevation: 3,
                 },
                 web: {
-                  borderBottomWidth: 0.5,
+                  borderBottomWidth: isDesktop ? 1 : 0,
                   borderBottomColor: '#CAC9C9',
                 },
               }),
             },
-            tabBarActiveTintColor: '#007AFF',
-            tabBarInactiveTintColor: '#666',
+            tabBarActiveTintColor: '#000000',
+            tabBarInactiveTintColor: '#999999',
             tabBarLabelStyle: {
-              fontSize: isDesktop ? 14 : 12,
-              fontWeight: '500',
+              fontSize: isDesktop ? 14 : 13,
+              fontWeight: isDesktop ? '500' : '600',
             },
             tabBarIconStyle: {
-              marginBottom: isDesktop ? 0 : 5,
+              marginTop: 0,
+              marginBottom: 0,
+            },
+            tabBarItemStyle: {
+              paddingVertical: 0,
+              flex: 1,
+              alignItems: 'center',
+              justifyContent: 'center',
             },
           }}
         >
@@ -92,7 +111,7 @@ export default function TabsLayout() {
               tabBarIcon: ({ color, size }) => (
                 <Ionicons name="home" size={isDesktop ? size + 4 : size} color={color} />
               ),
-              href: '/home', // Explicitly set home route
+              href: '/home',
             }}
           />
           <Tabs.Screen
@@ -105,20 +124,20 @@ export default function TabsLayout() {
             }}
           />
           <Tabs.Screen
-            name="(cart)"
-            options={{
-              title: 'Carrito',
-              tabBarIcon: ({ color, size }) => (
-                <Ionicons name="cart" size={isDesktop ? size + 4 : size} color={color} />
-              ),
-            }}
-          />
-          <Tabs.Screen
             name="(ratings)"
             options={{
               title: 'Ratings',
               tabBarIcon: ({ color, size }) => (
                 <Ionicons name="star" size={isDesktop ? size + 4 : size} color={color} />
+              ),
+            }}
+          />
+          <Tabs.Screen
+            name="(cart)"
+            options={{
+              title: 'Carrito',
+              tabBarIcon: ({ color, size }) => (
+                <Ionicons name="cart" size={isDesktop ? size + 4 : size} color={color} />
               ),
             }}
           />
@@ -156,18 +175,19 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     position: 'relative',
-    backgroundColor: 'white', // Add this to ensure white background below the curve
+    backgroundColor: '#FFFFFF',
+  },
+  content: {
+    flex: 1,
+    position: 'relative',
+    zIndex: 2,
+    paddingBottom: Platform.OS === 'web' ? 0 : 0, // Add padding for mobile web tab bar
   },
   svgBackground: {
     position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
-    height: 300, // Adjust this value to control the height of the curve
-    zIndex: 0,
-  },
-  content: {
-    flex: 1,
     zIndex: 1,
   },
 });

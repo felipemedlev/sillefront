@@ -1,34 +1,83 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, useWindowDimensions } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { View, Text, StyleSheet, Image, TouchableOpacity, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 
-const DESKTOP_BREAKPOINT = 768;
+type MenuItem = {
+  id: string;
+  title: string;
+  icon: keyof typeof Ionicons.glyphMap;
+  onPress: () => void;
+};
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const { width } = useWindowDimensions();
-  const isDesktop = width >= DESKTOP_BREAKPOINT;
 
-  const handleRetakeSurvey = () => {
-    router.push('/survey/1');
-  };
+  const menuItems: MenuItem[] = [
+    {
+      id: 'personal',
+      title: 'Información personal',
+      icon: 'person-outline',
+      onPress: () => console.log('Personal info'),
+    },
+    {
+      id: 'password',
+      title: 'Cambiar contraseña',
+      icon: 'lock-closed-outline',
+      onPress: () => console.log('Change password'),
+    },
+    {
+      id: 'purchases',
+      title: 'Mis compras',
+      icon: 'bag-outline',
+      onPress: () => console.log('My purchases'),
+    },
+    {
+      id: 'test',
+      title: 'Editar Test Inicial',
+      icon: 'create-outline',
+      onPress: () => router.push('/survey/1'),
+    },
+  ];
 
   return (
     <View style={styles.container}>
-      <View style={styles.profileHeader}>
-        <Ionicons name="person-circle" size={isDesktop ? 120 : 80} color="#007AFF" />
-        <Text style={styles.profileName}>Tu Perfil</Text>
+      {/* Profile Header */}
+      <View style={styles.header}>
+        <Image
+          source={require('../../../assets/images/avatar.png')}
+          style={styles.avatar}
+        />
+
+        {/* Stats */}
+        <View style={styles.statsContainer}>
+          <View style={styles.statItem}>
+            <Text style={styles.statNumber}>32</Text>
+            <Text style={styles.statLabel}>Calificaciones</Text>
+          </View>
+          <View style={styles.statDivider} />
+          <View style={styles.statItem}>
+            <Text style={styles.statNumber}>4</Text>
+            <Text style={styles.statLabel}>Compras</Text>
+          </View>
+        </View>
       </View>
 
-      <View style={styles.content}>
-        <TouchableOpacity
-          style={[styles.button, isDesktop && styles.desktopButton]}
-          onPress={handleRetakeSurvey}
-        >
-          <Ionicons name="refresh" size={24} color="#FFFFFF" style={styles.buttonIcon} />
-          <Text style={styles.buttonText}>Volver a hacer el test</Text>
-        </TouchableOpacity>
+      {/* Menu Items */}
+      <View style={styles.menuContainer}>
+        {menuItems.map((item) => (
+          <TouchableOpacity
+            key={item.id}
+            style={styles.menuItem}
+            onPress={item.onPress}
+          >
+            <View style={styles.menuIconContainer}>
+              <Ionicons name={item.icon} size={24} color="#000" />
+            </View>
+            <Text style={styles.menuText}>{item.title}</Text>
+            <Ionicons name="chevron-forward" size={24} color="#CCCCCC" />
+          </TouchableOpacity>
+        ))}
       </View>
     </View>
   );
@@ -37,51 +86,72 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFEFC',
+    backgroundColor: '#F8F8F6',
+    paddingTop: Platform.OS === 'web' ? '8%' : 20,
   },
-  profileHeader: {
+  header: {
     alignItems: 'center',
-    paddingTop: 40,
-    paddingBottom: 20,
+    paddingHorizontal: 20,
+    paddingBottom: 30,
   },
-  profileName: {
-    fontSize: 24,
-    fontWeight: '600',
-    color: '#333',
-    marginTop: 16,
+  avatar: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    marginBottom: 24,
   },
-  content: {
-    flex: 1,
-    padding: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  button: {
+  statsContainer: {
     flexDirection: 'row',
+    justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#007AFF',
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 25,
+    gap: 10,
+    backgroundColor: '#FFFFFF',
+    padding: 10,
+    borderRadius: 10,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
       height: 2,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 3,
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
   },
-  desktopButton: {
-    paddingVertical: 16,
-    paddingHorizontal: 32,
+  statItem: {
+    alignItems: 'center',
+    paddingHorizontal: 20,
   },
-  buttonIcon: {
-    marginRight: 8,
-  },
-  buttonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
+  statNumber: {
+    fontSize: 24,
     fontWeight: '600',
+    color: '#000',
+    marginBottom: 4,
+  },
+  statLabel: {
+    fontSize: 16,
+    color: '#666666',
+  },
+  statDivider: {
+    width: 1,
+    height: 30,
+    backgroundColor: '#EEEEEE',
+  },
+  menuContainer: {
+    paddingHorizontal: 20,
+  },
+  menuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#EEEEEE',
+  },
+  menuIconContainer: {
+    marginRight: 12,
+  },
+  menuText: {
+    flex: 1,
+    fontSize: 16,
+    color: '#000000',
   },
 });

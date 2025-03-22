@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Animated, useWindowDimensions, Platform, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, Animated, useWindowDimensions, Platform, TouchableOpacity, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
-import Logo from '../../assets/images/Logo.svg';
+import { Ionicons } from '@expo/vector-icons';
 import AIBoxScreen from './aibox';
 import GiftBoxScreen from './giftbox';
 
@@ -37,35 +37,53 @@ export default function HomeScreen() {
   return (
     <View style={styles.container}>
       <Animated.View style={[styles.content, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
-        <View style={styles.logoContainer}>
-          <Logo width={isDesktop ? 160 : 120} height="auto" preserveAspectRatio="xMidYMid meet" />
-        </View>
-
         {/* Tab Navigation */}
         <View style={[styles.tabContainer, isDesktop && styles.desktopTabContainer]}>
           <TouchableOpacity
-            style={[styles.tab, activeTab === 'aibox' && styles.activeTab]}
+            style={styles.tab}
             onPress={() => setActiveTab('aibox')}
           >
-            <Text style={[styles.tabText, activeTab === 'aibox' && styles.activeTabText]}>
-              AI Box
-            </Text>
+            <View style={styles.tabContent}>
+              <Ionicons
+                name="person-circle-outline"
+                size={24}
+                color={activeTab === 'aibox' ? '#000000' : '#AEAEAE'}
+                style={styles.tabIcon}
+              />
+              <Text style={[styles.tabText, activeTab === 'aibox' && styles.activeTabText]}>
+                Personalizados
+              </Text>
+            </View>
+            <View style={[styles.tabLine, activeTab === 'aibox' && styles.activeTabLine]} />
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.tab, activeTab === 'giftbox' && styles.activeTab]}
+            style={styles.tab}
             onPress={() => setActiveTab('giftbox')}
           >
-            <Text style={[styles.tabText, activeTab === 'giftbox' && styles.activeTabText]}>
-              Gift Box
-            </Text>
+            <View style={styles.tabContent}>
+              <Ionicons
+                name="gift-outline"
+                size={24}
+                color={activeTab === 'giftbox' ? '#000000' : '#AEAEAE'}
+                style={styles.tabIcon}
+              />
+              <Text style={[styles.tabText, activeTab === 'giftbox' && styles.activeTabText]}>
+                Regalo
+              </Text>
+            </View>
+            <View style={[styles.tabLine, activeTab === 'giftbox' && styles.activeTabLine]} />
           </TouchableOpacity>
         </View>
 
         {/* Tab Content */}
-        <View style={styles.tabContent}>
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollViewContent}
+          showsVerticalScrollIndicator={false}
+        >
           {activeTab === 'aibox' ? <AIBoxScreen /> : <GiftBoxScreen />}
-        </View>
+        </ScrollView>
       </Animated.View>
     </View>
   );
@@ -74,68 +92,76 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    paddingTop: Platform.OS === 'web' ? '5%' : 0,
     backgroundColor: '#FFFEFC',
-    paddingTop: Platform.OS === 'web' ? 80 : 60,
   },
   content: {
     flex: 1,
+    position: 'relative',
     alignItems: 'center',
-    justifyContent: 'center',
-    padding: 20,
-  },
-  logoContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 20,
-  },
-  welcomeText: {
-    fontSize: 24,
-    fontWeight: '600',
-    color: '#333',
-    textAlign: 'center',
-    marginBottom: 40,
-  },
-  desktopWelcomeText: {
-    fontSize: 32,
-    marginBottom: 60,
+    padding: 16,
+    paddingTop: 0,
   },
   tabContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginBottom: 30,
-    gap: 10,
+    marginBottom: 25,
+    gap: 40,
+    width: '100%',
+    position: 'relative',
+    alignSelf: 'flex-start',
   },
   desktopTabContainer: {
-    gap: 20,
-    marginBottom: 40,
+    gap: 60,
+    marginBottom: 30,
+    marginTop: 30,
   },
   tab: {
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 25,
-    backgroundColor: '#F5F5F5',
-  },
-  activeTab: {
-    backgroundColor: '#007AFF',
-  },
-  tabText: {
-    fontSize: 16,
-    color: '#666',
-    fontWeight: '600',
-  },
-  activeTabText: {
-    color: '#FFFFFF',
+    alignItems: 'center',
+    paddingVertical: 0,
+    flex: 1,
   },
   tabContent: {
-    flex: 1,
-    width: '100%',
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 20,
+    paddingBottom: 8,
   },
-  tabContentText: {
-    fontSize: 18,
-    color: '#333',
-    textAlign: 'center',
+  tabIcon: {
+    marginRight: 8,
+    marginBottom: 8,
+  },
+  tabText: {
+    fontSize: 20,
+    color: '#AEAEAE',
+    fontFamily: 'InstrumentSans',
+    fontWeight: '700',
+    marginBottom: 8,
+  },
+  activeTabText: {
+    color: '#000000',
+  },
+  tabLine: {
+    position: 'absolute',
+    bottom: 0,
+    left: -30,
+    right: -30,
+    height: 1,
+    backgroundColor: '#AEAEAE',
+  },
+  activeTabLine: {
+    backgroundColor: '#000000',
+  },
+  scrollView: {
+    flex: 1,
+    width: '100%',
+  },
+  scrollViewContent: {
+    flexGrow: 1,
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+    paddingTop: 10,
+    paddingHorizontal: 16,
+    paddingBottom: 40,
   },
 });

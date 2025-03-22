@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { View, Text, StyleSheet, Animated, useWindowDimensions, Platform, TouchableOpacity, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -16,6 +16,17 @@ export default function HomeScreen() {
   const [fadeAnim] = useState(new Animated.Value(0));
   const [slideAnim] = useState(new Animated.Value(50));
   const [activeTab, setActiveTab] = useState<TabType>('aibox');
+  const lineAnim = useRef(new Animated.Value(0)).current;
+
+  const handleTabPress = (tab: TabType) => {
+    setActiveTab(tab);
+    Animated.spring(lineAnim, {
+      toValue: tab === 'aibox' ? 0 : 1,
+      useNativeDriver: true,
+      tension: 50,
+      friction: 7,
+    }).start();
+  };
 
   useEffect(() => {
     Animated.parallel([
@@ -41,7 +52,7 @@ export default function HomeScreen() {
         <View style={[styles.tabContainer, isDesktop && styles.desktopTabContainer]}>
           <TouchableOpacity
             style={styles.tab}
-            onPress={() => setActiveTab('aibox')}
+            onPress={() => handleTabPress('aibox')}
           >
             <View style={styles.tabContent}>
               <Ionicons
@@ -54,12 +65,11 @@ export default function HomeScreen() {
                 Personalizados
               </Text>
             </View>
-            <View style={[styles.tabLine, activeTab === 'aibox' && styles.activeTabLine]} />
           </TouchableOpacity>
 
           <TouchableOpacity
             style={styles.tab}
-            onPress={() => setActiveTab('giftbox')}
+            onPress={() => handleTabPress('giftbox')}
           >
             <View style={styles.tabContent}>
               <Ionicons
@@ -72,8 +82,22 @@ export default function HomeScreen() {
                 Regalo
               </Text>
             </View>
-            <View style={[styles.tabLine, activeTab === 'giftbox' && styles.activeTabLine]} />
           </TouchableOpacity>
+
+          {/* Animated underline */}
+          <Animated.View
+            style={[
+              styles.tabLine,
+              {
+                transform: [{
+                  translateX: lineAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: ['0%', '100%']
+                  })
+                }]
+              }
+            ]}
+          />
         </View>
 
         {/* Tab Content */}
@@ -109,7 +133,9 @@ const styles = StyleSheet.create({
     gap: 40,
     width: '100%',
     position: 'relative',
-    alignSelf: 'flex-start',
+    alignSelf: 'center',
+    maxWidth: 600,
+    paddingHorizontal: 20,
   },
   desktopTabContainer: {
     gap: 60,
@@ -120,12 +146,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 0,
     flex: 1,
+    position: 'relative',
   },
   tabContent: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     paddingBottom: 8,
+    width: '100%',
   },
   tabIcon: {
     marginRight: 8,
@@ -144,13 +172,11 @@ const styles = StyleSheet.create({
   tabLine: {
     position: 'absolute',
     bottom: 0,
-    left: -30,
-    right: -30,
-    height: 1,
-    backgroundColor: '#AEAEAE',
-  },
-  activeTabLine: {
+    left: 0,
+    width: '50%',
+    height: 2,
     backgroundColor: '#000000',
+    borderRadius: 2,
   },
   scrollView: {
     flex: 1,

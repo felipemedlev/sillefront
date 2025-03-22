@@ -226,7 +226,7 @@ const styles = StyleSheet.create({
   },
   linkText: {
     fontFamily: 'InstrumentSans',
-    fontSize: 16,
+    fontSize: 18,
     color: '#71A983',
     textDecorationLine: 'underline',
   },

@@ -65,7 +65,7 @@ export default function SurveyQuestion() {
   const questionId = typeof id === 'string' ? id : '1';
   const questionIndex = parseInt(questionId) - 1;
   const router = useRouter();
-  const { setAnswer, answers } = useSurveyContext();
+  const { setAnswer, answers, saveAllAnswers } = useSurveyContext();
   const question = surveyQuestions[questionIndex];
   const animatedScales = useRef(emojiRatings.map(() => new Animated.Value(1))).current;
   const { width } = useWindowDimensions();
@@ -111,14 +111,24 @@ export default function SurveyQuestion() {
       // Handle gender selection
       setAnswer('gender', rating as string);
       const nextQuestionId = parseInt(questionId) + 1;
-      router.push(nextQuestionId <= surveyQuestions.length ? `/survey/${nextQuestionId}` : '/survey/complete');
+      if (nextQuestionId <= surveyQuestions.length) {
+        router.push(`/survey/${nextQuestionId}`);
+      } else {
+        saveAllAnswers();
+        router.push('/survey/complete');
+      }
     } else {
       // Handle regular rating
       if (question.accord) {
         setAnswer(question.accord, rating as number);
       }
       const nextQuestionId = parseInt(questionId) + 1;
-      router.push(nextQuestionId <= surveyQuestions.length ? `/survey/${nextQuestionId}` : '/survey/complete');
+      if (nextQuestionId <= surveyQuestions.length) {
+        router.push(`/survey/${nextQuestionId}`);
+      } else {
+        saveAllAnswers();
+        router.push('/survey/complete');
+      }
     }
   };
 
@@ -127,7 +137,12 @@ export default function SurveyQuestion() {
       setAnswer(question.accord, -1);
     }
     const nextQuestionId = parseInt(questionId) + 1;
-    router.push(nextQuestionId <= surveyQuestions.length ? `/survey/${nextQuestionId}` : '/survey/complete');
+    if (nextQuestionId <= surveyQuestions.length) {
+      router.push(`/survey/${nextQuestionId}`);
+    } else {
+      saveAllAnswers();
+      router.push('/survey/complete');
+    }
   };
 
   const handlePressIn = (index: number) => {

@@ -10,6 +10,7 @@ import {
   TouchableWithoutFeedback,
   Animated
 } from 'react-native';
+import { useMediaQuery } from 'react-responsive';
 
 interface DecantPopupProps {
   visible: boolean;
@@ -18,6 +19,7 @@ interface DecantPopupProps {
 
 const DecantPopup = ({ visible, onClose }: DecantPopupProps) => {
   const [fadeAnim] = useState(new Animated.Value(0));
+  const isDesktop = useMediaQuery({ minWidth: 768 });
 
   useEffect(() => {
     if (visible) {
@@ -45,7 +47,11 @@ const DecantPopup = ({ visible, onClose }: DecantPopupProps) => {
       <TouchableWithoutFeedback onPress={onClose}>
         <View style={styles.overlay}>
           <TouchableWithoutFeedback>
-            <Animated.View style={[styles.popupContainer, { opacity: fadeAnim }]}>
+            <Animated.View style={[
+              styles.popupContainer, 
+              isDesktop && styles.desktopPopupContainer,
+              { opacity: fadeAnim }
+            ]}>
 
               {/* Header with Title and Close Button */}
               <View style={styles.header}>
@@ -60,13 +66,13 @@ const DecantPopup = ({ visible, onClose }: DecantPopupProps) => {
                 {/* Left Side - Image */}
                 <Image
                   source={require('../../assets/images/decant-general.png')}
-                  style={styles.image}
+                  style={[styles.image, isDesktop && styles.desktopImage]}
                   resizeMode="contain"
                 />
 
                 {/* Right Side - Text */}
                 <View style={styles.textContainer}>
-                  <Text style={styles.description}>
+                  <Text style={[styles.description, isDesktop && styles.desktopDescription]}>
                     Un <Text style={styles.bold}>decant</Text> es una muestra de perfume original transferida a un frasco más pequeño.{"\n\n"}
                     Contamos con formatos de <Text style={styles.bold}>3, 5 o 10 ml</Text>, perfectos para descubrir nuevas fragancias.
                   </Text>
@@ -96,6 +102,9 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 20,
   },
+  desktopPopupContainer: {
+    width: width * 0.6,
+  },
   header: {
     width: '100%',
     flexDirection: 'row',
@@ -104,10 +113,13 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   title: {
+    flex: 1,
     fontFamily: 'InstrumentSans',
     fontWeight: 'bold',
     fontSize: 20,
     color: '#000000',
+    textAlign: 'center',
+    paddingBottom: 10
   },
   closeButton: {
     padding: 5,
@@ -122,8 +134,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   image: {
-    width: width * 0.3,  // 30% of screen width
-    height: height * 0.25, // 30% of screen height
+    width: width * 0.2,  // 30% of screen width
+    height: height * 0.3, // 30% of screen height
     marginRight: width * 0.01, // Add spacing relative to width
   },
   textContainer: {
@@ -138,6 +150,14 @@ const styles = StyleSheet.create({
   },
   bold: {
     fontWeight: 'bold',
+  },
+  desktopImage: {
+    width: width * 0.2,  // 40% of screen width
+    height: height * 0.3, // 35% of screen height
+  },
+  desktopDescription: {
+    fontSize: 18, // Smaller text for desktop
+    lineHeight: 18*1.2,
   },
 });
 

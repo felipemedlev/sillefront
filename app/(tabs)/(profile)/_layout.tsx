@@ -1,12 +1,15 @@
 import { Stack } from 'expo-router';
+import { SurveyProvider } from '../../../context/SurveyContext';
 
 export default function ProfileLayout() {
   return (
-    <Stack
-      screenOptions={{
-        headerShown: false,
-        contentStyle: { backgroundColor: '#FFFEFC' }
-      }}
-    />
+    <SurveyProvider>
+      <Stack
+        screenOptions={{
+          headerShown: false,
+          contentStyle: { backgroundColor: '#FFFEFC' }
+        }}
+      />
+    </SurveyProvider>
   );
 }

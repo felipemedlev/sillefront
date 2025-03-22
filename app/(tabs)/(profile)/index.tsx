@@ -36,7 +36,10 @@ export default function ProfileScreen() {
       id: 'test',
       title: 'Editar Test Inicial',
       icon: 'create-outline',
-      onPress: () => router.push('/survey/1'),
+      onPress: () => {
+        // Save the current answers before navigating
+        router.push('/survey/1');
+      },
     },
   ];
 

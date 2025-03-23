@@ -1,6 +1,6 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Animated, TouchableOpacity } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { Feather } from '@expo/vector-icons';
 
 type TabType = 'aibox' | 'giftbox';
 
@@ -16,20 +16,52 @@ export default function TabNavigation({ activeTab, onTabPress, isDesktop }: TabN
   const [secondTabWidth, setSecondTabWidth] = useState(0);
   const firstTabRef = useRef<View>(null);
   const secondTabRef = useRef<View>(null);
-  const [firstTabPosition, setFirstTabPosition] = useState(0);
-  const [secondTabPosition, setSecondTabPosition] = useState(0);
+  const firstIconRef = useRef<View>(null);
+  const secondIconRef = useRef<View>(null);
+  const [firstIconPosition, setFirstIconPosition] = useState(0);
+  const [secondIconPosition, setSecondIconPosition] = useState(0);
+  const containerRef = useRef<View>(null);
 
   useEffect(() => {
-    if (firstTabRef.current && secondTabRef.current) {
-      firstTabRef.current.measure?.((_x, _y, width, height, pageX, _pageY) => {
-        setFirstTabWidth(width);
-        setFirstTabPosition(pageX);
+    const measureTabs = () => {
+      if (!containerRef.current) return;
+
+      containerRef.current.measure?.((_x, _y, _width, _height, containerX, _pageY) => {
+        if (firstIconRef.current && secondIconRef.current) {
+          firstIconRef.current.measure?.((_x, _y, _width, _height, iconX, _pageY) => {
+            setFirstIconPosition(iconX - containerX);
+          });
+          secondIconRef.current.measure?.((_x, _y, _width, _height, iconX, _pageY) => {
+            setSecondIconPosition(iconX - containerX);
+          });
+        }
+        if (firstTabRef.current && secondTabRef.current) {
+          firstTabRef.current.measure?.((_x, _y, width, _height, _pageX, _pageY) => {
+            setFirstTabWidth(width - 35);
+          });
+          secondTabRef.current.measure?.((_x, _y, width, _height, _pageX, _pageY) => {
+            setSecondTabWidth(width - 35);
+          });
+        }
       });
-      secondTabRef.current.measure?.((_x, _y, width, height, pageX, _pageY) => {
-        setSecondTabWidth(width);
-        setSecondTabPosition(pageX);
-      });
-    }
+    };
+
+    // Initial measurement
+    measureTabs();
+
+    // Add a small delay to ensure layout is complete
+    const timer = setTimeout(measureTabs, 100);
+    return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    // Initial animation to set the line position
+    Animated.spring(lineAnim, {
+      toValue: activeTab === 'aibox' ? 0 : 1,
+      useNativeDriver: true,
+      tension: 50,
+      friction: 7,
+    }).start();
   }, []);
 
   const handleTabPress = (tab: TabType) => {
@@ -43,18 +75,20 @@ export default function TabNavigation({ activeTab, onTabPress, isDesktop }: TabN
   };
 
   return (
-    <View style={[styles.tabContainer, isDesktop && styles.desktopTabContainer]}>
+    <View ref={containerRef} style={[styles.tabContainer, isDesktop && styles.desktopTabContainer]}>
       <TouchableOpacity
         style={styles.tab}
         onPress={() => handleTabPress('aibox')}
       >
         <View ref={firstTabRef} style={styles.tabContent}>
-          <Ionicons
-            name="person-circle-outline"
-            size={24}
-            color={activeTab === 'aibox' ? '#000000' : '#AEAEAE'}
-            style={styles.tabIcon}
-          />
+          <View ref={firstIconRef}>
+            <Feather
+              name="user"
+              size={24}
+              color={activeTab === 'aibox' ? '#000000' : '#AEAEAE'}
+              style={styles.tabIcon}
+            />
+          </View>
           <Text style={[styles.tabText, activeTab === 'aibox' && styles.activeTabText]}>
             Personalizados
           </Text>
@@ -66,12 +100,14 @@ export default function TabNavigation({ activeTab, onTabPress, isDesktop }: TabN
         onPress={() => handleTabPress('giftbox')}
       >
         <View ref={secondTabRef} style={styles.tabContent}>
-          <Ionicons
-            name="gift-outline"
-            size={24}
-            color={activeTab === 'giftbox' ? '#000000' : '#AEAEAE'}
-            style={styles.tabIcon}
-          />
+          <View ref={secondIconRef}>
+            <Feather
+              name="gift"
+              size={24}
+              color={activeTab === 'giftbox' ? '#000000' : '#AEAEAE'}
+              style={styles.tabIcon}
+            />
+          </View>
           <Text style={[styles.tabText, activeTab === 'giftbox' && styles.activeTabText]}>
             Regalo
           </Text>
@@ -89,7 +125,7 @@ export default function TabNavigation({ activeTab, onTabPress, isDesktop }: TabN
             transform: [{
               translateX: lineAnim.interpolate({
                 inputRange: [0, 1],
-                outputRange: [firstTabPosition - 20, secondTabPosition - 20]
+                outputRange: [firstIconPosition, secondIconPosition]
               })
             }]
           }
@@ -103,7 +139,7 @@ const styles = StyleSheet.create({
   tabContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginBottom: 25,
+    marginBottom: 10,
     width: '100%',
     position: 'relative',
     alignSelf: 'center',
@@ -122,7 +158,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingBottom: 8,
+    paddingBottom: 0,
     paddingHorizontal: 20,
     width: 'auto',
   },
@@ -146,6 +182,7 @@ const styles = StyleSheet.create({
     left: 0,
     height: 2,
     backgroundColor: '#000000',
-    borderRadius: 2,
+    borderRadius: 10,
+    width: '100%',
   },
 });

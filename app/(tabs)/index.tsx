@@ -76,7 +76,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     alignItems: 'center',
     justifyContent: 'flex-start',
-    paddingTop: 10,
+    paddingTop: 0,
     paddingHorizontal: 16,
     paddingBottom: 40,
   },

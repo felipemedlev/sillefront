@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, useWindowDimensions, ScrollView, Pressable } from 'react-native';
+import { router } from 'expo-router';
 
 const DESKTOP_BREAKPOINT = 768;
 
@@ -20,6 +21,10 @@ export default function AIBoxScreen() {
   const { width } = useWindowDimensions();
   const isDesktop = width >= DESKTOP_BREAKPOINT;
 
+  const handleOpenPress = () => {
+    router.push('/aibox-selection');
+  };
+
   return (
     <ScrollView style={styles.container}>
       <View style={styles.content}>
@@ -27,7 +32,7 @@ export default function AIBoxScreen() {
         <View style={styles.mainCard}>
           <Text style={styles.subtitle}>Tu Box Personalizado</Text>
           <Text style={styles.mainTitle}>¡Está listo tu Box AI!</Text>
-          <Pressable style={styles.openButton}>
+          <Pressable style={styles.openButton} onPress={handleOpenPress}>
             <Text style={styles.openButtonText}>Abrir</Text>
           </Pressable>
         </View>

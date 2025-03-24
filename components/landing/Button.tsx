@@ -62,7 +62,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   primaryButton: {
-    backgroundColor: '#000000',
+    backgroundColor: '#222222',
   },
   secondaryButton: {
     backgroundColor: 'transparent',

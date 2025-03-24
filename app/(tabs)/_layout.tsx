@@ -10,7 +10,6 @@ const DESKTOP_BREAKPOINT = 768;
 export default function TabsLayout() {
   const { width } = Dimensions.get('window');
   const isDesktop = width >= DESKTOP_BREAKPOINT;
-  const svgHeight = Platform.OS === 'web' ? 300 : 200;
 
   return (
     <View style={styles.container}>

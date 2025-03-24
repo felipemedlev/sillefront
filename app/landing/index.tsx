@@ -14,19 +14,24 @@ import { useRouter } from 'expo-router';
 // import Logo from '../../components/Logo';
 import Logo from '../../assets/images/Logo.svg';
 import FondoFinal from '../../assets/images/FondoFinal.svg';
+import Landing1 from '../../assets/images/landing1.svg';
+import Landing2 from '../../assets/images/landing2.svg';
+import Landing3 from '../../assets/images/landing3.svg';
 import PaginationIndicator from '../../components/landing/PaginationIndicator';
 import Button from '../../components/landing/Button';
 import DecantPopup from '../../components/landing/DecantPopup';
 
 const { width, height } = Dimensions.get('window');
+const DESKTOP_BREAKPOINT = 768;
 
 export default function LandingScreen() {
   const router = useRouter();
+  const isDesktop = Platform.OS === 'web' && width >= DESKTOP_BREAKPOINT;
   const [currentPage, setCurrentPage] = useState(0);
   const [showDecantPopup, setShowDecantPopup] = useState(false);
   const scrollViewRef = useRef<ScrollView>(null);
-  const logoWidth = Platform.OS === 'web' && width > 768 ? width * 0.15 : width * 0.3;
-  const svgHeight = Platform.OS === 'web' ? '26%' : '20%';
+  const logoWidth = isDesktop ? width * 0.15 : width * 0.25;
+  const svgHeight = isDesktop ? '25%' : '18%';
 
   const handlePrimaryButtonPress = () => {
     if (currentPage < 2) {
@@ -83,17 +88,17 @@ export default function LandingScreen() {
     {
       title: "Descubre perfumes según tus gustos",
       description: "Utilizamos inteligencia artificial para encontrar perfumes de acuerdo a tu perfil en base a un test inicial",
-      image: require('../../assets/images/decant-1.png'),
+      image: Landing1,
     },
     {
       title: "Ordena un Box de muestras personalizadas",
       description: "Te enviaremos un box con decants según tus gustos. Elige formatos de 3, 5 o 10 ml y 4 u 8 decants. ¡Puedes cambiarlos si quieres!",
-      image: require('../../assets/images/decant-2.png'),
+      image: Landing2,
     },
     {
       title: "Califica y mejora tus recomendaciones",
       description: "Evalúa tus fragancias y nuestro algoritmo ajustará tus sugerencias para que descubras nuevos aromas.",
-      image: require('../../assets/images/decant-3.png'),
+      image: Landing3,
     },
   ];
 
@@ -119,11 +124,14 @@ export default function LandingScreen() {
               <Logo width={logoWidth} height="auto" preserveAspectRatio="xMidYMid meet" />
               <Text style={styles.slogan}>Descubre perfumes con AI</Text>
             </View>
-            <Image
-              source={page.image}
-              style={styles.mainImage}
-              resizeMode="contain"
-            />
+            {page.image && (
+              <page.image
+                width={width * 0.85}
+                height={height * 0.4}
+                style={styles.mainImage}
+                preserveAspectRatio="xMidYMid meet"
+              />
+            )}
             <PaginationIndicator totalPages={3} currentPage={currentPage} />
             <View style={styles.contentContainer}>
               <Text style={styles.title}>{page.title}</Text>
@@ -186,13 +194,11 @@ const styles = StyleSheet.create({
   slogan: {
     fontFamily: 'InstrumentSerifItalic',
     fontSize: 28,
-    marginTop: 5,
+    marginTop: 2,
     textAlign: 'center',
   },
   mainImage: {
-    width: width * 0.7,
-    height: height * 0.25,
-    marginTop: 30,
+    marginTop: 0,
   },
   contentContainer: {
     width: width * 0.85,
@@ -205,6 +211,7 @@ const styles = StyleSheet.create({
     fontFamily: 'InstrumentSans',
     fontWeight: 'bold',
     fontSize: 24,
+    color: '#222222',
     lineHeight: 22*1.2,
     textAlign: 'center',
     marginBottom: 15,
@@ -220,14 +227,15 @@ const styles = StyleSheet.create({
     fontSize: 18,
     lineHeight: 16 * 1.4, // Increase for better readability
     textAlign: 'center',
-    color: '#333333',
+    color: '#717171',
     flexWrap: 'wrap', // Allow text wrapping
     minHeight: 60, // Ensures enough space for multiple lines
   },
   linkText: {
     fontFamily: 'InstrumentSans',
     fontSize: 18,
-    color: '#71A983',
+    fontWeight: 500,
+    color: '#222222',
     textDecorationLine: 'underline',
   },
   bottomContainer: {

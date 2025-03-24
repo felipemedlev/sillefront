@@ -27,19 +27,22 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    marginVertical: 20,
+    marginVertical: 8,
+    paddingHorizontal: 4,
   },
   dot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    marginHorizontal: 5,
+    borderRadius: 4,
+    marginHorizontal: 4,
+    backgroundColor: '#E4E4E4',
   },
   activeDot: {
-    backgroundColor: '#000000',
+    width: 24,
+    height: 8,
+    backgroundColor: '#222222',
   },
   inactiveDot: {
-    backgroundColor: '#CCCCCC',
+    width: 8,
+    height: 8,
   },
 });
 

@@ -59,11 +59,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
   },
   content: {
-    padding: 20,
+    padding: 0,
     alignItems: 'center',
   },
   mainCard: {
-    width: '80%',
+    width: '100%',
     backgroundColor: '#FFFFFF',
     borderRadius: 16,
     padding: 24,

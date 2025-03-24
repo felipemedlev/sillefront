@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Animated, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, Animated, TouchableOpacity, Platform } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 
 type TabType = 'aibox' | 'giftbox';
@@ -37,30 +37,26 @@ export default function TabNavigation({ activeTab, onTabPress, isDesktop }: TabN
         }
         if (firstTabRef.current && secondTabRef.current) {
           firstTabRef.current.measure?.((_x, _y, width, _height, _pageX, _pageY) => {
-            setFirstTabWidth(width - 35);
+            setFirstTabWidth(width - 29);
           });
           secondTabRef.current.measure?.((_x, _y, width, _height, _pageX, _pageY) => {
-            setSecondTabWidth(width - 35);
+            setSecondTabWidth(width - 29);
           });
         }
       });
     };
 
-    // Initial measurement
     measureTabs();
-
-    // Add a small delay to ensure layout is complete
     const timer = setTimeout(measureTabs, 100);
     return () => clearTimeout(timer);
   }, []);
 
   useEffect(() => {
-    // Initial animation to set the line position
     Animated.spring(lineAnim, {
       toValue: activeTab === 'aibox' ? 0 : 1,
       useNativeDriver: true,
-      tension: 50,
-      friction: 7,
+      tension: 65,
+      friction: 10,
     }).start();
   }, []);
 
@@ -69,8 +65,8 @@ export default function TabNavigation({ activeTab, onTabPress, isDesktop }: TabN
     Animated.spring(lineAnim, {
       toValue: tab === 'aibox' ? 0 : 1,
       useNativeDriver: true,
-      tension: 50,
-      friction: 7,
+      tension: 65,
+      friction: 10,
     }).start();
   };
 
@@ -84,8 +80,8 @@ export default function TabNavigation({ activeTab, onTabPress, isDesktop }: TabN
           <View ref={firstIconRef}>
             <Feather
               name="user"
-              size={24}
-              color={activeTab === 'aibox' ? '#000000' : '#AEAEAE'}
+              size={20}
+              color={activeTab === 'aibox' ? '#809CAC' : '#717171'}
               style={styles.tabIcon}
             />
           </View>
@@ -103,8 +99,8 @@ export default function TabNavigation({ activeTab, onTabPress, isDesktop }: TabN
           <View ref={secondIconRef}>
             <Feather
               name="gift"
-              size={24}
-              color={activeTab === 'giftbox' ? '#000000' : '#AEAEAE'}
+              size={20}
+              color={activeTab === 'giftbox' ? '#809CAC' : '#717171'}
               style={styles.tabIcon}
             />
           </View>
@@ -139,50 +135,49 @@ const styles = StyleSheet.create({
   tabContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginBottom: 10,
+    marginBottom: 8,
     width: '100%',
     position: 'relative',
     alignSelf: 'center',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E5E5',
   },
   desktopTabContainer: {
     maxWidth: 600,
-    marginBottom: 30,
-    marginTop: 30,
+    marginBottom: 24,
+    marginTop: 24,
   },
   tab: {
     alignItems: 'center',
-    paddingVertical: 0,
+    paddingVertical: 12,
     position: 'relative',
   },
   tabContent: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingBottom: 0,
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
     width: 'auto',
   },
   tabIcon: {
-    marginRight: 8,
-    marginBottom: 8,
+    marginRight: 6,
   },
   tabText: {
-    fontSize: 20,
-    color: '#AEAEAE',
-    fontFamily: 'InstrumentSans',
-    fontWeight: '700',
-    marginBottom: 8,
+    fontSize: 18,
+    color: '#717171',
+    fontFamily: Platform.select({ ios: 'System', android: 'Roboto' }),
+    fontWeight: '500',
   },
   activeTabText: {
-    color: '#000000',
+    color: '#809CAC',
+    fontWeight: '600',
   },
   tabLine: {
     position: 'absolute',
-    bottom: 0,
+    bottom: -1,
     left: 0,
     height: 2,
-    backgroundColor: '#000000',
-    borderRadius: 10,
-    width: '100%',
+    backgroundColor: '#809CAC',
+    borderRadius: 2,
   },
 });

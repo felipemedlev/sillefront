@@ -44,7 +44,7 @@ export default function LandingScreen() {
   };
 
   const handleSkipPress = () => {
-    router.push('/auth/login');
+    router.push('/auth/signup');
   };
 
   const handleScroll = (event: any) => {

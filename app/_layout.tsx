@@ -12,14 +12,18 @@ export default function RootLayout() {
   useEffect(() => {
     const loadFonts = async () => {
       try {
+        console.log("Starting font loading");
         await Font.loadAsync({
           'InstrumentSans': require('../assets/fonts/InstrumentSans-Regular.ttf'),
           'InstrumentSerif': require('../assets/fonts/InstrumentSerif-Regular.ttf'),
           'InstrumentSerifItalic': require('../assets/fonts/InstrumentSerif-Italic.ttf'),
         });
+        console.log("Fonts loaded successfully");
         setFontsLoaded(true);
       } catch (error) {
         console.error("Error loading fonts:", error);
+        // Continue without custom fonts
+        setFontsLoaded(true);
       }
     };
 
@@ -35,14 +39,7 @@ export default function RootLayout() {
     }
   }, [segments, fontsLoaded]);
 
-  if (!fontsLoaded) {
-    return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#FFFEFC' }}>
-        <ActivityIndicator size="large" color="#000000" />
-      </View>
-    );
-  }
-
+  // Remove the loading screen and just proceed with system fonts if custom fonts aren't loaded
   return (
     <>
       <StatusBar style="dark" translucent={true} />

@@ -44,7 +44,7 @@ export default function LandingScreen() {
   };
 
   const handleSkipPress = () => {
-    router.push('./registration');
+    router.push('/auth/login');
   };
 
   const handleScroll = (event: any) => {
@@ -148,17 +148,22 @@ export default function LandingScreen() {
           </View>
         ))}
       </ScrollView>
-      <View style={styles.bottomContainer}>
+      <View style={[
+        styles.bottomContainer,
+        currentPage < 2 && styles.bottomContainerFirstTwo
+      ]}>
         <Button
           title={getPrimaryButtonTitle()}
           onPress={handlePrimaryButtonPress}
           primary
         />
-        <Button
-          title="Saltar intro"
-          onPress={handleSkipPress}
-          primary={false}
-        />
+        {currentPage === 2 && (
+          <Button
+            title="Saltar intro"
+            onPress={handleSkipPress}
+            primary={false}
+          />
+        )}
       </View>
       <DecantPopup
         visible={showDecantPopup}
@@ -243,5 +248,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 0,
     paddingHorizontal: 20,
+  },
+  bottomContainerFirstTwo: {
+    marginBottom: 30, // This will move the button up on first two screens
   },
 });

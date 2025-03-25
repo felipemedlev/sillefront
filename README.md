@@ -1,50 +1,58 @@
-# Welcome to your Expo app 👋
+# SilleFront Project
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+This is the frontend for the Sille application. It's built using Expo and React Native, with Expo Router for navigation.
 
-## Get started
+## File Structure
 
-1. Install dependencies
+The project is organized as follows:
 
-   ```bash
-   npm install
-   ```
-
-2. Start the app
-
-   ```bash
-    npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
+```
+/
+├── app/              # Main application code
+│   ├── (tabs)/       # Tab navigation structure
+│   ├── auth/         # Authentication related screens (login, signup)
+│   ├── components/   # Reusable UI components specific to the app
+│   ├── landing/      # Landing page
+│   ├── survey/       # Survey related screens
+│   ├── _layout.tsx   # Root layout component
+│   ├── aibox-selection.tsx # AI Box selection screen
+│   ├── home.tsx      # Home screen (redirects to tabs)
+│   └── index.tsx     # Initial splash screen
+├── assets/           # Static assets (images, fonts)
+├── components/       # Reusable UI components (shared across the app)
+├── context/          # React context providers
+├── types/            # TypeScript type definitions
+├── app.json          # Expo application configuration
+├── package.json      # Project dependencies and scripts
+└── README.md         # This file
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+-   `app/`: Contains the main application logic, including screens, navigation, and app-specific components.
+-   `assets/`: Stores static assets like images and fonts.
+-   `components/`: Houses reusable UI components used throughout the application.
+-   `context/`: Manages global application state using React Context.
+-   `types/`: Defines TypeScript types for better code maintainability.
 
-## Learn more
+## Getting Started
 
-To learn more about developing your project with Expo, look at the following resources:
+1.  **Install Dependencies:**
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+    ```bash
+    npm install
+    ```
 
-## Join the community
+2.  **Run the Development Server:**
 
-Join our community of developers creating universal apps.
+    ```bash
+    npx expo start
+    ```
+    This will start the Expo development server. You can then run the app on an emulator/simulator or a physical device using the Expo Go app. For web, you can use:
+    ```bash
+    npm run web
+    ```
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+## Known Issues/TODOs
+
+-   **Resolved Hook Error:** There was a previous issue in `app/auth/index.tsx` where the `usePathname` hook was called conditionally, violating the rules of hooks. This has been resolved by removing the conditional and always redirecting to `/auth/login`.
+- Add more detailed documentation for each component.
+- Implement proper error handling and loading states.

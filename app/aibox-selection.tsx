@@ -330,13 +330,7 @@ const styles = StyleSheet.create({
   decantCountButtonActive: {
     backgroundColor: '#809CAC',
     borderColor: '#809CAC',
-    shadowColor: '#809CAC',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
+    boxShadow: '0 2px 4px rgba(128, 156, 172, 0.2)',
     elevation: 3,
   },
   decantCountText: {
@@ -364,13 +358,7 @@ const styles = StyleSheet.create({
   sizeButtonActive: {
     backgroundColor: '#809CAC',
     borderColor: '#809CAC',
-    shadowColor: '#809CAC',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
+    boxShadow: '0 2px 4px rgba(128, 156, 172, 0.2)',
     elevation: 3,
   },
   sizeText: {
@@ -432,13 +420,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     backgroundColor: '#FFFFFF',
     marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
     elevation: 3,
   },
   matchBadge: {
@@ -517,13 +499,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 24,
     borderRadius: 8,
-    shadowColor: '#809CAC',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
+    boxShadow: '0 2px 4px rgba(128, 156, 172, 0.2)',
     elevation: 3,
   },
   addToCartButtonText: {

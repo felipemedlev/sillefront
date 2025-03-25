@@ -39,13 +39,7 @@ export default function TabsLayout() {
                   borderRadius: 0,
                   paddingTop: 0,
                   backgroundColor: '#FFFFFF',
-                  shadowColor: '#000',
-                  shadowOffset: {
-                    width: 0,
-                    height: -2,
-                  },
-                  shadowOpacity: 0.05,
-                  shadowRadius: 4,
+                  boxShadow: '0 -2px 4px rgba(0, 0, 0, 0.05)',
                   elevation: 5,
                 }),
               } : {
@@ -58,23 +52,11 @@ export default function TabsLayout() {
               }),
               elevation: 0,
               backgroundColor: '#FFFFFF',
-              shadowColor: '#000',
-              shadowOffset: {
-                width: 0,
-                height: Platform.OS === 'web' ? 1 : -1,
-              },
-              shadowOpacity: 0.1,
-              shadowRadius: 2,
+              boxShadow: '0 1px 2px rgba(0, 0, 0, 0.1)',
               zIndex: 999,
               ...Platform.select({
                 ios: {
-                  shadowColor: '#000',
-                  shadowOffset: {
-                    width: 0,
-                    height: -2,
-                  },
-                  shadowOpacity: 0.1,
-                  shadowRadius: 3,
+                  boxShadow: '0 -2px 3px rgba(0, 0, 0, 0.1)',
                 },
                 android: {
                   elevation: 3,

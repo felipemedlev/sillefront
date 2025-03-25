@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { View, Dimensions, Text, StyleSheet, TouchableOpacity, Image, Animated, useWindowDimensions } from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter, Redirect } from 'expo-router';
 import { useSurveyContext } from '../../context/SurveyContext';
 import Logo from '../../assets/images/Logo.svg';
 import { Ionicons } from '@expo/vector-icons';
@@ -74,18 +74,9 @@ export default function SurveyQuestion() {
   const [fadeAnim] = useState(new Animated.Value(0));
   const [slideAnim] = useState(new Animated.Value(50));
 
-  // Redirect if question not found
-  useEffect(() => {
-    if (!question && questionId !== 'complete') {
-      router.replace('/survey/1');
-    }
-  }, [question, questionId, router]);
-
-  useEffect(() => {
-    if (!question) {
-      router.replace('/survey/1');
-    }
-  }, [question, router]);
+  if (!question && questionId !== 'complete') {
+    return <Redirect href="/survey/1" />;
+  }
 
   useEffect(() => {
     Animated.parallel([
@@ -304,13 +295,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
+    boxShadow: '0 1px 2px rgba(0, 0, 0, 0.1)',
     elevation: 2,
   },
   image: {
@@ -379,13 +364,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 1,
     borderColor: '#E5E5E5',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
+    boxShadow: '0 1px 2px rgba(0, 0, 0, 0.1)',
     elevation: 2,
   },
   desktopRatingButton: {
@@ -399,6 +378,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 4,
     elevation: 4,
+    boxShadow: '0 2px 4px rgba(108, 52, 131, 0.2)',
   },
   ratingText: {
     fontSize: 32,
@@ -455,13 +435,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 1,
     borderColor: '#E5E5E5',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
+    boxShadow: '0 1px 2px rgba(0, 0, 0, 0.1)',
     elevation: 2,
   },
   desktopGenderButton: {
@@ -475,6 +449,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 4,
     elevation: 4,
+    boxShadow: '0 2px 4px rgba(108, 52, 131, 0.2)',
   },
   genderEmoji: {
     fontSize: 40,

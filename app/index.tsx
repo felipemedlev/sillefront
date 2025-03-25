@@ -23,7 +23,7 @@ export default function SplashScreen() {
 
   return (
     <Animated.View style={[styles.container, { opacity: fadeAnim }]}>
-      <Logo width={width*0.3} height="auto" preserveAspectRatio="xMidYMid meet" />
+      <Logo width={width*0.3} preserveAspectRatio="xMidYMid meet" />
     </Animated.View>
   );
 }

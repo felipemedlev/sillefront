@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import PerfumeModal, { PerfumeModalRef } from '../components/product/PerfumeModal';
 import { View, Text, StyleSheet, useWindowDimensions, ScrollView, Pressable, Image, ImageSourcePropType, Dimensions } from 'react-native';
 import { Feather } from '@expo/vector-icons';
@@ -10,19 +10,40 @@ const DESKTOP_BREAKPOINT = 768;
 type DecantCount = 4 | 8;
 type DecantSize = 3 | 5 | 10;
 
+// Mirror the interface from PerfumeModal.tsx
 interface Perfume {
   id: string;
   name: string;
   brand: string;
-  matchPercentage: number;
+  matchPercentage: number; // Kept for now
   pricePerML: number;
   image: ImageSourcePropType;
-  notes?: string[];
   description?: string;
+
+  // New fields matching PerfumeModal
+  accords?: string[];
+  topNotes?: string[];
+  middleNotes?: string[];
+  baseNotes?: string[];
+  overallRating?: number; // e.g., 0-5
+  dayNightRating?: number; // 0 (Night) to 1 (Day), 0.5 (Both)
+  seasonRating?: number; // Numerical value 0 (Winter) to 1 (Summer) for the bar logic
+  priceValueRating?: number; // e.g., 0-5
+  sillageRating?: number; // 0 (Intimate) to 1 (Enormous) - mapped from 0, 1, 2, 3
+  longevityRating?: number; // 0 (Weak) to 1 (Eternal) - mapped from 0, 1, 2, 3
+  similarPerfumes?: BasicPerfumeInfo[]; // Requires BasicPerfumeInfo definition
+}
+
+// Simplified info for similar perfumes list (matching PerfumeModal)
+interface BasicPerfumeInfo {
+  id: string;
+  name: string;
+  brand: string;
+  image: ImageSourcePropType;
 }
 
 
-// Mock data - replace with real data later
+// Mock data - updated with numerical ratings
 const MOCK_PERFUMES: Perfume[] = [
   {
     id: '1',
@@ -31,8 +52,21 @@ const MOCK_PERFUMES: Perfume[] = [
     matchPercentage: 95,
     pricePerML: 1000,
     image: require('../assets/images/decant-general.png'),
-    notes: ['Citrus', 'Wood', 'Amber'],
     description: 'An aromatic-woody fragrance with a captivating trail. A meeting of strength and elegance.',
+    accords: ['Citrus', 'Woody', 'Aromatic', 'Amber', 'Fresh Spicy'],
+    topNotes: ['Grapefruit', 'Lemon', 'Mint', 'Pink Pepper'],
+    middleNotes: ['Ginger', 'Nutmeg', 'Jasmine'],
+    baseNotes: ['Incense', 'Vetiver', 'Cedar', 'Sandalwood', 'Patchouli', 'Labdanum', 'White Musk'],
+    overallRating: 4.5,
+    dayNightRating: 0.5, // 'both' -> 0.5
+    seasonRating: 0.6, // Leans towards Spring/Summer/Autumn
+    priceValueRating: 3.5,
+    sillageRating: 1, // 'moderate' -> 1
+    longevityRating: 2, // 'long' -> 2
+    similarPerfumes: [
+      { id: '3', name: 'Sauvage', brand: 'Dior', image: require('../assets/images/decant-general.png') },
+      { id: '2', name: 'Acqua di Gio', brand: 'Giorgio Armani', image: require('../assets/images/decant-general.png') },
+    ],
   },
   {
     id: '2',
@@ -41,8 +75,21 @@ const MOCK_PERFUMES: Perfume[] = [
     matchPercentage: 92,
     pricePerML: 1200,
     image: require('../assets/images/decant-general.png'),
-    notes: ['Marine', 'Citrus', 'Wood'],
     description: 'A fresh aquatic fragrance inspired by the Mediterranean sea.',
+    accords: ['Aquatic', 'Citrus', 'Aromatic', 'Marine', 'Woody'],
+    topNotes: ['Lime', 'Lemon', 'Bergamot', 'Jasmine', 'Orange'],
+    middleNotes: ['Sea Notes', 'Jasmine', 'Calone', 'Peach', 'Freesia'],
+    baseNotes: ['White Musk', 'Cedar', 'Oakmoss', 'Patchouli', 'Amber'],
+    overallRating: 4.2,
+    dayNightRating: 1, // 'day' -> 1
+    seasonRating: 0.8, // Strong Summer
+    priceValueRating: 4.0,
+    sillageRating: 1, // 'moderate' -> 1
+    longevityRating: 1, // 'moderate' -> 1
+    similarPerfumes: [
+      { id: '4', name: 'Light Blue', brand: 'Dolce & Gabbana', image: require('../assets/images/decant-general.png') },
+      { id: '1', name: 'Bleu de Chanel', brand: 'Chanel', image: require('../assets/images/decant-general.png') },
+    ],
   },
   {
     id: '3',
@@ -51,8 +98,20 @@ const MOCK_PERFUMES: Perfume[] = [
     matchPercentage: 88,
     pricePerML: 2000,
     image: require('../assets/images/decant-general.png'),
-    notes: ['Bergamot', 'Pepper', 'Ambroxan'],
     description: 'A radically fresh composition with powerful woody notes.',
+    accords: ['Fresh Spicy', 'Amber', 'Citrus', 'Aromatic', 'Musky'],
+    topNotes: ['Calabrian bergamot', 'Pepper'],
+    middleNotes: ['Sichuan Pepper', 'Lavender', 'Pink Pepper', 'Vetiver'],
+    baseNotes: ['Ambroxan', 'Cedar', 'Labdanum'],
+    overallRating: 4.0,
+    dayNightRating: 0.5, // 'both' -> 0.5
+    seasonRating: 0.5, // All seasons
+    priceValueRating: 3.0,
+    sillageRating: 2, // 'strong' -> 2
+    longevityRating: 2, // 'long' -> 2
+    similarPerfumes: [
+      { id: '1', name: 'Bleu de Chanel', brand: 'Chanel', image: require('../assets/images/decant-general.png') },
+    ],
   },
   {
     id: '4',
@@ -61,8 +120,20 @@ const MOCK_PERFUMES: Perfume[] = [
     matchPercentage: 85,
     pricePerML: 980,
     image: require('../assets/images/decant-general.png'),
-    notes: ['Citrus', 'Apple', 'Cedar'],
     description: 'A refreshing summer fragrance that evokes the spirit of Sicily.',
+    accords: ['Citrus', 'Woody', 'Fresh', 'Fruity', 'Aromatic'],
+    topNotes: ['Sicilian Lemon', 'Apple', 'Cedar', 'Bellflower'],
+    middleNotes: ['Bamboo', 'Jasmine', 'White Rose'],
+    baseNotes: ['Cedar', 'Musk', 'Amber'],
+    overallRating: 4.1,
+    dayNightRating: 1, // 'day' -> 1
+    seasonRating: 0.9, // Strong Summer
+    priceValueRating: 4.5,
+    sillageRating: 1, // 'moderate' -> 1
+    longevityRating: 1, // 'moderate' -> 1
+    similarPerfumes: [
+      { id: '2', name: 'Acqua di Gio', brand: 'Giorgio Armani', image: require('../assets/images/decant-general.png') },
+    ],
   },
   {
     id: '5',
@@ -71,8 +142,21 @@ const MOCK_PERFUMES: Perfume[] = [
     matchPercentage: 82,
     pricePerML: 876,
     image: require('../assets/images/decant-general.png'),
-    notes: ['Iris', 'Jasmine', 'Patchouli'],
     description: 'A feminine fragrance with an iris gourmand accord.',
+    accords: ['Sweet', 'Vanilla', 'Fruity', 'Powdery', 'Patchouli'],
+    topNotes: ['Black Currant', 'Pear'],
+    middleNotes: ['Iris', 'Jasmine', 'Orange Blossom'],
+    baseNotes: ['Praline', 'Vanilla', 'Patchouli', 'Tonka Bean'],
+    overallRating: 4.6,
+    dayNightRating: 0.5, // 'both' -> 0.5
+    seasonRating: 0.2, // Leans Winter/Autumn
+    priceValueRating: 4.0,
+    sillageRating: 2, // 'strong' -> 2
+    longevityRating: 2, // 'long' -> 2
+    similarPerfumes: [
+      { id: '6', name: 'Black Opium', brand: 'Yves Saint Laurent', image: require('../assets/images/decant-general.png') },
+      { id: '8', name: 'Good Girl', brand: 'Carolina Herrera', image: require('../assets/images/decant-general.png') },
+    ],
   },
   {
     id: '6',
@@ -81,8 +165,21 @@ const MOCK_PERFUMES: Perfume[] = [
     matchPercentage: 80,
     pricePerML: 930,
     image: require('../assets/images/decant-general.png'),
-    notes: ['Coffee', 'Vanilla', 'White Flowers'],
     description: 'An addictive gourmand fragrance with notes of black coffee and vanilla.',
+    accords: ['Vanilla', 'Coffee', 'Sweet', 'Warm Spicy', 'White Floral'],
+    topNotes: ['Pear', 'Pink Pepper', 'Orange Blossom'],
+    middleNotes: ['Coffee', 'Jasmine', 'Bitter Almond', 'Licorice'],
+    baseNotes: ['Vanilla', 'Patchouli', 'Cedar', 'Cashmere Wood'],
+    overallRating: 4.3,
+    dayNightRating: 0, // 'night' -> 0
+    seasonRating: 0.1, // Strong Winter/Autumn
+    priceValueRating: 3.8,
+    sillageRating: 2, // 'strong' -> 2
+    longevityRating: 2, // 'long' -> 2
+    similarPerfumes: [
+      { id: '5', name: 'La Vie Est Belle', brand: 'Lancôme', image: require('../assets/images/decant-general.png') },
+      { id: '8', name: 'Good Girl', brand: 'Carolina Herrera', image: require('../assets/images/decant-general.png') },
+    ],
   },
   {
     id: '7',
@@ -91,8 +188,18 @@ const MOCK_PERFUMES: Perfume[] = [
     matchPercentage: 78,
     pricePerML: 1700,
     image: require('../assets/images/decant-general.png'),
-    notes: ['Ylang-Ylang', 'Damascus Rose', 'Jasmine'],
     description: 'A floral bouquet that celebrates femininity.',
+    accords: ['White Floral', 'Floral', 'Fruity', 'Sweet', 'Aquatic'],
+    topNotes: ['Pear', 'Melon', 'Magnolia', 'Peach', 'Mandarin Orange'],
+    middleNotes: ['Jasmine', 'Lily-of-the-Valley', 'Tuberose', 'Freesia'],
+    baseNotes: ['Musk', 'Vanilla', 'Blackberry', 'Cedar'],
+    overallRating: 4.4,
+    dayNightRating: 1, // 'day' -> 1
+    seasonRating: 0.7, // Spring/Summer
+    priceValueRating: 3.2,
+    sillageRating: 1, // 'moderate' -> 1
+    longevityRating: 2, // 'long' -> 2
+    similarPerfumes: [], // No similar ones in this mock list
   },
   {
     id: '8',
@@ -101,8 +208,21 @@ const MOCK_PERFUMES: Perfume[] = [
     matchPercentage: 75,
     pricePerML: 1300,
     image: require('../assets/images/decant-general.png'),
-    notes: ['Almond', 'Coffee', 'Tuberose'],
     description: 'A sensual fragrance with a duality of good girl and bad girl notes.',
+    accords: ['White Floral', 'Sweet', 'Warm Spicy', 'Vanilla', 'Cacao'],
+    topNotes: ['Almond', 'Coffee', 'Bergamot', 'Lemon'],
+    middleNotes: ['Tuberose', 'Jasmine Sambac', 'Orange Blossom', 'Orris'],
+    baseNotes: ['Tonka Bean', 'Cacao', 'Vanilla', 'Praline', 'Sandalwood'],
+    overallRating: 4.2,
+    dayNightRating: 0, // 'night' -> 0
+    seasonRating: 0.2, // Winter/Autumn
+    priceValueRating: 3.9,
+    sillageRating: 2, // 'strong' -> 2
+    longevityRating: 2, // 'long' -> 2
+    similarPerfumes: [
+      { id: '5', name: 'La Vie Est Belle', brand: 'Lancôme', image: require('../assets/images/decant-general.png') },
+      { id: '6', name: 'Black Opium', brand: 'Yves Saint Laurent', image: require('../assets/images/decant-general.png') },
+    ],
   },
 ];
 
@@ -156,6 +276,13 @@ export default function AIBoxSelectionScreen() {
   const selectedPerfume = selectedPerfumeId
     ? MOCK_PERFUMES.find(p => p.id === selectedPerfumeId)
     : null;
+
+  // Effect to show the modal when a perfume is selected
+  useEffect(() => {
+    if (selectedPerfume && modalRef.current) {
+      modalRef.current.show(selectedPerfume);
+    }
+  }, [selectedPerfume]); // Dependency array ensures this runs when selectedPerfume changes
 
   return (
     <View style={[styles.container, {backgroundColor: '#e9e3db'}]}>

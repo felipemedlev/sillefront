@@ -1,10 +1,9 @@
-import React, { useState, useCallback, useRef, useEffect } from 'react';
-import PerfumeModal from '../components/product/PerfumeModal.tsx';
-import { View, Text, StyleSheet, useWindowDimensions, ScrollView, Pressable, Image, ImageSourcePropType, Dimensions, Platform, Animated, StatusBar } from 'react-native';
+import React, { useState, useCallback, useRef } from 'react';
+import PerfumeModal, { PerfumeModalRef } from '../components/product/PerfumeModal';
+import { View, Text, StyleSheet, useWindowDimensions, ScrollView, Pressable, Image, ImageSourcePropType, Dimensions } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { router, useLocalSearchParams } from 'expo-router';
+import { router } from 'expo-router';
 import Slider from '@react-native-community/slider';
-import { Picker } from '@react-native-picker/picker';
 
 const DESKTOP_BREAKPOINT = 768;
 
@@ -108,22 +107,15 @@ const MOCK_PERFUMES: Perfume[] = [
 ];
 
 export default function AIBoxSelectionScreen() {
-  const { width, height } = useWindowDimensions();
-  const isDesktop = width >= DESKTOP_BREAKPOINT;
-  const cardHeight = height * 0.2;
+  const { width } = useWindowDimensions();
 
   const [decantCount, setDecantCount] = useState<DecantCount>(4);
   const [decantSize, setDecantSize] = useState<DecantSize>(5);
   const [minPricePerML, setMinPricePerML] = useState(0);
   const [maxPricePerML, setMaxPricePerML] = useState(20000);
   const [selectedPerfumeId, setSelectedPerfumeId] = useState<string | null>(null);
-  const slideAnim = useRef(new Animated.Value(height)).current;
-
-  const handleMinPriceChange = useCallback((value: number) => {
-    if (value <= maxPricePerML) {
-      setMinPricePerML(Math.floor(value));
-    }
-  }, [maxPricePerML]);
+  // Create a ref for the modal
+  const modalRef = useRef<PerfumeModalRef>(null);
 
   const handleMaxPriceChange = useCallback((value: number) => {
     if (value >= minPricePerML) {
@@ -133,24 +125,16 @@ export default function AIBoxSelectionScreen() {
 
   const handlePerfumePress = (perfumeId: string) => {
     setSelectedPerfumeId(perfumeId);
-    Animated.spring(slideAnim, {
-      toValue: 0,
-      tension: 50,
-      friction: 9,
-      useNativeDriver: true,
-    }).start();
   };
 
-  const handleCloseModal = () => {
-    // Animate the modal sliding down
-    Animated.timing(slideAnim, {
-      toValue: height,
-      duration: 300,
-      useNativeDriver: true,
-    }).start(() => {
-      setSelectedPerfumeId(null);
-    });
-  };
+  // Callback when the modal is dismissed (by background tap, swipe, etc.)
+  const handleModalDismiss = useCallback(() => {
+    // Add a small delay before clearing the selected perfume ID
+    // This ensures the modal is fully closed before state changes
+    setTimeout(() => {
+      setSelectedPerfumeId(null); // Clear the selected perfume ID
+    }, 100);
+  }, []);
 
   const handleAddToCart = () => {
     // Add to cart functionality to be implemented
@@ -284,13 +268,13 @@ export default function AIBoxSelectionScreen() {
                 style={styles.perfumeImage}
               />
               <View style={styles.perfumeInfo}>
+                <View style={styles.matchBadge}>
+                  <Text style={styles.matchText}>{perfume.matchPercentage}% AI Match</Text>
+                </View>
                 <Text style={styles.perfumeName}>{perfume.name}</Text>
                 <Text style={styles.perfumeBrand}>{perfume.brand}</Text>
                 <Text style={styles.perfumePrice}>${perfume.pricePerML.toLocaleString()}/mL</Text>
                 <Text style={styles.perfumeTotalPrice}>Total: ${(perfume.pricePerML * decantSize).toLocaleString()}</Text>
-              </View>
-              <View style={styles.matchBadge}>
-                <Text style={styles.matchText}>{perfume.matchPercentage}% Match</Text>
               </View>
             </Pressable>
           ))}
@@ -311,12 +295,12 @@ export default function AIBoxSelectionScreen() {
         </Pressable>
       </View>
 
-      {/* Render PerfumeModal Component */}
-      {selectedPerfumeId && selectedPerfume && (
+      {/* Render PerfumeModal Component conditionally based on selectedPerfume */}
+      {selectedPerfume && (
         <PerfumeModal
+          ref={modalRef}
           perfume={selectedPerfume}
-          slideAnim={slideAnim}
-          onClose={handleCloseModal}
+          onClose={handleModalDismiss}
         />
       )}
     </View>
@@ -324,7 +308,7 @@ export default function AIBoxSelectionScreen() {
 }
 
 const { height, width } = Dimensions.get('window');
-const cardHeight = height * 0.2;
+const cardHeight = height * 0.25;
 
 const styles = StyleSheet.create({
   container: {
@@ -462,44 +446,47 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     marginBottom: 16,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    elevation: 2,
     height: cardHeight,
     alignItems: 'center',
-    position: 'relative',
+    borderWidth: 1,
+    borderColor: '#F0F0F0',
+    overflow: 'hidden',
   },
   matchBadge: {
-    backgroundColor: '#809CAC',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 20,
-    position: 'absolute',
-    right: 12,
-    top: 12,
+    backgroundColor: 'rgba(128, 156, 172, 0.1)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    marginBottom: 4,
+    alignSelf: 'flex-start',
   },
   matchText: {
-    color: '#FFFFFF',
-    fontSize: 12,
+    color: '#809CAC',
+    fontSize: 11,
     fontWeight: '600',
+    letterSpacing: 0.5,
   },
   perfumeImage: {
-    width: cardHeight * 0.7,
-    height: cardHeight * 0.7,
-    borderRadius: 10,
-    marginRight: 16,
+    width: cardHeight * 0.65,
+    height: cardHeight * 0.65,
+    borderRadius: 8,
+    marginRight: 12,
     resizeMode: 'contain',
   },
   perfumeInfo: {
     flex: 1,
-    justifyContent: 'center',
+    paddingRight: 8,
   },
   perfumeName: {
-    fontSize: 18,
+    fontSize: 15,
     fontWeight: '600',
-    color: '#333',
-    marginBottom: 6,
+    color: '#222',
+    marginBottom: 2,
+    letterSpacing: 0.1,
   },
   perfumeBrand: {
     fontSize: 14,

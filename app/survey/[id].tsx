@@ -11,11 +11,11 @@ type QuestionType = {
   accord?: string;
   description?: string;
   question?: string;
-  options?: Array<{
+  options?: {
     id: string;
     label: string;
     emoji: string;
-  }>;
+  }[];
 };
 
 const surveyQuestions: QuestionType[] = [
@@ -74,10 +74,6 @@ export default function SurveyQuestion() {
   const [fadeAnim] = useState(new Animated.Value(0));
   const [slideAnim] = useState(new Animated.Value(50));
 
-  if (!question && questionId !== 'complete') {
-    return <Redirect href="/survey/1" />;
-  }
-
   useEffect(() => {
     Animated.parallel([
       Animated.spring(fadeAnim, {
@@ -93,7 +89,11 @@ export default function SurveyQuestion() {
         friction: 7,
       }),
     ]).start();
-  }, []);
+  }, [fadeAnim, slideAnim]);
+
+  if (!question && questionId !== 'complete') {
+    return <Redirect href="/survey/1" />;
+  }
 
   if (!question) return null;
 

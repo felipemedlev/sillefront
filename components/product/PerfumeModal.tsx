@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, StyleSheet, Dimensions, Platform, Animated, StatusBar, Pressable, Image } from 'react-native';
+import React, { forwardRef, useImperativeHandle } from 'react';
+import { View, Text, StyleSheet, Dimensions, Pressable, Image, Modal, ScrollView } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { ImageSourcePropType } from 'react-native';
 
@@ -14,44 +14,55 @@ interface Perfume {
   description?: string;
 }
 
-// PerfumeModal Component
-const PerfumeModal = ({
-  perfume,
-  slideAnim,
-  onClose
-}: {
-  perfume: Perfume,
-  slideAnim: Animated.Value,
-  onClose: () => void
-}) => {
+interface PerfumeModalProps {
+  perfume: Perfume | null;
+  onClose?: () => void;
+}
+
+export interface PerfumeModalRef {
+  show: () => void;
+  hide: () => void;
+}
+
+const PerfumeModal = forwardRef<PerfumeModalRef, PerfumeModalProps>((props, ref) => {
+  const { perfume, onClose } = props;
   const { width } = Dimensions.get('window');
 
+  useImperativeHandle(ref, () => ({
+    show: () => {},
+    hide: () => onClose?.()
+  }));
+
+  const handleClose = () => {
+    onClose?.();
+  };
+
+  if (!perfume) {
+    return null;
+  }
+
   return (
-    <View style={styles.modalOverlay}>
-      <StatusBar barStyle="dark-content" />
-      <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
+    <Modal
+      visible={!!perfume}
+      transparent={true}
+      animationType="slide"
+      onRequestClose={handleClose}
+    >
+      <View style={styles.modalContainer}>
+        <View style={styles.modalContent}>
+          <Pressable style={styles.closeButton} onPress={handleClose}>
+            <Feather name="x" size={24} color="#333" />
+          </Pressable>
 
-      <Animated.View
-        style={[
-          styles.modalContainer,
-          { transform: [{ translateY: slideAnim }] }
-        ]}
-      >
-        <View style={styles.handle} />
-
-        <Pressable style={styles.closeButton} onPress={onClose}>
-          <Feather name="x" size={24} color="#333" />
-        </Pressable>
-
-        <View style={styles.modalContentContainer}>
-          <View style={styles.modalImageContainer}>
-            <Image source={perfume.image} style={styles.modalImage} />
-            <View style={styles.modalMatchBadge}>
-              <Text style={styles.modalMatchText}>{perfume.matchPercentage}% Match</Text>
+          <ScrollView style={styles.scrollContainer}>
+            <View style={styles.modalImageContainer}>
+              <Image source={perfume.image} style={[styles.modalImage, { width: width * 0.5, height: width * 0.5 }]} />
+              <View style={styles.modalMatchBadge}>
+                <Text style={styles.modalMatchText}>{perfume.matchPercentage}% Match</Text>
+              </View>
             </View>
-          </View>
 
-          <View style={styles.modalDetailsContainer}>
+            <View style={styles.modalDetailsContainer}>
             <Text style={styles.modalName}>{perfume.name}</Text>
             <Text style={styles.modalBrand}>{perfume.brand}</Text>
             <Text style={styles.modalPrice}>${perfume.pricePerML.toLocaleString()}/mL</Text>
@@ -65,7 +76,7 @@ const PerfumeModal = ({
 
             <Text style={styles.sectionTitle}>Notas</Text>
             <View style={styles.modalNotesContainer}>
-              {perfume.notes ? (
+              {perfume.notes && perfume.notes.length > 0 ? (
                 perfume.notes.map((note, index) => (
                   <View key={index} style={styles.noteTag}>
                     <Text style={styles.noteText}>{note}</Text>
@@ -77,79 +88,41 @@ const PerfumeModal = ({
             </View>
 
             <View style={styles.modalActionButtonContainer}>
-              <Pressable style={styles.modalAddToCartButton} onPress={onClose}>
+              <Pressable style={styles.modalAddToCartButton} onPress={handleClose}>
                 <Text style={styles.modalAddToCartButtonText}>Agregar al Box</Text>
               </Pressable>
             </View>
-          </View>
+            </View>
+          </ScrollView>
         </View>
-      </Animated.View>
-    </View>
+      </View>
+    </Modal>
   );
-};
+});
 
-const { width } = Dimensions.get('window');
+PerfumeModal.displayName = 'PerfumeModal';
 
 const styles = StyleSheet.create({
-  // Modal styles
-  modalOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    justifyContent: 'flex-end',
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    zIndex: 1000,
-  },
   modalContainer: {
-    backgroundColor: '#FFFFFF',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    height: '85%',
-    alignItems: 'center',
-    paddingTop: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    elevation: 10,
-    zIndex: 1001,
-  },
-  handle: {
-    width: 40,
-    height: 5,
-    backgroundColor: '#E0E0E0',
-    borderRadius: 3,
-    marginBottom: 10,
-  },
-  closeButton: {
-    position: 'absolute',
-    top: 16,
-    right: 16,
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#F5F5F5',
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    zIndex: 1002,
+    backgroundColor: 'rgba(0,0,0,0.5)',
   },
-  modalContentContainer: {
-    flex: 1,
-    width: '100%',
-    paddingHorizontal: 20,
-    paddingBottom: Platform.OS === 'ios' ? 40 : 20,
+  modalContent: {
+    width: '90%',
+    maxHeight: '80%',
+    backgroundColor: 'white',
+    borderRadius: 10,
+    padding: 20,
   },
   modalImageContainer: {
     alignItems: 'center',
     position: 'relative',
-    marginTop: 20,
+    marginTop: 10,
     marginBottom: 20,
   },
   modalImage: {
-    width: width * 0.5,
-    height: width * 0.5,
     resizeMode: 'contain',
   },
   modalMatchBadge: {
@@ -193,9 +166,10 @@ const styles = StyleSheet.create({
     marginVertical: 16,
   },
   sectionTitle: {
-    fontSize: 15,
-    color: '#666',
-    lineHeight: 22,
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#444',
+    marginBottom: 8,
   },
   modalDescription: {
     fontSize: 15,
@@ -220,8 +194,9 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   modalActionButtonContainer: {
-    marginTop: 'auto',
-    paddingTop: 20,
+    marginTop: 20,
+    paddingTop: 10,
+    paddingBottom: 10,
   },
   modalAddToCartButton: {
     backgroundColor: '#809CAC',
@@ -239,6 +214,19 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
+  scrollContainer: {
+    width: '100%',
+    height: '100%',
+  },
+  closeButton: {
+    position: 'absolute',
+    right: 20,
+    top: 20,
+    zIndex: 1,
+    padding: 8,
+    backgroundColor: 'rgba(255,255,255,0.7)',
+    borderRadius: 20,
+  }
 });
 
 export default PerfumeModal;

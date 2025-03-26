@@ -126,8 +126,8 @@ export default function LandingScreen() {
             </View>
             {page.image && (
               <page.image
-                width={width * 0.85}
-                height={height * 0.4}
+                width={width * 0.9}
+                height={height * 0.37}
                 style={styles.mainImage}
                 preserveAspectRatio="xMidYMid meet"
               />
@@ -198,7 +198,7 @@ const styles = StyleSheet.create({
   },
   slogan: {
     fontFamily: 'InstrumentSerifItalic',
-    fontSize: 28,
+    fontSize: 22,
     marginTop: 2,
     textAlign: 'center',
   },
@@ -206,16 +206,16 @@ const styles = StyleSheet.create({
     marginTop: 0,
   },
   contentContainer: {
-    width: width * 0.85,
+    width: width * 0.9,
     alignItems: 'center',
-    marginTop: 10,
+    marginTop: 0,
     flexGrow: 1, // Ensure it can expand
     flexShrink: 1, // Prevent excessive shrinking
   },
   title: {
     fontFamily: 'InstrumentSans',
     fontWeight: 'bold',
-    fontSize: 24,
+    fontSize: 22,
     color: '#222222',
     lineHeight: 22*1.2,
     textAlign: 'center',
@@ -223,13 +223,13 @@ const styles = StyleSheet.create({
   },
   descriptionWrapper: {
     width: '100%', // Allow full width
-    minHeight: 40, // Ensures text area has enough space
+    minHeight: 10, // Ensures text area has enough space
     justifyContent: 'center', // Ensures text is aligned properly
   },
   description: {
     fontFamily: 'InstrumentSans',
     fontWeight: 'regular',
-    fontSize: 18,
+    fontSize: 16,
     lineHeight: 16 * 1.4, // Increase for better readability
     textAlign: 'center',
     color: '#717171',

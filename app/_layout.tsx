@@ -1,5 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import { SurveyProvider } from '../context/SurveyContext';
+import React, { useEffect, useState } from 'react';
 import { Stack, useRouter, useSegments, usePathname } from 'expo-router';
 import * as Font from 'expo-font';
 import { StatusBar } from 'expo-status-bar';
@@ -9,7 +8,6 @@ export default function RootLayout() {
   const [fontsLoaded, setFontsLoaded] = useState(false);
   const router = useRouter();
   const segments = useSegments();
-  const pathname = usePathname();
 
   useEffect(() => {
     console.log("app/_layout.tsx: useEffect - Font loading started");
@@ -41,7 +39,7 @@ export default function RootLayout() {
     if (fontsLoaded && currentPath === 'home') {
       router.replace('/(tabs)');
     }
-  }, [segments, fontsLoaded]);
+  }, [segments, fontsLoaded, router]);
 
   // Remove the loading screen and just proceed with system fonts if custom fonts aren't loaded
   return (

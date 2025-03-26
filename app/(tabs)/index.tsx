@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { View, StyleSheet, Animated, useWindowDimensions, Platform, ScrollView } from 'react-native';
-import { useRouter } from 'expo-router';
 import AIBoxScreen from './aibox';
 import GiftBoxScreen from './giftbox';
 import TabNavigation from '../components/TabNavigation';
@@ -10,7 +9,6 @@ const DESKTOP_BREAKPOINT = 768;
 type TabType = 'aibox' | 'giftbox';
 
 export default function HomeScreen() {
-  const router = useRouter();
   const { width } = useWindowDimensions();
   const isDesktop = width >= DESKTOP_BREAKPOINT;
   const [fadeAnim] = useState(new Animated.Value(0));
@@ -32,7 +30,7 @@ export default function HomeScreen() {
         friction: 7,
       }),
     ]).start();
-  }, []);
+  });
 
   return (
     <View style={styles.container}>

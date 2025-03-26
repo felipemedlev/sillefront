@@ -1,12 +1,11 @@
 // app/survey/[id].tsx
-import React, { useEffect, useMemo } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import React, { useEffect } from 'react';
+import { View, StyleSheet } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSurveyContext } from '../../context/SurveyContext';
-import { Ionicons } from '@expo/vector-icons';
 
 // Survey questions data
-const surveyQuestions = useMemo(() => [
+const surveyQuestions = [
   { id: '1', accord: 'Citrus', description: 'Fresh, zesty scents like lemon, orange, and grapefruit' },
   { id: '2', accord: 'Floral', description: 'Scents of various flowers like rose, jasmine, and lily' },
   { id: '3', accord: 'Fruity', description: 'Sweet, juicy scents like apple, peach, and berry' },
@@ -18,7 +17,7 @@ const surveyQuestions = useMemo(() => [
   { id: '9', accord: 'Gourmand', description: 'Sweet, edible scents like chocolate, caramel, and coffee' },
   { id: '10', accord: 'Leather', description: 'Rich, warm scents reminiscent of leather goods' },
   { id: '11', accord: 'Powdery', description: 'Soft, comforting scents like talcum powder and iris' },
-], []);
+];
 
 export default function SurveyQuestion() {
   const { id } = useLocalSearchParams();

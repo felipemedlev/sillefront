@@ -3,7 +3,6 @@ import React from 'react';
 import { View, StyleSheet, Platform, Dimensions } from 'react-native';
 import { Tabs } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
-import FondoFinal from '../../assets/images/FondoFinal.svg';
 
 const DESKTOP_BREAKPOINT = 768;
 

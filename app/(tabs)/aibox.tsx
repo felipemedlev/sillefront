@@ -2,8 +2,6 @@ import React from 'react';
 import { View, Text, StyleSheet, useWindowDimensions, ScrollView, Pressable } from 'react-native';
 import { router } from 'expo-router';
 
-const DESKTOP_BREAKPOINT = 768;
-
 const OCCASIONS = [
   { id: 1, title: 'Romántica', color: '#F5E6E6' },
   { id: 2, title: 'Casual', color: '#E6F0F5' },
@@ -18,9 +16,6 @@ const OCCASIONS = [
 ];
 
 export default function AIBoxScreen() {
-  const { width } = useWindowDimensions();
-  const isDesktop = width >= DESKTOP_BREAKPOINT;
-
   const handleOpenPress = () => {
     router.push('/aibox-selection');
   };

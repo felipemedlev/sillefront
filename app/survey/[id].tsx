@@ -103,7 +103,10 @@ export default function SurveyQuestion() {
       setAnswer('gender', rating as string);
       const nextQuestionId = parseInt(questionId) + 1;
       if (nextQuestionId <= surveyQuestions.length) {
-        router.push(`/survey/${nextQuestionId}`);
+        router.push({
+          pathname: '/survey/[id]',
+          params: { id: String(nextQuestionId) },
+        });
       } else {
         saveAllAnswers();
         router.push('/survey/complete');
@@ -115,7 +118,10 @@ export default function SurveyQuestion() {
       }
       const nextQuestionId = parseInt(questionId) + 1;
       if (nextQuestionId <= surveyQuestions.length) {
-        router.push(`/survey/${nextQuestionId}`);
+        router.push({
+          pathname: '/survey/[id]',
+          params: { id: String(nextQuestionId) },
+        });
       } else {
         saveAllAnswers();
         router.push('/survey/complete');
@@ -129,7 +135,10 @@ export default function SurveyQuestion() {
     }
     const nextQuestionId = parseInt(questionId) + 1;
     if (nextQuestionId <= surveyQuestions.length) {
-      router.push(`/survey/${nextQuestionId}`);
+      router.push({
+        pathname: '/survey/[id]',
+        params: { id: String(nextQuestionId) },
+      });
     } else {
       saveAllAnswers();
       router.push('/survey/complete');

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { Dimensions, StyleSheet, Animated, View } from 'react-native';
+import { Dimensions, StyleSheet, Animated } from 'react-native';
 import { useRouter } from 'expo-router';
 import Logo from '../../assets/images/Logo.svg';
 

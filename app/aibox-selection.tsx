@@ -1,11 +1,9 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import PerfumeModal, { PerfumeModalRef } from '../components/product/PerfumeModal';
-import { View, Text, StyleSheet, useWindowDimensions, ScrollView, Pressable, Image, ImageSourcePropType, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, Image, ImageSourcePropType, Dimensions } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import Slider from '@react-native-community/slider';
-
-const DESKTOP_BREAKPOINT = 768;
 
 type DecantCount = 4 | 8;
 type DecantSize = 3 | 5 | 10;
@@ -227,21 +225,16 @@ const MOCK_PERFUMES: Perfume[] = [
 ];
 
 export default function AIBoxSelectionScreen() {
-  const { width } = useWindowDimensions();
-
   const [decantCount, setDecantCount] = useState<DecantCount>(4);
   const [decantSize, setDecantSize] = useState<DecantSize>(5);
-  const [minPricePerML, setMinPricePerML] = useState(0);
   const [maxPricePerML, setMaxPricePerML] = useState(20000);
   const [selectedPerfumeId, setSelectedPerfumeId] = useState<string | null>(null);
   // Create a ref for the modal
   const modalRef = useRef<PerfumeModalRef>(null);
 
   const handleMaxPriceChange = useCallback((value: number) => {
-    if (value >= minPricePerML) {
       setMaxPricePerML(Math.floor(value));
-    }
-  }, [minPricePerML]);
+  }, []);
 
   const handlePerfumePress = (perfumeId: string) => {
     setSelectedPerfumeId(perfumeId);
@@ -353,7 +346,7 @@ export default function AIBoxSelectionScreen() {
           <Text style={[styles.sectionTitle, styles.filterTitle]}>Rango de Precio por mL</Text>
           <View style={styles.priceContainer}>
             <View style={styles.priceLabelsCompact}>
-              <Text style={styles.priceText}>${minPricePerML.toLocaleString()}</Text>
+              <Text style={styles.priceText}>0</Text>
               <Text style={styles.priceText}>${maxPricePerML.toLocaleString()}</Text>
             </View>
             <View style={styles.sliderContainer}>
@@ -372,7 +365,7 @@ export default function AIBoxSelectionScreen() {
                 style={[
                   styles.rangeHighlight,
                   {
-                    left: `${(minPricePerML / 20000) * 100}%`,
+                    left: `${(0 / 20000) * 100}%`,
                     right: `${100 - (maxPricePerML / 20000) * 100}%`,
                   }
                 ]}
@@ -434,7 +427,7 @@ export default function AIBoxSelectionScreen() {
   );
 }
 
-const { height, width } = Dimensions.get('window');
+const { height } = Dimensions.get('window');
 const cardHeight = height * 0.25;
 
 const styles = StyleSheet.create({

@@ -1,6 +1,6 @@
 import React, { forwardRef, useImperativeHandle, useState } from 'react';
 import { View, Text, StyleSheet, Dimensions, Pressable, Image, Modal, ScrollView, FlatList, ViewStyle } from 'react-native'; // Import ViewStyle
-import { Feather, Ionicons } from '@expo/vector-icons'; // Import Ionicons
+import { Feather } from '@expo/vector-icons';
 import { ImageSourcePropType } from 'react-native';
 
 // --- Placeholder Components (Ideally, these would be separate files) ---
@@ -118,22 +118,6 @@ const PerfumeModal = forwardRef<PerfumeModalRef, PerfumeModalProps>((props, ref)
     props.onClose?.();
   };
 
-  // Helper to render rating stars
-  const renderStars = (rating: number = 0) => {
-    const stars = [];
-    for (let i = 1; i <= 5; i++) {
-      stars.push(
-        <Ionicons // Use Ionicons
-          key={i}
-          name={i <= rating ? "star" : "star-outline"}
-          size={18}
-          color={i <= rating ? "#FFC107" : "#CCC"} // Gold for filled, grey for outline
-        />
-      );
-    }
-    return <View style={styles.ratingStarsContainer}>{stars}</View>;
-  };
-
   // Helper to render note tags
   const renderNoteTags = (notes?: string[]) => {
     if (!notes || notes.length === 0) {
@@ -211,11 +195,11 @@ const PerfumeModal = forwardRef<PerfumeModalRef, PerfumeModalProps>((props, ref)
               <Text style={styles.sectionTitle}>Ratings</Text>
               <View style={styles.ratingItem}>
                 <Text style={styles.ratingLabel}>Overall:</Text>
-                {renderStars(overallRating)}
+                <Text style={styles.ratingLabel}>{overallRating}/5</Text>
               </View>
               <View style={styles.ratingItem}>
                 <Text style={styles.ratingLabel}>Price/Value:</Text>
-                {renderStars(priceValueRating)}
+                <Text style={styles.ratingLabel}>{priceValueRating}/5</Text>
               </View>
               {/* Longevity Rating Bar */}
               <View style={styles.ratingItem}>
@@ -312,13 +296,6 @@ const PerfumeModal = forwardRef<PerfumeModalRef, PerfumeModalProps>((props, ref)
             <View style={{ height: 80 }} />
 
           </ScrollView>
-
-          {/* Action Button Footer */}
-          <View style={styles.footer}>
-            <Pressable style={styles.addToCartButton} onPress={() => { /* Add to cart logic */ handleClose(); }}>
-              <Text style={styles.addToCartButtonText}>Add to Box</Text>
-            </Pressable>
-          </View>
         </View>
       </View>
     </Modal>

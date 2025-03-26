@@ -7,7 +7,7 @@ import Logo from '../assets/images/Logo.svg';
 export default function SplashScreen() {
   const router = useRouter();
   const fadeAnim = useRef(new Animated.Value(1)).current; // Initial opacity is 1
-  const { width, height } = Dimensions.get('window');
+  const { width } = Dimensions.get('window');
 
   useEffect(() => {
     setTimeout(() => {

@@ -12,16 +12,11 @@ import {
 } from 'react-native';
 import { Stack, router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { useFonts } from 'expo-font';
 import { LinearGradient } from 'expo-linear-gradient';
 
 const { width } = Dimensions.get('window');
 
 export default function LoginScreen() {
-    const [fontsLoaded] = useFonts({
-        InstrumentSans: require('../../assets/fonts/InstrumentSans-Regular.ttf'),
-      });
-
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);

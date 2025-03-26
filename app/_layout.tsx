@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Stack, useRouter, useSegments, usePathname } from 'expo-router';
+import { Stack, useRouter, useSegments } from 'expo-router';
 import * as Font from 'expo-font';
 import { StatusBar } from 'expo-status-bar';
 import { View } from 'react-native';
@@ -32,7 +32,6 @@ export default function RootLayout() {
   }, []);
 
   useEffect(() => {
-    console.log("app/_layout.tsx: useEffect - Navigation check started", { fontsLoaded, segments });
     if (!fontsLoaded) return;
 
     const currentPath = segments[0] as string;

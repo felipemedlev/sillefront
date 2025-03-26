@@ -8,7 +8,7 @@ export default function RootLayout() {
       <StatusBar style="dark" translucent={true} />
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="index" options={{ headerShown: true, title: "Home" }} />
-        <Stack.Screen name="survey/[id]" />
+        <Stack.Screen name="[id]" />
       </Stack>
     </SurveyProvider>
   );

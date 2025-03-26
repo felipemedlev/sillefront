@@ -227,12 +227,12 @@ const styles = StyleSheet.create({
   authToggleActiveText: {
     color: '#333',
     fontWeight: '600',
-    fontSize: 15,
+    fontSize: 16,
     fontFamily: 'InstrumentSans',
   },
   authToggleInactiveText: {
     color: '#666',
-    fontSize: 15,
+    fontSize: 16,
     fontFamily: 'InstrumentSans',
   },
   form: {
@@ -272,6 +272,11 @@ const styles = StyleSheet.create({
     borderRadius: 25,
     marginBottom: 15,
     backgroundColor: '#fff',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    elevation: 3,
   },
   inputContainerFocused: {
     borderColor: '#809CAC',
@@ -295,7 +300,7 @@ const styles = StyleSheet.create({
   signUpButton: {
     backgroundColor: '#809CAC',
     height: 55,
-    borderRadius: 25,
+    borderRadius: 30,
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 10,

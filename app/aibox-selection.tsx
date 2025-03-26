@@ -1,8 +1,10 @@
-import React, { useState, useCallback } from 'react';
-import { View, Text, StyleSheet, useWindowDimensions, ScrollView, Pressable, Image } from 'react-native';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
+import PerfumeModal from '../components/product/PerfumeModal.tsx';
+import { View, Text, StyleSheet, useWindowDimensions, ScrollView, Pressable, Image, ImageSourcePropType, Dimensions, Platform, Animated, StatusBar } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import Slider from '@react-native-community/slider';
+import { Picker } from '@react-native-picker/picker';
 
 const DESKTOP_BREAKPOINT = 768;
 
@@ -15,8 +17,11 @@ interface Perfume {
   brand: string;
   matchPercentage: number;
   pricePerML: number;
-  image: string;
+  image: ImageSourcePropType;
+  notes?: string[];
+  description?: string;
 }
+
 
 // Mock data - replace with real data later
 const MOCK_PERFUMES: Perfume[] = [
@@ -26,7 +31,9 @@ const MOCK_PERFUMES: Perfume[] = [
     brand: 'Chanel',
     matchPercentage: 95,
     pricePerML: 1000,
-    image: 'assets/images/decant-general.png',
+    image: require('../assets/images/decant-general.png'),
+    notes: ['Citrus', 'Wood', 'Amber'],
+    description: 'An aromatic-woody fragrance with a captivating trail. A meeting of strength and elegance.',
   },
   {
     id: '2',
@@ -34,7 +41,9 @@ const MOCK_PERFUMES: Perfume[] = [
     brand: 'Giorgio Armani',
     matchPercentage: 92,
     pricePerML: 1200,
-    image: 'assets/images/decant-general.png',
+    image: require('../assets/images/decant-general.png'),
+    notes: ['Marine', 'Citrus', 'Wood'],
+    description: 'A fresh aquatic fragrance inspired by the Mediterranean sea.',
   },
   {
     id: '3',
@@ -42,7 +51,9 @@ const MOCK_PERFUMES: Perfume[] = [
     brand: 'Dior',
     matchPercentage: 88,
     pricePerML: 2000,
-    image: 'assets/images/decant-general.png',
+    image: require('../assets/images/decant-general.png'),
+    notes: ['Bergamot', 'Pepper', 'Ambroxan'],
+    description: 'A radically fresh composition with powerful woody notes.',
   },
   {
     id: '4',
@@ -50,7 +61,9 @@ const MOCK_PERFUMES: Perfume[] = [
     brand: 'Dolce & Gabbana',
     matchPercentage: 85,
     pricePerML: 980,
-    image: 'assets/images/decant-general.png',
+    image: require('../assets/images/decant-general.png'),
+    notes: ['Citrus', 'Apple', 'Cedar'],
+    description: 'A refreshing summer fragrance that evokes the spirit of Sicily.',
   },
   {
     id: '5',
@@ -58,7 +71,9 @@ const MOCK_PERFUMES: Perfume[] = [
     brand: 'Lancôme',
     matchPercentage: 82,
     pricePerML: 876,
-    image: 'assets/images/decant-general.png',
+    image: require('../assets/images/decant-general.png'),
+    notes: ['Iris', 'Jasmine', 'Patchouli'],
+    description: 'A feminine fragrance with an iris gourmand accord.',
   },
   {
     id: '6',
@@ -66,7 +81,9 @@ const MOCK_PERFUMES: Perfume[] = [
     brand: 'Yves Saint Laurent',
     matchPercentage: 80,
     pricePerML: 930,
-    image: 'assets/images/decant-general.png',
+    image: require('../assets/images/decant-general.png'),
+    notes: ['Coffee', 'Vanilla', 'White Flowers'],
+    description: 'An addictive gourmand fragrance with notes of black coffee and vanilla.',
   },
   {
     id: '7',
@@ -74,7 +91,9 @@ const MOCK_PERFUMES: Perfume[] = [
     brand: 'Dior',
     matchPercentage: 78,
     pricePerML: 1700,
-    image: 'assets/images/decant-general.png',
+    image: require('../assets/images/decant-general.png'),
+    notes: ['Ylang-Ylang', 'Damascus Rose', 'Jasmine'],
+    description: 'A floral bouquet that celebrates femininity.',
   },
   {
     id: '8',
@@ -82,18 +101,23 @@ const MOCK_PERFUMES: Perfume[] = [
     brand: 'Carolina Herrera',
     matchPercentage: 75,
     pricePerML: 1300,
-    image: 'assets/images/decant-general.png',
+    image: require('../assets/images/decant-general.png'),
+    notes: ['Almond', 'Coffee', 'Tuberose'],
+    description: 'A sensual fragrance with a duality of good girl and bad girl notes.',
   },
 ];
 
 export default function AIBoxSelectionScreen() {
-  const { width } = useWindowDimensions();
+  const { width, height } = useWindowDimensions();
   const isDesktop = width >= DESKTOP_BREAKPOINT;
+  const cardHeight = height * 0.2;
 
   const [decantCount, setDecantCount] = useState<DecantCount>(4);
   const [decantSize, setDecantSize] = useState<DecantSize>(5);
   const [minPricePerML, setMinPricePerML] = useState(0);
   const [maxPricePerML, setMaxPricePerML] = useState(20000);
+  const [selectedPerfumeId, setSelectedPerfumeId] = useState<string | null>(null);
+  const slideAnim = useRef(new Animated.Value(height)).current;
 
   const handleMinPriceChange = useCallback((value: number) => {
     if (value <= maxPricePerML) {
@@ -108,8 +132,24 @@ export default function AIBoxSelectionScreen() {
   }, [minPricePerML]);
 
   const handlePerfumePress = (perfumeId: string) => {
-    // Navigate to perfume detail screen (to be implemented)
-    console.log('Navigate to perfume:', perfumeId);
+    setSelectedPerfumeId(perfumeId);
+    Animated.spring(slideAnim, {
+      toValue: 0,
+      tension: 50,
+      friction: 9,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const handleCloseModal = () => {
+    // Animate the modal sliding down
+    Animated.timing(slideAnim, {
+      toValue: height,
+      duration: 300,
+      useNativeDriver: true,
+    }).start(() => {
+      setSelectedPerfumeId(null);
+    });
   };
 
   const handleAddToCart = () => {
@@ -129,8 +169,12 @@ export default function AIBoxSelectionScreen() {
     }, 0);
   }, [decantCount, decantSize]);
 
+  const selectedPerfume = selectedPerfumeId
+    ? MOCK_PERFUMES.find(p => p.id === selectedPerfumeId)
+    : null;
+
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, {backgroundColor: '#e9e3db'}]}>
       {/* Header */}
       <View style={styles.header}>
         <Pressable onPress={() => router.back()} style={styles.backButton}>
@@ -203,7 +247,7 @@ export default function AIBoxSelectionScreen() {
             </View>
             <View style={styles.sliderContainer}>
               <Slider
-                style={[styles.slider]}
+                style={styles.slider}
                 minimumValue={0}
                 maximumValue={20000}
                 step={100}
@@ -229,17 +273,14 @@ export default function AIBoxSelectionScreen() {
         {/* Perfumes List */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Perfumes Seleccionados</Text>
-          {MOCK_PERFUMES.map((perfume) => (
+          {MOCK_PERFUMES.slice(0, decantCount).map((perfume) => (
             <Pressable
               key={perfume.id}
               style={styles.perfumeCard}
               onPress={() => handlePerfumePress(perfume.id)}
             >
-              <View style={styles.matchBadge}>
-                <Text style={styles.matchText}>{perfume.matchPercentage}% Match</Text>
-              </View>
               <Image
-                source={{ uri: perfume.image }}
+                source={perfume.image}
                 style={styles.perfumeImage}
               />
               <View style={styles.perfumeInfo}>
@@ -247,6 +288,9 @@ export default function AIBoxSelectionScreen() {
                 <Text style={styles.perfumeBrand}>{perfume.brand}</Text>
                 <Text style={styles.perfumePrice}>${perfume.pricePerML.toLocaleString()}/mL</Text>
                 <Text style={styles.perfumeTotalPrice}>Total: ${(perfume.pricePerML * decantSize).toLocaleString()}</Text>
+              </View>
+              <View style={styles.matchBadge}>
+                <Text style={styles.matchText}>{perfume.matchPercentage}% Match</Text>
               </View>
             </Pressable>
           ))}
@@ -266,9 +310,21 @@ export default function AIBoxSelectionScreen() {
           <Text style={styles.addToCartButtonText}>Añadir al carro</Text>
         </Pressable>
       </View>
+
+      {/* Render PerfumeModal Component */}
+      {selectedPerfumeId && selectedPerfume && (
+        <PerfumeModal
+          perfume={selectedPerfume}
+          slideAnim={slideAnim}
+          onClose={handleCloseModal}
+        />
+      )}
     </View>
   );
 }
+
+const { height, width } = Dimensions.get('window');
+const cardHeight = height * 0.2;
 
 const styles = StyleSheet.create({
   container: {
@@ -330,7 +386,6 @@ const styles = StyleSheet.create({
   decantCountButtonActive: {
     backgroundColor: '#809CAC',
     borderColor: '#809CAC',
-    boxShadow: '0 2px 4px rgba(128, 156, 172, 0.2)',
     elevation: 3,
   },
   decantCountText: {
@@ -358,7 +413,6 @@ const styles = StyleSheet.create({
   sizeButtonActive: {
     backgroundColor: '#809CAC',
     borderColor: '#809CAC',
-    boxShadow: '0 2px 4px rgba(128, 156, 172, 0.2)',
     elevation: 3,
   },
   sizeText: {
@@ -372,23 +426,10 @@ const styles = StyleSheet.create({
   priceContainer: {
     paddingHorizontal: 4,
   },
-  priceLabels: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 12,
-  },
   priceLabelsCompact: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: 8,
-  },
-  priceLabelContainer: {
-    alignItems: 'center',
-  },
-  priceLabel: {
-    fontSize: 12,
-    color: '#666',
-    marginBottom: 2,
   },
   priceText: {
     fontSize: 14,
@@ -416,21 +457,27 @@ const styles = StyleSheet.create({
   },
   perfumeCard: {
     flexDirection: 'row',
-    padding: 16,
+    padding: 12,
     borderRadius: 12,
     backgroundColor: '#FFFFFF',
-    marginBottom: 12,
-    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
     elevation: 3,
+    height: cardHeight,
+    alignItems: 'center',
+    position: 'relative',
   },
   matchBadge: {
-    position: 'absolute',
-    top: 8,
-    right: 8,
     backgroundColor: '#809CAC',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 20,
+    position: 'absolute',
+    right: 12,
+    top: 12,
   },
   matchText: {
     color: '#FFFFFF',
@@ -438,38 +485,38 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   perfumeImage: {
-    width: 80,
-    height: 80,
-    borderRadius: 8,
+    width: cardHeight * 0.7,
+    height: cardHeight * 0.7,
+    borderRadius: 10,
     marginRight: 16,
+    resizeMode: 'contain',
   },
   perfumeInfo: {
     flex: 1,
     justifyContent: 'center',
   },
   perfumeName: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: '600',
     color: '#333',
-    marginBottom: 4,
+    marginBottom: 6,
   },
   perfumeBrand: {
     fontSize: 14,
     color: '#666',
-    marginBottom: 4,
+    marginBottom: 8,
   },
   perfumePrice: {
     fontSize: 14,
     color: '#666',
     fontWeight: '500',
-    marginBottom: 2,
+    marginBottom: 4,
   },
   perfumeTotalPrice: {
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: 16,
+    fontWeight: '600',
     color: '#809CAC',
   },
-  // Bottom bar styles
   bottomBar: {
     flexDirection: 'row',
     padding: 16,
@@ -499,7 +546,10 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 24,
     borderRadius: 8,
-    boxShadow: '0 2px 4px rgba(128, 156, 172, 0.2)',
+    shadowColor: '#809CAC',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
     elevation: 3,
   },
   addToCartButtonText: {

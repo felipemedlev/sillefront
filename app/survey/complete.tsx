@@ -14,27 +14,27 @@ export default function CompleteScreen() {
     // Entrance animation
     Animated.parallel([
       Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 800,
-        useNativeDriver: true,
-      }),
-      Animated.spring(scaleAnim, {
-        toValue: 1,
-        tension: 50,
-        friction: 7,
-        useNativeDriver: true,
-      }),
+              toValue: 1,
+              duration: 800,
+              useNativeDriver: true,
+            }),
+            Animated.spring(scaleAnim, {
+              toValue: 1,
+              tension: 50,
+              friction: 7,
+              useNativeDriver: true,
+            }),
     ]).start();
 
     // Exit animation after delay
     setTimeout(() => {
       Animated.timing(fadeAnim, {
-        toValue: 0,
-        duration: 1000,
-        useNativeDriver: true,
-      }).start(() => {
-        router.replace('/(tabs)');
-      });
+              toValue: 0,
+              duration: 1000,
+              useNativeDriver: true,
+            }).start(() => {
+              router.replace('/(tabs)');
+            });
     }, 2000);
   }, [fadeAnim, scaleAnim, router]);
 

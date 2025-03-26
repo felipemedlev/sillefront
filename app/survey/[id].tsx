@@ -446,10 +446,7 @@ const styles = StyleSheet.create({
   selectedGender: {
     backgroundColor: '#8E44AD',
     borderColor: '#6C3483',
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 4,
-    boxShadow: '0 2px 4px rgba(108, 52, 131, 0.2)',
+    boxShadow: '0px 2px 4px rgba(108, 52, 131, 0.2)',
   },
   genderEmoji: {
     fontSize: 40,

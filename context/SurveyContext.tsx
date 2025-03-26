@@ -51,6 +51,7 @@ export const SurveyProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   // Load answers from storage when mounting
   useEffect(() => {
+    console.log("context/SurveyContext.tsx: useEffect - Loading survey answers");
     const loadSurveyAnswers = async () => {
       try {
         const storedAnswers = await AsyncStorage.getItem('surveyAnswers');

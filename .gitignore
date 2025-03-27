@@ -39,3 +39,6 @@ app-example
 
 # Local Netlify folder
 .netlify
+
+# ESLint
+.eslintrc.js

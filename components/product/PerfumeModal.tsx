@@ -8,7 +8,7 @@ import { ImageSourcePropType } from 'react-native';
 // Placeholder for a simple Perfume Card used in the "Similar Perfumes" section
 const PerfumeCardPlaceholder = ({ perfume }: { perfume: BasicPerfumeInfo }) => (
   <View style={styles.similarPerfumeCard}>
-    <Image source={perfume.image} style={styles.similarPerfumeImage} />
+    <Image source={{ uri: perfume.thumbnailUrl }} style={styles.similarPerfumeImage} />
     <Text style={styles.similarPerfumeName} numberOfLines={1}>{perfume.name}</Text>
     <Text style={styles.similarPerfumeBrand} numberOfLines={1}>{perfume.brand}</Text>
   </View>
@@ -57,7 +57,8 @@ interface BasicPerfumeInfo {
   id: string;
   name: string;
   brand: string;
-  image: ImageSourcePropType;
+  thumbnailUrl: string;
+  fullSizeUrl: string;
 }
 
 interface Perfume {
@@ -66,7 +67,8 @@ interface Perfume {
   brand: string;
   matchPercentage: number; // Kept for now
   pricePerML: number;
-  image: ImageSourcePropType;
+  thumbnailUrl: string;
+  fullSizeUrl: string;
   description?: string;
 
   // New fields
@@ -138,7 +140,7 @@ const PerfumeModal = forwardRef<PerfumeModalRef, PerfumeModalProps>((props, ref)
   const longevityLabels = ['Weak', 'Moderate', 'Long', 'Eternal'];
   const sillageLabels = ['Intimate', 'Moderate', 'Strong', 'Enormous'];
   const dayNightLabels = ['Night', 'Both', 'Day']; // Use 3 labels for 0, 0.5, 1
-  const seasonLabels = ['Winter', 'Spring', 'Summer', 'Autumn'];
+  const seasonLabels = ['Winter', 'Autumn', 'Spring', 'Summer'];
 
   // Helper to map discrete ratings (0, 1, 2, 3) to a 0-1 scale for the bar
   const mapDiscreteRatingToScale = (rating: number | undefined, maxRating: number): number => {
@@ -152,7 +154,7 @@ const PerfumeModal = forwardRef<PerfumeModalRef, PerfumeModalProps>((props, ref)
   }
 
   const {
-    name, brand, image, matchPercentage, pricePerML, description,
+    name, brand, thumbnailUrl, matchPercentage, pricePerML, description,
     accords, topNotes, middleNotes, baseNotes, overallRating,
     dayNightRating, seasonRating, priceValueRating, sillageRating,
     longevityRating, similarPerfumes
@@ -173,14 +175,17 @@ const PerfumeModal = forwardRef<PerfumeModalRef, PerfumeModalProps>((props, ref)
           </Pressable>
 
           <ScrollView showsVerticalScrollIndicator={false}>
+            {/* Match Percentage at Top */}
+            {matchPercentage !== undefined && (
+              <View style={styles.matchContainer}>
+                <Text style={styles.matchPercentage}>{matchPercentage}%</Text>
+                <Text style={styles.matchLabel}>Match</Text>
+              </View>
+            )}
+
             {/* Image Header */}
             <View style={styles.imageContainer}>
-              <Image source={image} style={[styles.perfumeImage, { width: width * 0.6, height: width * 0.6 }]} />
-              {matchPercentage !== undefined && (
-                 <View style={styles.matchBadge}>
-                   <Text style={styles.matchText}>{matchPercentage}% Match</Text>
-                 </View>
-              )}
+              <Image source={{ uri: currentPerfume.fullSizeUrl }} style={[styles.perfumeImage, { width: width * 0.6, height: width * 0.6 }]} />
             </View>
 
             {/* Basic Info */}
@@ -189,6 +194,29 @@ const PerfumeModal = forwardRef<PerfumeModalRef, PerfumeModalProps>((props, ref)
               <Text style={styles.perfumeBrand}>{brand}</Text>
               <Text style={styles.perfumePrice}>${pricePerML?.toLocaleString()}/mL</Text>
             </View>
+
+            {/* Accords - Redesigned */}
+            {accords && accords.length > 0 && (
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>Main Accords</Text>
+                <View style={styles.accordsContainer}>
+                  {accords.map((accord, index) => (
+                    <View
+                      key={index}
+                      style={[
+                        styles.accordBar,
+                        {
+                          width: `${90 - (index * 7)}%`,
+                          backgroundColor: getAccordColor(accord)
+                        }
+                      ]}
+                    >
+                      <Text style={styles.accordText}>{accord}</Text>
+                    </View>
+                  ))}
+                </View>
+              </View>
+            )}
 
             {/* Ratings Section */}
             <View style={styles.section}>
@@ -252,14 +280,6 @@ const PerfumeModal = forwardRef<PerfumeModalRef, PerfumeModalProps>((props, ref)
               </View>
             )}
 
-            {/* Accords */}
-            {accords && accords.length > 0 && (
-              <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Main Accords</Text>
-                {renderNoteTags(accords)}
-              </View>
-            )}
-
             {/* Notes Breakdown */}
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Perfume Pyramid</Text>
@@ -306,6 +326,49 @@ PerfumeModal.displayName = 'PerfumeModal';
 
 // --- Styles ---
 
+const getAccordColor = (accord: string): string => {
+  // Convert to lowercase for case-insensitive matching
+  const accordLower = accord.toLowerCase();
+
+  // Map common accord types to specific colors
+  if (accordLower.includes('citrus') || accordLower.includes('lemon') || accordLower.includes('orange') || accordLower.includes('bergamot')) {
+    return '#FFD166'; // Bright yellow for citrus
+  } else if (accordLower.includes('floral') || accordLower.includes('flower')) {
+    return '#F7C8A3'; // Soft peach for general florals
+  } else if (accordLower.includes('rose')) {
+    return '#f7d0cb'; // Pink for rose
+  } else if (accordLower.includes('vanilla')) {
+    return '#fdf7e4'; // Cream color for vanilla
+  } else if (accordLower.includes('amber') || accordLower.includes('ambergris')) {
+    return '#D4A373'; // Amber color
+  } else if (accordLower.includes('wood') || accordLower.includes('cedar') || accordLower.includes('sandalwood')) {
+    return '#a97a57'; // Brown for woody notes
+  } else if (accordLower.includes('green') || accordLower.includes('grass') || accordLower.includes('leaf')) {
+    return '#CCD5AE'; // Light green for green notes
+  } else if (accordLower.includes('musk')) {
+    return '#B5838D'; // Mauve for musk
+  } else if (accordLower.includes('spicy') || accordLower.includes('pepper') || accordLower.includes('cinnamon')) {
+    return '#D5BDAF'; // Spicy brown
+  } else if (accordLower.includes('marine') || accordLower.includes('aquatic') || accordLower.includes('water')) {
+    return '#6FAEDC'; // Light blue for marine/aquatic
+  } else if (accordLower.includes('fruity') || accordLower.includes('fruit')) {
+    return '#EE964B'; // Orange for fruity
+  } else if (accordLower.includes('sweet')) {
+    return '#F4ACBD'; // Light pink for sweet
+  } else if (accordLower.includes('leather')) {
+    return '#795C34'; // Dark brown for leather
+  } else if (accordLower.includes('powder') || accordLower.includes('powdery')) {
+    return '#E8E6E1'; // Off-white for powdery
+  } else if (accordLower.includes('smoke') || accordLower.includes('tobacco')) {
+    return '#6B5B4C'; // Dark taupe for smoke/tobacco
+  } else if (accordLower.includes('gourmand') || accordLower.includes('caramel') || accordLower.includes('chocolate')) {
+    return '#C68E61'; // Caramel color for gourmand
+  } else {
+    // Default color for unmatched accords
+    return '#BDBDBD'; // Neutral gray
+  }
+};
+
 const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
@@ -319,6 +382,11 @@ const styles = StyleSheet.create({
     height: '90%', // Adjust height as needed
     paddingTop: 15, // Space for close button handle area
     paddingHorizontal: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -3 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 10,
   },
   closeButton: {
     alignSelf: 'center',
@@ -333,6 +401,21 @@ const styles = StyleSheet.create({
   },
   perfumeImage: {
     resizeMode: 'contain',
+  },
+  matchContainer: {
+    alignItems: 'center',
+    marginTop: 5,
+    marginBottom: 20,
+  },
+  matchPercentage: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: '#809CAC', // Using existing color scheme
+  },
+  matchLabel: {
+    fontSize: 16,
+    color: '#555',
+    marginTop: -5,
   },
   matchBadge: {
     position: 'absolute',
@@ -375,6 +458,22 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '500',
     color: '#809CAC', // Existing color
+  },
+  // New accord styles
+  accordsContainer: {
+    marginTop: 10,
+  },
+  accordBar: {
+    height: 30,
+    marginBottom: 8,
+    borderRadius: 15,
+    justifyContent: 'center',
+    paddingHorizontal: 15,
+  },
+  accordText: {
+    color: '#333',
+    fontWeight: '500',
+    fontSize: 14,
   },
   ratingItem: {
     flexDirection: 'row',

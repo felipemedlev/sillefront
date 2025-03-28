@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Image, SafeAreaView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import RatingModal from '../../../components/RatingModal';
+import { useRatings } from '../../../context/RatingsContext';
 
 // Define perfume type
 interface Perfume {
@@ -13,6 +15,20 @@ interface Perfume {
 export default function RatingsScreen() {
   const [activeTab, setActiveTab] = useState('calificados');
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedPerfume, setSelectedPerfume] = useState<Perfume | null>(null);
+  const [isRatingModalVisible, setIsRatingModalVisible] = useState(false);
+  const { getRating } = useRatings();
+
+  // Filter perfumes based on search query
+  const filterPerfumes = (perfumes: Perfume[]) => {
+    if (!searchQuery.trim()) return perfumes;
+
+    const query = searchQuery.toLowerCase().trim();
+    return perfumes.filter(perfume =>
+      perfume.name.toLowerCase().includes(query) ||
+      perfume.brand.toLowerCase().includes(query)
+    );
+  };
 
   // Mock data for perfume cards
   const calificadosPerfumes: Perfume[] = [
@@ -25,20 +41,45 @@ export default function RatingsScreen() {
     { id: 4, name: 'Tobacco Vanille', brand: 'Tom Ford', image: 'https://fimgs.net/mdimg/perfume/s.1825.jpg' },
   ];
 
+  const handlePerfumePress = (perfume: Perfume) => {
+    setSelectedPerfume(perfume);
+    setIsRatingModalVisible(true);
+  };
+
   // Render perfume card
-  const renderPerfumeCard = (perfume: Perfume) => (
-    <View key={perfume.id} style={styles.cardContainer}>
-      <Image
-        source={{ uri: perfume.image }}
-        style={styles.perfumeImage}
-        resizeMode="cover"
-      />
-      <View style={styles.cardContent}>
-        <Text style={styles.brandText}>{perfume.brand}</Text>
-        <Text style={styles.nameText}>{perfume.name}</Text>
-      </View>
-    </View>
-  );
+  const renderPerfumeCard = (perfume: Perfume) => {
+    const rating = getRating(perfume.id);
+
+    return (
+      <TouchableOpacity
+        key={perfume.id}
+        style={styles.cardContainer}
+        onPress={() => handlePerfumePress(perfume)}
+      >
+        <Image
+          source={{ uri: perfume.image }}
+          style={styles.perfumeImage}
+          resizeMode="contain"
+        />
+        <View style={styles.cardContent}>
+          <Text style={styles.brandText}>{perfume.brand}</Text>
+          <Text style={styles.nameText}>{perfume.name}</Text>
+          {rating && (
+            <View style={styles.ratingContainer}>
+              {[1, 2, 3, 4, 5].map((star) => (
+                <Ionicons
+                  key={star}
+                  name={star <= rating.rating ? "star" : "star-outline"}
+                  size={12}
+                  color="#FFD700"
+                />
+              ))}
+            </View>
+          )}
+        </View>
+      </TouchableOpacity>
+    );
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -51,7 +92,7 @@ export default function RatingsScreen() {
         <Ionicons name="search" size={20} color="#888" style={styles.searchIcon} />
         <TextInput
           style={styles.searchInput}
-          placeholder="Search your collection..."
+          placeholder="Buscar en mis perfumes..."
           placeholderTextColor="#999"
           value={searchQuery}
           onChangeText={setSearchQuery}
@@ -61,28 +102,39 @@ export default function RatingsScreen() {
       {/* Tab Navigation */}
       <View style={styles.tabContainer}>
         <TouchableOpacity
-          style={[styles.tab, activeTab === 'calificados' && styles.activeTab]}
-          onPress={() => setActiveTab('calificados')}
-        >
-          <Text style={[styles.tabText, activeTab === 'calificados' && styles.activeTabText]}>Calificados</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
           style={[styles.tab, activeTab === 'porCalificar' && styles.activeTab]}
           onPress={() => setActiveTab('porCalificar')}
         >
           <Text style={[styles.tabText, activeTab === 'porCalificar' && styles.activeTabText]}>Por Calificar</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.tab, activeTab === 'calificados' && styles.activeTab]}
+          onPress={() => setActiveTab('calificados')}
+        >
+          <Text style={[styles.tabText, activeTab === 'calificados' && styles.activeTabText]}>Calificados</Text>
         </TouchableOpacity>
       </View>
 
       {/* Perfume Cards Grid */}
       <ScrollView style={styles.cardsContainer} showsVerticalScrollIndicator={false}>
         <View style={styles.cardsGrid}>
-          {activeTab === 'calificados'
-            ? calificadosPerfumes.map(perfume => renderPerfumeCard(perfume))
-            : porCalificarPerfumes.map(perfume => renderPerfumeCard(perfume))
+          {filterPerfumes(activeTab === 'calificados' ? calificadosPerfumes : porCalificarPerfumes)
+            .map(perfume => renderPerfumeCard(perfume))
           }
         </View>
       </ScrollView>
+
+      {/* Rating Modal */}
+      {selectedPerfume && (
+        <RatingModal
+          visible={isRatingModalVisible}
+          onClose={() => {
+            setIsRatingModalVisible(false);
+            setSelectedPerfume(null);
+          }}
+          perfume={selectedPerfume}
+        />
+      )}
     </SafeAreaView>
   );
 }
@@ -180,8 +232,8 @@ const styles = StyleSheet.create({
   },
   perfumeImage: {
     width: '100%',
-    height: 160,
-    borderRadius: 12,
+    height: 120,
+    borderRadius: 12
   },
   cardContent: {
     padding: 12,
@@ -196,5 +248,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#222222',
+    marginBottom: 8,
+  },
+  ratingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
   },
 });

@@ -35,10 +35,10 @@ const surveyQuestions: QuestionType[] = [
   { id: '5', accord: 'Florales', description: 'Esencias de flores como rosa o jazmín' },
   { id: '6', accord: 'Avainillados', description: 'Toques dulces y cálidos de vainilla' },
   { id: '7', accord: 'Tabaco', description: 'Aromas intensos y cálidos como el tabaco' },
-  { id: '8', accord: 'Lavanda', description: 'Aroma herbal fresco y relajante' },
-  { id: '9', accord: 'Frutales', description: 'Aromas jugosos como manzana o durazno' },
+  { id: '8', accord: 'Lavanda', description: 'Aroma herbal y relajante' },
+  { id: '9', accord: 'Frutales', description: 'Aromas jugosos como manzana o berries' },
   { id: '10', accord: 'Acanelados', description: 'Notas especiadas dulces como canela' },
-  { id: '11', accord: 'Especiados', description: 'Toques cálidos como clavo o pimienta' },
+  { id: '11', accord: 'Especiados', description: 'Toques cálidos como clavo de olor o pimienta' },
   { id: '12', accord: 'Acuerados', description: 'Aromas intensos tipo cuero' },
 ];
 

@@ -2,16 +2,18 @@ import React, { forwardRef, useImperativeHandle, useState } from 'react';
 import { View, Text, StyleSheet, Dimensions, Pressable, Image, Modal, ScrollView, FlatList, ViewStyle } from 'react-native'; // Import ViewStyle
 import { Feather } from '@expo/vector-icons';
 import { ImageSourcePropType } from 'react-native';
+import { MOCK_PERFUMES } from '../../app/aibox-selection';
+import { Perfume, BasicPerfumeInfo } from '../../types/perfume';
 
 // --- Placeholder Components (Ideally, these would be separate files) ---
 
 // Placeholder for a simple Perfume Card used in the "Similar Perfumes" section
-const PerfumeCardPlaceholder = ({ perfume }: { perfume: BasicPerfumeInfo }) => (
-  <View style={styles.similarPerfumeCard}>
+const PerfumeCardPlaceholder = ({ perfume, onPress }: { perfume: BasicPerfumeInfo; onPress: () => void }) => (
+  <Pressable onPress={onPress} style={styles.similarPerfumeCard}>
     <Image source={{ uri: perfume.thumbnailUrl }} style={styles.similarPerfumeImage} />
     <Text style={styles.similarPerfumeName} numberOfLines={1}>{perfume.name}</Text>
     <Text style={styles.similarPerfumeBrand} numberOfLines={1}>{perfume.brand}</Text>
-  </View>
+  </Pressable>
 );
 
 // Generic Rating Bar
@@ -52,46 +54,15 @@ const RatingBar = ({ rating, labels, style }: RatingBarProps) => {
 
 // --- Interfaces ---
 
-// Simplified info for similar perfumes list
-interface BasicPerfumeInfo {
-  id: string;
-  name: string;
-  brand: string;
-  thumbnailUrl: string;
-  fullSizeUrl: string;
-}
-
-interface Perfume {
-  id: string;
-  name: string;
-  brand: string;
-  matchPercentage: number; // Kept for now
-  pricePerML: number;
-  thumbnailUrl: string;
-  fullSizeUrl: string;
-  description?: string;
-
-  // New fields
-  accords?: string[];
-  topNotes?: string[];
-  middleNotes?: string[];
-  baseNotes?: string[];
-  overallRating?: number; // e.g., 0-5
-  dayNightRating?: number; // 0 (Night) to 1 (Day), 0.5 (Both)
-  seasonRating?: number; // Numerical value 0 (Winter) to 1 (Summer) for the bar logic
-  priceValueRating?: number; // e.g., 0-5
-  sillageRating?: number; // 0 (Intimate) to 1 (Enormous) - mapped from 0, 1, 2, 3
-  longevityRating?: number; // 0 (Weak) to 1 (Eternal) - mapped from 0, 1, 2, 3
-  similarPerfumes?: BasicPerfumeInfo[];
-}
-
 interface PerfumeModalProps {
   perfume: Perfume | null;
   onClose?: () => void;
+  isSwapping?: boolean;
+  onSimilarPerfumeSelect?: (perfumeId: string) => void;
 }
 
 export interface PerfumeModalRef {
-  show: (perfumeData: Perfume) => void; // Allow passing perfume data on show
+  show: (perfumeData: Perfume) => void;
   hide: () => void;
 }
 
@@ -101,6 +72,7 @@ const PerfumeModal = forwardRef<PerfumeModalRef, PerfumeModalProps>((props, ref)
   const [isVisible, setIsVisible] = useState(false);
   const [currentPerfume, setCurrentPerfume] = useState<Perfume | null>(props.perfume);
   const { width } = Dimensions.get('window');
+  const { isSwapping, onSimilarPerfumeSelect } = props;
 
   useImperativeHandle(ref, () => ({
     show: (perfumeData: Perfume) => {
@@ -120,6 +92,126 @@ const PerfumeModal = forwardRef<PerfumeModalRef, PerfumeModalProps>((props, ref)
     props.onClose?.();
   };
 
+  const handleSimilarPerfumePress = (perfumeId: string) => {
+    if (isSwapping && onSimilarPerfumeSelect) {
+      onSimilarPerfumeSelect(perfumeId);
+    } else {
+      // Find the full perfume data from the MOCK_PERFUMES array
+      const similarPerfume = MOCK_PERFUMES.find((p: Perfume) => p.id === perfumeId);
+      if (similarPerfume) {
+        setCurrentPerfume(similarPerfume);
+      }
+    }
+  };
+
+  // Helper function to get similar perfume data
+  const getSimilarPerfumeData = (perfumeId: string): BasicPerfumeInfo | undefined => {
+    const perfume = MOCK_PERFUMES.find((p: Perfume) => p.id === perfumeId);
+    if (!perfume) return undefined;
+
+    return {
+      id: perfume.id,
+      name: perfume.name,
+      brand: perfume.brand,
+      thumbnailUrl: perfume.thumbnailUrl,
+      fullSizeUrl: perfume.fullSizeUrl,
+    };
+  };
+
+  // Translation mapping for perfume notes
+  const translateNote = (note: string): string => {
+    const noteLower = note.toLowerCase();
+
+    // Common perfume notes translations
+    const translations: { [key: string]: string } = {
+      // Top notes
+      'grapefruit': 'Pomelo',
+      'lemon': 'Limón',
+      'lime': 'Lima',
+      'orange': 'Naranja',
+      'bergamot': 'Bergamota',
+      'mandarin': 'Mandarina',
+      'mint': 'Menta',
+      'pink pepper': 'Pimienta Rosa',
+      'pepper': 'Pimienta',
+      'apple': 'Manzana',
+      'pear': 'Pera',
+      'melon': 'Melón',
+      'peach': 'Durazno',
+      'black currant': 'Grosella Negra',
+      'almond': 'Almendra',
+      'coffee': 'Café',
+
+      // Middle notes
+      'ginger': 'Jengibre',
+      'nutmeg': 'Nuez Moscada',
+      'jasmine': 'Jazmín',
+      'sea notes': 'Notas Marinas',
+      'calone': 'Calona',
+      'freesia': 'Fresia',
+      'bamboo': 'Bambú',
+      'white rose': 'Rosa Blanca',
+      'iris': 'Iris',
+      'orange blossom': 'Azahar',
+      'lily-of-the-valley': 'Lirio del Valle',
+      'tuberose': 'Tuberosa',
+      'lavender': 'Lavanda',
+      'vetiver': 'Vetiver',
+      'sichuan pepper': 'Pimienta de Sichuán',
+
+      // Base notes
+      'incense': 'Incienso',
+      'cedar': 'Cedro',
+      'sandalwood': 'Sándalo',
+      'patchouli': 'Pachulí',
+      'labdanum': 'Ládano',
+      'white musk': 'Almizcle Blanco',
+      'oakmoss': 'Musgo de Roble',
+      'amber': 'Ámbar',
+      'vanilla': 'Vainilla',
+      'blackberry': 'Mora',
+      'praline': 'Praliné',
+      'tonka bean': 'Haba Tonka',
+      'cacao': 'Cacao',
+      'cashmere wood': 'Madera de Cachemira',
+
+      // Accords
+      'citrus': 'Cítrico',
+      'woody': 'Amaderado',
+      'aromatic': 'Aromático',
+      'fresh spicy': 'Especiado Fresco',
+      'aquatic': 'Acuático',
+      'marine': 'Marino',
+      'fresh': 'Fresco',
+      'fruity': 'Frutal',
+      'sweet': 'Dulce',
+      'warm spicy': 'Especiado Cálido',
+      'white floral': 'Floral Blanco',
+      'floral': 'Floral',
+      'powdery': 'Polvoso',
+      'gourmand': 'Gourmand',
+      'musky': 'Musk',
+      'leather': 'Cuero',
+      'smoke': 'Humo',
+      'tobacco': 'Tabaco',
+    };
+
+    // Try to find an exact match first
+    if (translations[noteLower]) {
+      return translations[noteLower];
+    }
+
+    // Try to find a partial match
+    for (const [key, value] of Object.entries(translations)) {
+      if (noteLower.includes(key)) {
+        return value;
+      }
+    }
+
+    // If no translation found, return the original note
+    return note;
+  };
+
   // Helper to render note tags
   const renderNoteTags = (notes?: string[]) => {
     if (!notes || notes.length === 0) {
@@ -129,7 +221,7 @@ const PerfumeModal = forwardRef<PerfumeModalRef, PerfumeModalProps>((props, ref)
       <View style={styles.notesGroupContainer}>
         {notes.map((note, index) => (
           <View key={index} style={styles.noteTag}>
-            <Text style={styles.noteText}>{note}</Text>
+            <Text style={styles.noteText}>{translateNote(note)}</Text>
           </View>
         ))}
       </View>
@@ -137,10 +229,10 @@ const PerfumeModal = forwardRef<PerfumeModalRef, PerfumeModalProps>((props, ref)
   };
 
   // --- Rating Mappings ---
-  const longevityLabels = ['Weak', 'Moderate', 'Long', 'Eternal'];
-  const sillageLabels = ['Intimate', 'Moderate', 'Strong', 'Enormous'];
-  const dayNightLabels = ['Night', 'Both', 'Day']; // Use 3 labels for 0, 0.5, 1
-  const seasonLabels = ['Winter', 'Autumn', 'Spring', 'Summer'];
+  const longevityLabels = ['Baja', 'Moderada', 'Duradera', 'Eterna'];
+  const sillageLabels = ['Bajo', 'Moderado', 'Fuerte', 'Intenso'];
+  const dayNightLabels = ['Noche', 'Ambos', 'Día']; // Use 3 labels for 0, 0.5, 1
+  const seasonLabels = ['Invierno', 'Otoño', 'Primavera', 'Verano'];
 
   // Helper to map discrete ratings (0, 1, 2, 3) to a 0-1 scale for the bar
   const mapDiscreteRatingToScale = (rating: number | undefined, maxRating: number): number => {
@@ -183,6 +275,14 @@ const PerfumeModal = forwardRef<PerfumeModalRef, PerfumeModalProps>((props, ref)
               </View>
             )}
 
+            {/* Swap Mode Indicator */}
+            {isSwapping && (
+              <View style={styles.swapModeContainer}>
+                <Text style={styles.swapModeText}>Modo Cambio</Text>
+                <Text style={styles.swapModeSubtext}>Selecciona un perfume similar para reemplazar</Text>
+              </View>
+            )}
+
             {/* Image Header */}
             <View style={styles.imageContainer}>
               <Image source={{ uri: currentPerfume.fullSizeUrl }} style={[styles.perfumeImage, { width: width * 0.6, height: width * 0.6 }]} />
@@ -198,7 +298,7 @@ const PerfumeModal = forwardRef<PerfumeModalRef, PerfumeModalProps>((props, ref)
             {/* Accords - Redesigned */}
             {accords && accords.length > 0 && (
               <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Main Accords</Text>
+                <Text style={styles.sectionTitle}>Acordes Principales</Text>
                 <View style={styles.accordsContainer}>
                   {accords.map((accord, index) => (
                     <View
@@ -211,7 +311,7 @@ const PerfumeModal = forwardRef<PerfumeModalRef, PerfumeModalProps>((props, ref)
                         }
                       ]}
                     >
-                      <Text style={styles.accordText}>{accord}</Text>
+                      <Text style={styles.accordText}>{translateNote(accord)}</Text>
                     </View>
                   ))}
                 </View>
@@ -222,16 +322,16 @@ const PerfumeModal = forwardRef<PerfumeModalRef, PerfumeModalProps>((props, ref)
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Ratings</Text>
               <View style={styles.ratingItem}>
-                <Text style={styles.ratingLabel}>Overall:</Text>
+                <Text style={styles.ratingLabel}>General:</Text>
                 <Text style={styles.ratingLabel}>{overallRating}/5</Text>
               </View>
               <View style={styles.ratingItem}>
-                <Text style={styles.ratingLabel}>Price/Value:</Text>
+                <Text style={styles.ratingLabel}>Valor/Precio:</Text>
                 <Text style={styles.ratingLabel}>{priceValueRating}/5</Text>
               </View>
               {/* Longevity Rating Bar */}
               <View style={styles.ratingItem}>
-                <Text style={styles.ratingLabel}>Longevity:</Text>
+                <Text style={styles.ratingLabel}>Duración:</Text>
                 {longevityRating !== undefined ? (
                   <RatingBar
                     rating={mapDiscreteRatingToScale(longevityRating, longevityLabels.length - 1)}
@@ -255,7 +355,7 @@ const PerfumeModal = forwardRef<PerfumeModalRef, PerfumeModalProps>((props, ref)
               </View>
               {/* Day/Night Rating Bar */}
               <View style={styles.ratingItem}>
-                <Text style={styles.ratingLabel}>Best For:</Text>
+                <Text style={styles.ratingLabel}>Mejor para:</Text>
                 {dayNightRating !== undefined ? (
                   <RatingBar
                     rating={dayNightRating} // Already 0-1 scale
@@ -267,7 +367,7 @@ const PerfumeModal = forwardRef<PerfumeModalRef, PerfumeModalProps>((props, ref)
               </View>
               {/* Season Rating Bar */}
               <View style={styles.ratingItem}>
-                 <Text style={styles.ratingLabel}>Season:</Text>
+                 <Text style={styles.ratingLabel}>Temporada:</Text>
                  {seasonRating !== undefined ? <RatingBar rating={seasonRating} labels={seasonLabels} /> : <Text style={styles.ratingValue}>N/A</Text>}
               </View>
             </View>
@@ -275,24 +375,24 @@ const PerfumeModal = forwardRef<PerfumeModalRef, PerfumeModalProps>((props, ref)
             {/* Description */}
             {description && (
               <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Description</Text>
+                <Text style={styles.sectionTitle}>Descripción</Text>
                 <Text style={styles.descriptionText}>{description}</Text>
               </View>
             )}
 
             {/* Notes Breakdown */}
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Perfume Pyramid</Text>
+              <Text style={styles.sectionTitle}>Piramide Olfativa</Text>
               <View style={styles.notesSection}>
-                <Text style={styles.notesCategoryTitle}>Top Notes</Text>
+                <Text style={styles.notesCategoryTitle}>Notas de Salida</Text>
                 {renderNoteTags(topNotes)}
               </View>
               <View style={styles.notesSection}>
-                <Text style={styles.notesCategoryTitle}>Middle Notes</Text>
+                <Text style={styles.notesCategoryTitle}>Notas Medias</Text>
                 {renderNoteTags(middleNotes)}
               </View>
               <View style={styles.notesSection}>
-                <Text style={styles.notesCategoryTitle}>Base Notes</Text>
+                <Text style={styles.notesCategoryTitle}>Notas de Fondo</Text>
                 {renderNoteTags(baseNotes)}
               </View>
             </View>
@@ -300,11 +400,22 @@ const PerfumeModal = forwardRef<PerfumeModalRef, PerfumeModalProps>((props, ref)
              {/* Similar Perfumes */}
              {similarPerfumes && similarPerfumes.length > 0 && (
                 <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>Similar Perfumes</Text>
+                    <Text style={styles.sectionTitle}>
+                      {isSwapping ? 'Perfumes Similares para Cambiar' : 'Perfumes Similares'}
+                    </Text>
                     <FlatList
                         data={similarPerfumes}
-                        renderItem={({ item }) => <PerfumeCardPlaceholder perfume={item} />}
-                        keyExtractor={(item) => item.id}
+                        renderItem={({ item }) => {
+                            const similarPerfumeData = getSimilarPerfumeData(item);
+                            if (!similarPerfumeData) return null;
+                            return (
+                                <PerfumeCardPlaceholder
+                                    perfume={similarPerfumeData}
+                                    onPress={() => handleSimilarPerfumePress(item)}
+                                />
+                            );
+                        }}
+                        keyExtractor={(item) => item}
                         horizontal
                         showsHorizontalScrollIndicator={false}
                         contentContainerStyle={styles.similarPerfumesList}
@@ -624,6 +735,24 @@ const styles = StyleSheet.create({
       fontSize: 14,
       color: '#999',
       fontStyle: 'italic',
+  },
+  swapModeContainer: {
+    backgroundColor: '#F5F5F7',
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 16,
+    alignItems: 'center',
+  },
+  swapModeText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#809CAC',
+    marginBottom: 4,
+  },
+  swapModeSubtext: {
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
   },
 });
 

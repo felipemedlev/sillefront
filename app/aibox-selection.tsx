@@ -3,35 +3,11 @@ import PerfumeModal, { PerfumeModalRef } from '../components/product/PerfumeModa
 import { View, Text, StyleSheet, ScrollView, Pressable, Image, ImageSourcePropType, Dimensions } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import Slider from '@react-native-community/slider';
+import MultiSlider from '@ptomasroos/react-native-multi-slider';
+import { Perfume } from '../types/perfume';
 
 type DecantCount = 4 | 8;
 type DecantSize = 3 | 5 | 10;
-
-// Mirror the interface from PerfumeModal.tsx
-interface Perfume {
-  id: string;
-  name: string;
-  brand: string;
-  matchPercentage: number; // Kept for now
-  pricePerML: number;
-  thumbnailUrl: string;
-  fullSizeUrl: string;
-  description?: string;
-
-  // New fields matching PerfumeModal
-  accords?: string[];
-  topNotes?: string[];
-  middleNotes?: string[];
-  baseNotes?: string[];
-  overallRating?: number; // e.g., 0-5
-  dayNightRating?: number; // 0 (Night) to 1 (Day), 0.5 (Both)
-  seasonRating?: number; // Numerical value 0 (Winter) to 1 (Summer) for the bar logic
-  priceValueRating?: number; // e.g., 0-5
-  sillageRating?: number; // 0 (Intimate) to 1 (Enormous) - mapped from 0, 1, 2, 3
-  longevityRating?: number; // 0 (Weak) to 1 (Eternal) - mapped from 0, 1, 2, 3
-  similarPerfumes?: BasicPerfumeInfo[]; // Requires BasicPerfumeInfo definition
-}
 
 // Simplified info for similar perfumes list (matching PerfumeModal)
 interface BasicPerfumeInfo {
@@ -42,9 +18,8 @@ interface BasicPerfumeInfo {
   fullSizeUrl: string;
 }
 
-
 // Mock data - updated with numerical ratings
-const MOCK_PERFUMES: Perfume[] = [
+export const MOCK_PERFUMES: Perfume[] = [
   {
     id: '9099',
     name: 'Bleu de Chanel',
@@ -59,14 +34,14 @@ const MOCK_PERFUMES: Perfume[] = [
     middleNotes: ['Ginger', 'Nutmeg', 'Jasmine'],
     baseNotes: ['Incense', 'Vetiver', 'Cedar', 'Sandalwood', 'Patchouli', 'Labdanum', 'White Musk'],
     overallRating: 4.5,
-    dayNightRating: 0.5, // 'both' -> 0.5
-    seasonRating: 0.6, // Leans towards Spring/Summer/Autumn
+    dayNightRating: 0.5,
+    seasonRating: 0.6,
     priceValueRating: 3.5,
-    sillageRating: 1, // 'moderate' -> 1
-    longevityRating: 2, // 'long' -> 2
+    sillageRating: 1,
+    longevityRating: 2,
     similarPerfumes: [
-      { id: '3', name: 'Sauvage', brand: 'Dior', thumbnailUrl: 'https://fimgs.net/mdimg/perfume/s.31861.jpg', fullSizeUrl: 'https://fimgs.net/mdimg/perfume/375x500.31861.jpg' },
-      { id: '2', name: 'Acqua di Gio', brand: 'Giorgio Armani', thumbnailUrl: 'https://fimgs.net/mdimg/perfume/s.410.jpg', fullSizeUrl: 'https://fimgs.net/mdimg/perfume/375x500.410.jpg' },
+      '31861', // Sauvage
+      '410', // Acqua di Gio
     ],
   },
   {
@@ -83,14 +58,14 @@ const MOCK_PERFUMES: Perfume[] = [
     middleNotes: ['Sea Notes', 'Jasmine', 'Calone', 'Peach', 'Freesia'],
     baseNotes: ['White Musk', 'Cedar', 'Oakmoss', 'Patchouli', 'Amber'],
     overallRating: 4.2,
-    dayNightRating: 1, // 'day' -> 1
-    seasonRating: 0.8, // Strong Summer
+    dayNightRating: 1,
+    seasonRating: 0.8,
     priceValueRating: 4.0,
-    sillageRating: 1, // 'moderate' -> 1
-    longevityRating: 1, // 'moderate' -> 1
+    sillageRating: 1,
+    longevityRating: 1,
     similarPerfumes: [
-      { id: '4', name: 'Light Blue', brand: 'Dolce & Gabbana', thumbnailUrl: 'https://fimgs.net/mdimg/perfume/s.485.jpg', fullSizeUrl: 'https://fimgs.net/mdimg/perfume/375x500.485.jpg' },
-      { id: '1', name: 'Bleu de Chanel', brand: 'Chanel', thumbnailUrl: 'https://fimgs.net/mdimg/perfume/s.9099.jpg', fullSizeUrl: 'https://fimgs.net/mdimg/perfume/375x500.9099.jpg' },
+      '485', // Light Blue
+      '9099', // Bleu de Chanel
     ],
   },
   {
@@ -107,13 +82,13 @@ const MOCK_PERFUMES: Perfume[] = [
     middleNotes: ['Sichuan Pepper', 'Lavender', 'Pink Pepper', 'Vetiver'],
     baseNotes: ['Ambroxan', 'Cedar', 'Labdanum'],
     overallRating: 4.0,
-    dayNightRating: 0.5, // 'both' -> 0.5
-    seasonRating: 0.5, // All seasons
+    dayNightRating: 0.5,
+    seasonRating: 0.5,
     priceValueRating: 3.0,
-    sillageRating: 2, // 'strong' -> 2
-    longevityRating: 2, // 'long' -> 2
+    sillageRating: 2,
+    longevityRating: 2,
     similarPerfumes: [
-      { id: '1', name: 'Bleu de Chanel', brand: 'Chanel', thumbnailUrl: 'https://fimgs.net/mdimg/perfume/s.9099.jpg', fullSizeUrl: 'https://fimgs.net/mdimg/perfume/375x500.9099.jpg' },
+      '9099', // Bleu de Chanel
     ],
   },
   {
@@ -130,13 +105,13 @@ const MOCK_PERFUMES: Perfume[] = [
     middleNotes: ['Bamboo', 'Jasmine', 'White Rose'],
     baseNotes: ['Cedar', 'Musk', 'Amber'],
     overallRating: 4.1,
-    dayNightRating: 1, // 'day' -> 1
-    seasonRating: 0.9, // Strong Summer
+    dayNightRating: 1,
+    seasonRating: 0.9,
     priceValueRating: 4.5,
-    sillageRating: 1, // 'moderate' -> 1
-    longevityRating: 1, // 'moderate' -> 1
+    sillageRating: 1,
+    longevityRating: 1,
     similarPerfumes: [
-      { id: '2', name: 'Acqua di Gio', brand: 'Giorgio Armani', thumbnailUrl: 'https://fimgs.net/mdimg/perfume/s.410.jpg', fullSizeUrl: 'https://fimgs.net/mdimg/perfume/375x500.410.jpg' },
+      '410', // Acqua di Gio
     ],
   },
   {
@@ -153,14 +128,14 @@ const MOCK_PERFUMES: Perfume[] = [
     middleNotes: ['Iris', 'Jasmine', 'Orange Blossom'],
     baseNotes: ['Praline', 'Vanilla', 'Patchouli', 'Tonka Bean'],
     overallRating: 4.6,
-    dayNightRating: 0.5, // 'both' -> 0.5
-    seasonRating: 0.2, // Leans Winter/Autumn
+    dayNightRating: 0.5,
+    seasonRating: 0.2,
     priceValueRating: 4.0,
-    sillageRating: 2, // 'strong' -> 2
-    longevityRating: 2, // 'long' -> 2
+    sillageRating: 2,
+    longevityRating: 2,
     similarPerfumes: [
-      { id: '6', name: 'Black Opium', brand: 'Yves Saint Laurent', thumbnailUrl: 'https://fimgs.net/mdimg/perfume/s.25325.jpg', fullSizeUrl: 'https://fimgs.net/mdimg/perfume/375x500.25325.jpg' },
-      { id: '8', name: 'Good Girl', brand: 'Carolina Herrera', thumbnailUrl: 'https://fimgs.net/mdimg/perfume/s.39681.jpg', fullSizeUrl: 'https://fimgs.net/mdimg/perfume/375x500.39681.jpg' },
+      '25325', // Black Opium
+      '39681', // Good Girl
     ],
   },
   {
@@ -177,14 +152,14 @@ const MOCK_PERFUMES: Perfume[] = [
     middleNotes: ['Coffee', 'Jasmine', 'Bitter Almond', 'Licorice'],
     baseNotes: ['Vanilla', 'Patchouli', 'Cedar', 'Cashmere Wood'],
     overallRating: 4.3,
-    dayNightRating: 0, // 'night' -> 0
-    seasonRating: 0.1, // Strong Winter/Autumn
+    dayNightRating: 0,
+    seasonRating: 0.1,
     priceValueRating: 3.8,
-    sillageRating: 2, // 'strong' -> 2
-    longevityRating: 2, // 'long' -> 2
+    sillageRating: 2,
+    longevityRating: 2,
     similarPerfumes: [
-      { id: '5', name: 'La Vie Est Belle', brand: 'Lancôme', thumbnailUrl: 'https://fimgs.net/mdimg/perfume/s.14982.jpg', fullSizeUrl: 'https://fimgs.net/mdimg/perfume/375x500.14982.jpg' },
-      { id: '8', name: 'Good Girl', brand: 'Carolina Herrera', thumbnailUrl: 'https://fimgs.net/mdimg/perfume/s.39681.jpg', fullSizeUrl: 'https://fimgs.net/mdimg/perfume/375x500.39681.jpg' },
+      '14982', // La Vie Est Belle
+      '39681', // Good Girl
     ],
   },
   {
@@ -201,11 +176,11 @@ const MOCK_PERFUMES: Perfume[] = [
     middleNotes: ['Jasmine', 'Lily-of-the-Valley', 'Tuberose', 'Freesia'],
     baseNotes: ['Musk', 'Vanilla', 'Blackberry', 'Cedar'],
     overallRating: 4.4,
-    dayNightRating: 1, // 'day' -> 1
-    seasonRating: 0.7, // Spring/Summer
+    dayNightRating: 1,
+    seasonRating: 0.7,
     priceValueRating: 3.2,
-    sillageRating: 1, // 'moderate' -> 1
-    longevityRating: 2, // 'long' -> 2
+    sillageRating: 1,
+    longevityRating: 2,
     similarPerfumes: [], // No similar ones in this mock list
   },
   {
@@ -222,14 +197,14 @@ const MOCK_PERFUMES: Perfume[] = [
     middleNotes: ['Tuberose', 'Jasmine Sambac', 'Orange Blossom', 'Orris'],
     baseNotes: ['Tonka Bean', 'Cacao', 'Vanilla', 'Praline', 'Sandalwood'],
     overallRating: 4.2,
-    dayNightRating: 0, // 'night' -> 0
-    seasonRating: 0.2, // Winter/Autumn
+    dayNightRating: 0,
+    seasonRating: 0.2,
     priceValueRating: 3.9,
-    sillageRating: 2, // 'strong' -> 2
-    longevityRating: 2, // 'long' -> 2
+    sillageRating: 2,
+    longevityRating: 2,
     similarPerfumes: [
-      { id: '5', name: 'La Vie Est Belle', brand: 'Lancôme', thumbnailUrl: 'https://fimgs.net/mdimg/perfume/s.14982.jpg', fullSizeUrl: 'https://fimgs.net/mdimg/perfume/375x500.14982.jpg' },
-      { id: '6', name: 'Black Opium', brand: 'Yves Saint Laurent', thumbnailUrl: 'https://fimgs.net/mdimg/perfume/s.25325.jpg', fullSizeUrl: 'https://fimgs.net/mdimg/perfume/375x500.25325.jpg' },
+      '14982', // La Vie Est Belle
+      '25325', // Black Opium
     ],
   },
 ];
@@ -237,17 +212,52 @@ const MOCK_PERFUMES: Perfume[] = [
 export default function AIBoxSelectionScreen() {
   const [decantCount, setDecantCount] = useState<DecantCount>(4);
   const [decantSize, setDecantSize] = useState<DecantSize>(5);
-  const [maxPricePerML, setMaxPricePerML] = useState(20000);
+  const [rangoPrecio, setRangoPrecio] = useState([0, 10000]);
   const [selectedPerfumeId, setSelectedPerfumeId] = useState<string | null>(null);
-  // Create a ref for the modal
+  const [swappingPerfumeId, setSwappingPerfumeId] = useState<string | null>(null);
+  const [selectedPerfumes, setSelectedPerfumes] = useState<string[]>([]);
   const modalRef = useRef<PerfumeModalRef>(null);
+  const sliderContainerRef = useRef<View>(null);
+  const [isSliderReady, setIsSliderReady] = useState(false);
 
-  const handleMaxPriceChange = useCallback((value: number) => {
-      setMaxPricePerML(Math.floor(value));
+  // Initialize selected perfumes when component mounts
+  useEffect(() => {
+    const filteredPerfumes = MOCK_PERFUMES.filter(perfume =>
+      (perfume.pricePerML ?? 0) >= rangoPrecio[0] &&
+      (perfume.pricePerML ?? 0) <= rangoPrecio[1]
+    );
+    setSelectedPerfumes(filteredPerfumes.slice(0, decantCount).map(p => p.id));
+  }, [decantCount, rangoPrecio]);
+
+  // Add effect to handle slider container mounting
+  useEffect(() => {
+    if (sliderContainerRef.current) {
+      setIsSliderReady(true);
+    }
+  }, []);
+
+  const handleMaxPriceChange = useCallback((values: number[]) => {
+    setRangoPrecio(values);
   }, []);
 
   const handlePerfumePress = (perfumeId: string) => {
     setSelectedPerfumeId(perfumeId);
+  };
+
+  const handleSwapPress = (perfumeId: string) => {
+    setSwappingPerfumeId(perfumeId);
+    setSelectedPerfumeId(perfumeId);
+  };
+
+  const handleSimilarPerfumeSelect = (newPerfumeId: string) => {
+    if (swappingPerfumeId) {
+      // Replace the old perfume with the new one in the selected perfumes array
+      setSelectedPerfumes(prev =>
+        prev.map(id => id === swappingPerfumeId ? newPerfumeId : id)
+      );
+      // Close the modal
+      modalRef.current?.hide();
+    }
   };
 
   // Callback when the modal is dismissed (by background tap, swipe, etc.)
@@ -255,7 +265,8 @@ export default function AIBoxSelectionScreen() {
     // Add a small delay before clearing the selected perfume ID
     // This ensures the modal is fully closed before state changes
     setTimeout(() => {
-      setSelectedPerfumeId(null); // Clear the selected perfume ID
+      setSelectedPerfumeId(null);
+      setSwappingPerfumeId(null);
     }, 100);
   }, []);
 
@@ -270,17 +281,19 @@ export default function AIBoxSelectionScreen() {
 
   const calculateTotalPrice = useCallback(() => {
     // Calculate total price based on selected perfumes
-    const filteredPerfumes = MOCK_PERFUMES.filter(perfume => perfume.pricePerML <= maxPricePerML);
-    const selectedPerfumes = filteredPerfumes.slice(0, decantCount);
-    return selectedPerfumes.reduce((total, perfume) => {
-      return total + (perfume.pricePerML * decantSize);
+    return selectedPerfumes.reduce((total, perfumeId) => {
+      const perfume = MOCK_PERFUMES.find(p => p.id === perfumeId);
+      return total + (perfume?.pricePerML || 0) * decantSize;
     }, 0);
-  }, [decantCount, decantSize, maxPricePerML]);
+  }, [decantCount, decantSize, selectedPerfumes]);
 
-  // Filter perfumes by maxPricePerML
+  // Filter perfumes by price range
   const filteredPerfumes = useMemo(() => {
-    return MOCK_PERFUMES.filter(perfume => perfume.pricePerML <= maxPricePerML);
-  }, [maxPricePerML]);
+    return MOCK_PERFUMES.filter(perfume =>
+      (perfume.pricePerML ?? 0) >= rangoPrecio[0] &&
+      (perfume.pricePerML ?? 0) <= rangoPrecio[1]
+    );
+  }, [rangoPrecio]);
 
   const selectedPerfume = selectedPerfumeId
     ? MOCK_PERFUMES.find(p => p.id === selectedPerfumeId)
@@ -362,30 +375,29 @@ export default function AIBoxSelectionScreen() {
           <Text style={[styles.sectionTitle, styles.filterTitle]}>Rango de Precio por mL</Text>
           <View style={styles.priceContainer}>
             <View style={styles.priceLabelsCompact}>
-              <Text style={styles.priceText}>0</Text>
-              <Text style={styles.priceText}>${maxPricePerML.toLocaleString()}</Text>
+              <Text style={styles.priceText}>${rangoPrecio[0].toLocaleString()}</Text>
+              <Text style={styles.priceText}>${rangoPrecio[1].toLocaleString()}</Text>
             </View>
-            <View style={styles.sliderContainer}>
-              <Slider
-                style={styles.slider}
-                minimumValue={0}
-                maximumValue={20000}
-                step={100}
-                value={maxPricePerML}
-                onValueChange={handleMaxPriceChange}
-                minimumTrackTintColor="#E6E6E6"
-                maximumTrackTintColor="#E6E6E6"
-                thumbTintColor="#809CAC"
-              />
-              <View
-                style={[
-                  styles.rangeHighlight,
-                  {
-                    left: `${(0 / 20000) * 100}%`,
-                    right: `${100 - (maxPricePerML / 20000) * 100}%`,
-                  }
-                ]}
-              />
+            <View ref={sliderContainerRef} style={styles.sliderContainer}>
+              {isSliderReady && (
+                <MultiSlider
+                  values={rangoPrecio}
+                  min={0}
+                  max={20000}
+                  step={100}
+                  onValuesChange={handleMaxPriceChange}
+                  sliderLength={Dimensions.get('window').width - 80}
+                  selectedStyle={{
+                    backgroundColor: '#809CAC',
+                    height: 4,
+                  }}
+                  unselectedStyle={{
+                    backgroundColor: '#E6E6E6',
+                    height: 4,
+                  }}
+                  containerStyle={styles.slider}
+                />
+              )}
             </View>
           </View>
         </View>
@@ -393,33 +405,44 @@ export default function AIBoxSelectionScreen() {
         {/* Perfumes List */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Perfumes Seleccionados</Text>
-          {filteredPerfumes.slice(0, decantCount).map((perfume) => (
-            <Pressable
-              key={perfume.id}
-              style={styles.perfumeCard}
-              onPress={() => handlePerfumePress(perfume.id)}
-            >
-              <View style={styles.imageContainer}>
-                <Image
-                  source={{ uri: perfume.thumbnailUrl }}
-                  style={styles.perfumeImage}
-                />
-                <Image
-                  source={require('../assets/images/decant-general.png')}
-                  style={styles.decantIcon}
-                />
-              </View>
-              <View style={styles.perfumeInfo}>
-                <View style={styles.matchBadge}>
-                  <Text style={styles.matchText}>{perfume.matchPercentage}% AI Match</Text>
+          {selectedPerfumes.map((perfumeId) => {
+            const perfume = MOCK_PERFUMES.find(p => p.id === perfumeId);
+            if (!perfume) return null;
+
+            return (
+              <Pressable
+                key={perfume.id}
+                style={styles.perfumeCard}
+                onPress={() => handlePerfumePress(perfume.id)}
+              >
+                <View style={styles.imageContainer}>
+                  <Image
+                    source={{ uri: perfume.thumbnailUrl }}
+                    style={styles.perfumeImage}
+                  />
+                  <Image
+                    source={require('../assets/images/decant-general.png')}
+                    style={styles.decantIcon}
+                  />
                 </View>
-                <Text style={styles.perfumeName}>{perfume.name}</Text>
-                <Text style={styles.perfumeBrand}>{perfume.brand}</Text>
-                <Text style={styles.perfumePrice}>${perfume.pricePerML.toLocaleString()}/mL</Text>
-                <Text style={styles.perfumeTotalPrice}>Total: ${(perfume.pricePerML * decantSize).toLocaleString()}</Text>
-              </View>
-            </Pressable>
-          ))}
+                <View style={styles.perfumeInfo}>
+                  <View style={styles.matchBadge}>
+                    <Text style={styles.matchText}>{perfume.matchPercentage}% AI Match</Text>
+                  </View>
+                  <Text style={styles.perfumeName}>{perfume.name}</Text>
+                  <Text style={styles.perfumeBrand}>{perfume.brand}</Text>
+                  <Text style={styles.perfumePrice}>${(perfume.pricePerML ?? 0).toLocaleString()}/mL</Text>
+                  <Text style={styles.perfumeTotalPrice}>Total: ${((perfume.pricePerML ?? 0) * decantSize).toLocaleString()}</Text>
+                  <Pressable
+                    style={styles.swapButton}
+                    onPress={() => handleSwapPress(perfume.id)}
+                  >
+                    <Text style={styles.swapButtonText}>Cambiar</Text>
+                  </Pressable>
+                </View>
+              </Pressable>
+            );
+          })}
         </View>
       </ScrollView>
 
@@ -443,6 +466,8 @@ export default function AIBoxSelectionScreen() {
           ref={modalRef}
           perfume={selectedPerfume}
           onClose={handleModalDismiss}
+          isSwapping={!!swappingPerfumeId}
+          onSimilarPerfumeSelect={handleSimilarPerfumeSelect}
         />
       )}
     </View>
@@ -450,7 +475,7 @@ export default function AIBoxSelectionScreen() {
 }
 
 const { height } = Dimensions.get('window');
-const cardHeight = height * 0.25;
+const cardHeight = height * 0.3;
 
 const styles = StyleSheet.create({
   container: {
@@ -586,7 +611,7 @@ const styles = StyleSheet.create({
   },
   perfumeCard: {
     flexDirection: 'row',
-    padding: 12,
+    padding: 20,
     borderRadius: 12,
     backgroundColor: '#FFFFFF',
     marginBottom: 16,
@@ -618,6 +643,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 6,
+    marginTop: 20,
     marginBottom: 6,
     alignSelf: 'flex-start',
   },
@@ -628,35 +654,34 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   perfumeImage: {
-    width: cardHeight * 0.65,
-    height: cardHeight * 0.65,
+    width: cardHeight * 0.55,
+    height: cardHeight * 0.55,
     borderRadius: 8,
     resizeMode: 'contain',
   },
   perfumeInfo: {
     flex: 1,
-    paddingRight: 8,
   },
   perfumeName: {
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: '600',
     color: '#222',
-    marginBottom: 2,
+    marginBottom: 4,
     letterSpacing: 0.1,
   },
   perfumeBrand: {
-    fontSize: 14,
+    fontSize: 15,
     color: '#666',
-    marginBottom: 8,
+    marginBottom: 10,
   },
   perfumePrice: {
-    fontSize: 14,
+    fontSize: 15,
     color: '#666',
     fontWeight: '500',
-    marginBottom: 4,
+    marginBottom: 6,
   },
   perfumeTotalPrice: {
-    fontSize: 16,
+    fontSize: 17,
     fontWeight: '600',
     color: '#809CAC',
   },
@@ -685,7 +710,7 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   addToCartButton: {
-    backgroundColor: '#809CAC',
+    backgroundColor: '#222222',
     paddingVertical: 12,
     paddingHorizontal: 24,
     borderRadius: 8,
@@ -698,6 +723,22 @@ const styles = StyleSheet.create({
   addToCartButtonText: {
     color: '#FFFFFF',
     fontSize: 16,
+    fontWeight: '600',
+  },
+  swapButton: {
+    backgroundColor: '#F5F5F7',
+    paddingVertical: 6,
+    paddingHorizontal: 14,
+    borderRadius: 6,
+    marginTop: 10,
+    marginBottom: 20,
+    alignSelf: 'flex-start',
+    borderWidth: 1,
+    borderColor: '#E6E6E6',
+  },
+  swapButtonText: {
+    color: '#809CAC',
+    fontSize: 14,
     fontWeight: '600',
   },
 });

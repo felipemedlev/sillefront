@@ -1,69 +1,109 @@
-import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
-
-interface Perfume {
-  id: number;
-  name: string;
-  brand: string;
-  image: string;
-}
-
-interface Rating {
-  perfumeId: number;
-  rating: number;
-  aiMatch?: number;
-}
-
-interface RatingsContextType {
-  ratings: Rating[];
-  addRating: (perfumeId: number, rating: number, aiMatch?: number) => void;
-  getRating: (perfumeId: number) => Rating | undefined;
-}
+import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Rating, RatingsContextType } from '../types/rating';
+import { STORAGE_KEYS } from '../types/constants';
+import { AppError, handleError } from '../types/error';
 
 const RatingsContext = createContext<RatingsContextType | undefined>(undefined);
 
-const STORAGE_KEY = 'perfume_ratings';
-
 export function RatingsProvider({ children }: { children: ReactNode }) {
-  const [ratings, setRatings] = useState<Rating[]>(() => {
-    // Initialize from localStorage if available
-    if (typeof window !== 'undefined') {
-      const savedRatings = localStorage.getItem(STORAGE_KEY);
-      return savedRatings ? JSON.parse(savedRatings) : [];
-    }
-    return [];
-  });
+  const [ratings, setRatings] = useState<Rating[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Save to localStorage whenever ratings change
+  // Load ratings from AsyncStorage on mount
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(ratings));
+    const loadRatings = async () => {
+      try {
+        setIsLoading(true);
+        const savedRatings = await AsyncStorage.getItem(STORAGE_KEYS.RATINGS);
+        if (savedRatings) {
+          setRatings(JSON.parse(savedRatings));
+        }
+      } catch (err) {
+        const appError = handleError(err);
+        setError(appError.message);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadRatings();
+  }, []);
+
+  // Save to AsyncStorage whenever ratings change
+  useEffect(() => {
+    const saveRatings = async () => {
+      try {
+        await AsyncStorage.setItem(STORAGE_KEYS.RATINGS, JSON.stringify(ratings));
+      } catch (err) {
+        const appError = handleError(err);
+        setError(appError.message);
+      }
+    };
+
+    if (!isLoading) {
+      saveRatings();
     }
+  }, [ratings, isLoading]);
+
+  const addRating = useCallback(async (perfumeId: number, rating: number, aiMatch?: number) => {
+    try {
+      setRatings(prevRatings => {
+        const existingRatingIndex = prevRatings.findIndex(r => r.perfumeId === perfumeId);
+        const newRating: Rating = {
+          perfumeId,
+          rating,
+          aiMatch,
+          timestamp: Date.now()
+        };
+
+        if (existingRatingIndex !== -1) {
+          const newRatings = [...prevRatings];
+          newRatings[existingRatingIndex] = newRating;
+          return newRatings;
+        }
+        return [...prevRatings, newRating];
+      });
+    } catch (err) {
+      const appError = handleError(err);
+      setError(appError.message);
+      throw err;
+    }
+  }, []);
+
+  const getRating = useCallback((perfumeId: number): Rating | undefined => {
+    return ratings.find(rating => rating.perfumeId === perfumeId);
   }, [ratings]);
 
-  const addRating = (perfumeId: number, rating: number, aiMatch?: number) => {
-    setRatings(prevRatings => {
-      const existingRatingIndex = prevRatings.findIndex(r => r.perfumeId === perfumeId);
-      if (existingRatingIndex !== -1) {
-        const newRatings = [...prevRatings];
-        newRatings[existingRatingIndex] = { perfumeId, rating, aiMatch };
-        return newRatings;
-      }
-      return [...prevRatings, { perfumeId, rating, aiMatch }];
-    });
-  };
+  const clearRatings = useCallback(async () => {
+    try {
+      await AsyncStorage.removeItem(STORAGE_KEYS.RATINGS);
+      setRatings([]);
+    } catch (err) {
+      const appError = handleError(err);
+      setError(appError.message);
+      throw err;
+    }
+  }, []);
 
-  const getRating = (perfumeId: number) => {
-    return ratings.find(rating => rating.perfumeId === perfumeId);
+  const value = {
+    ratings,
+    isLoading,
+    error,
+    addRating,
+    getRating,
+    clearRatings,
   };
 
   return (
-    <RatingsContext.Provider value={{ ratings, addRating, getRating }}>
+    <RatingsContext.Provider value={value}>
       {children}
     </RatingsContext.Provider>
   );
 }
 
-export function useRatings() {
+export function useRatings(): RatingsContextType {
   const context = useContext(RatingsContext);
   if (context === undefined) {
     throw new Error('useRatings must be used within a RatingsProvider');

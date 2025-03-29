@@ -134,18 +134,18 @@ export const MOCK_PERFUMES: Perfume[] = [
     sillageRating: 2,
     longevityRating: 2,
     similarPerfumes: [
-      '25325', // Black Opium
+      '25324', // Black Opium
       '39681', // Good Girl
     ],
   },
   {
-    id: '25325',
+    id: '25324',
     name: 'Black Opium',
     brand: 'Yves Saint Laurent',
     matchPercentage: 80,
     pricePerML: 930,
-    thumbnailUrl: 'https://fimgs.net/mdimg/perfume/s.25325.jpg',
-    fullSizeUrl: 'https://fimgs.net/mdimg/perfume/375x500.25325.jpg',
+    thumbnailUrl: 'https://fimgs.net/mdimg/perfume/s.25324.jpg',
+    fullSizeUrl: 'https://fimgs.net/mdimg/perfume/375x500.25324.jpg',
     description: 'An addictive gourmand fragrance with notes of black coffee and vanilla.',
     accords: ['Vanilla', 'Coffee', 'Sweet', 'Warm Spicy', 'White Floral'],
     topNotes: ['Pear', 'Pink Pepper', 'Orange Blossom'],
@@ -204,7 +204,7 @@ export const MOCK_PERFUMES: Perfume[] = [
     longevityRating: 2,
     similarPerfumes: [
       '14982', // La Vie Est Belle
-      '25325', // Black Opium
+      '25324', // Black Opium
     ],
   },
 ];

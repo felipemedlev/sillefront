@@ -1,5 +1,6 @@
 export const STORAGE_KEYS = {
   RATINGS: 'perfume_ratings',
+  FAVORITES: 'perfume_favorites',
 } as const;
 
 export const FONTS = {

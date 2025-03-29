@@ -33,6 +33,12 @@ export default function ProfileScreen() {
       onPress: () => console.log('My purchases'),
     },
     {
+      id: 'favorites', // New item ID
+      title: 'Mis Favoritos', // New item title
+      icon: 'heart-outline', // New item icon
+      onPress: () => router.push('/(tabs)/(profile)/favorites'), // Try more explicit path
+    },
+    {
       id: 'test',
       title: 'Editar Test Inicial',
       icon: 'create-outline',

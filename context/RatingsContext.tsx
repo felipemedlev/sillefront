@@ -8,46 +8,84 @@ const RatingsContext = createContext<RatingsContextType | undefined>(undefined);
 
 export function RatingsProvider({ children }: { children: ReactNode }) {
   const [ratings, setRatings] = useState<Rating[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [favorites, setFavorites] = useState<string[]>([]); // State for favorite perfume IDs
+  const [isLoadingRatings, setIsLoadingRatings] = useState(true); // Renamed
+  const [isLoadingFavorites, setIsLoadingFavorites] = useState(true); // Added
   const [error, setError] = useState<string | null>(null);
 
   // Load ratings from AsyncStorage on mount
   useEffect(() => {
     const loadRatings = async () => {
       try {
-        setIsLoading(true);
+        setIsLoadingRatings(true);
         const savedRatings = await AsyncStorage.getItem(STORAGE_KEYS.RATINGS);
         if (savedRatings) {
           setRatings(JSON.parse(savedRatings));
         }
       } catch (err) {
         const appError = handleError(err);
-        setError(appError.message);
+        setError(`Error loading ratings: ${appError.message}`);
       } finally {
-        setIsLoading(false);
+        setIsLoadingRatings(false);
       }
     };
 
     loadRatings();
   }, []);
 
-  // Save to AsyncStorage whenever ratings change
+  // Load favorites from AsyncStorage on mount
+  useEffect(() => {
+    const loadFavorites = async () => {
+      try {
+        setIsLoadingFavorites(true);
+        const savedFavorites = await AsyncStorage.getItem(STORAGE_KEYS.FAVORITES);
+        if (savedFavorites) {
+          setFavorites(JSON.parse(savedFavorites));
+        }
+      } catch (err) {
+        const appError = handleError(err);
+        setError(`Error loading favorites: ${appError.message}`);
+      } finally {
+        setIsLoadingFavorites(false);
+      }
+    };
+
+    loadFavorites();
+  }, []);
+
+  // Save ratings to AsyncStorage whenever ratings change
   useEffect(() => {
     const saveRatings = async () => {
       try {
         await AsyncStorage.setItem(STORAGE_KEYS.RATINGS, JSON.stringify(ratings));
       } catch (err) {
         const appError = handleError(err);
-        setError(appError.message);
+        setError(`Error saving ratings: ${appError.message}`);
       }
     };
 
-    if (!isLoading) {
+    if (!isLoadingRatings) {
       saveRatings();
     }
-  }, [ratings, isLoading]);
+  }, [ratings, isLoadingRatings]);
 
-  const addRating = useCallback(async (perfumeId: number, rating: number, aiMatch?: number) => {
+  // Save favorites to AsyncStorage whenever favorites change
+  useEffect(() => {
+    const saveFavorites = async () => {
+      try {
+        await AsyncStorage.setItem(STORAGE_KEYS.FAVORITES, JSON.stringify(favorites));
+      } catch (err) {
+        const appError = handleError(err);
+        setError(`Error saving favorites: ${appError.message}`);
+      }
+    };
+
+    if (!isLoadingFavorites) {
+      saveFavorites();
+    }
+  }, [favorites, isLoadingFavorites]);
+
+  const addRating = useCallback(async (perfumeId: string, rating: number, aiMatch?: number) => { // Updated perfumeId type
     try {
       setRatings(prevRatings => {
         const existingRatingIndex = prevRatings.findIndex(r => r.perfumeId === perfumeId);
@@ -68,11 +106,11 @@ export function RatingsProvider({ children }: { children: ReactNode }) {
     } catch (err) {
       const appError = handleError(err);
       setError(appError.message);
-      throw err;
+      throw err; // Re-throw error for potential handling upstream
     }
   }, []);
 
-  const getRating = useCallback((perfumeId: number): Rating | undefined => {
+  const getRating = useCallback((perfumeId: string): Rating | undefined => { // Updated perfumeId type
     return ratings.find(rating => rating.perfumeId === perfumeId);
   }, [ratings]);
 
@@ -87,13 +125,63 @@ export function RatingsProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  // --- Favorite Management ---
+
+  const addFavorite = useCallback(async (perfumeId: string) => {
+    try {
+      setFavorites(prevFavorites => {
+        if (prevFavorites.includes(perfumeId)) {
+          return prevFavorites; // Already a favorite
+        }
+        return [...prevFavorites, perfumeId];
+      });
+    } catch (err) {
+      const appError = handleError(err);
+      setError(`Error adding favorite: ${appError.message}`);
+      throw err;
+    }
+  }, []);
+
+  const removeFavorite = useCallback(async (perfumeId: string) => {
+    try {
+      setFavorites(prevFavorites => prevFavorites.filter(id => id !== perfumeId));
+    } catch (err) {
+      const appError = handleError(err);
+      setError(`Error removing favorite: ${appError.message}`);
+      throw err;
+    }
+  }, []);
+
+  const isFavorite = useCallback((perfumeId: string): boolean => {
+    return favorites.includes(perfumeId);
+  }, [favorites]);
+
+  const clearFavorites = useCallback(async () => {
+    try {
+      await AsyncStorage.removeItem(STORAGE_KEYS.FAVORITES);
+      setFavorites([]);
+    } catch (err) {
+      const appError = handleError(err);
+      setError(appError.message);
+      throw err;
+    }
+  }, []);
+
+  // --- Context Value ---
+
   const value = {
     ratings,
-    isLoading,
+    favorites, // Added
+    isLoadingRatings, // Renamed
+    isLoadingFavorites, // Added
     error,
     addRating,
     getRating,
     clearRatings,
+    addFavorite, // Added
+    removeFavorite, // Added
+    isFavorite, // Added
+    clearFavorites, // Added
   };
 
   return (

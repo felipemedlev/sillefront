@@ -72,7 +72,7 @@ export default function ManualBoxScreen() {
           <Text style={styles.perfumeBrand}>{perfume.brand}</Text>
           <Text style={styles.perfumeName}>{perfume.name}</Text>
           <Text style={styles.perfumePrice}>
-            ${(perfume.pricePerML ?? 0) * decantSize} por {decantSize}ml
+            {((perfume.pricePerML ?? 0) * decantSize).toLocaleString('de-DE')} por {decantSize}ml
           </Text>
         </View>
         <TouchableOpacity
@@ -220,7 +220,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.ACCENT,
     paddingHorizontal: SPACING.LARGE,
     paddingVertical: SPACING.MEDIUM,
-    borderRadius: 8,
+    borderRadius: 18,
     marginTop: SPACING.MEDIUM,
   },
   emptyStateLink: {

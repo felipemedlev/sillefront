@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, useWindowDimensions, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, useWindowDimensions, TouchableOpacity, ScrollView, Pressable } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import MultiSlider from '@ptomasroos/react-native-multi-slider';
+import PriceRangeButtons from '../../components/product/PriceRangeButtons';
+import { COLORS, SPACING, FONT_SIZES } from '../../types/constants';
 
 const DESKTOP_BREAKPOINT = 768;
 
@@ -45,12 +46,14 @@ export default function PantallaCajaRegalo() {
   const { width } = useWindowDimensions();
   const isDesktop = width >= DESKTOP_BREAKPOINT;
   const [generoSeleccionado, setGeneroSeleccionado] = useState<Genero>('masculino');
-  const [rangoPrecio, setRangoPrecio] = useState([50000, 100000]);
+  const [rangoPrecio, setRangoPrecio] = useState('50.000-70.000');
+  const [decantCount, setDecantCount] = useState<4 | 8>(4);
+  const [decantSize, setDecantSize] = useState<3 | 5 | 10>(5);
 
-  const colorMasculino = '#E8ECF0';
-  const colorFemenino = '#F0E8EC';
-  const colorMasculinoActivo = '#C8D4E0';
-  const colorFemeninoActivo = '#E0C8D4';
+  const colorMasculino = '#E6F3FF'; // Light blue background
+  const colorFemenino = '#FFE6F3'; // Light pink background
+  const colorMasculinoActivo = colorMasculino; // Use light blue for active state
+  const colorFemeninoActivo = colorFemenino; // Use light pink for active state
 
   const formatearPrecio = (valor: number) => {
     return valor.toLocaleString('es-CL', {
@@ -89,32 +92,42 @@ export default function PantallaCajaRegalo() {
           </TouchableOpacity>
         </View>
 
-        {/* Rango de Precio */}
-        <View style={styles.sliderContainer}>
-          <Text style={styles.sectionTitle}>Rango de Precio</Text>
-          <View style={styles.sliderWrapper}>
-            <MultiSlider
-              values={rangoPrecio}
-              min={0}
-              max={120000}
-              step={1000}
-              onValuesChange={setRangoPrecio}
-              sliderLength={width - 80}
-              selectedStyle={{
-                backgroundColor: '#333',
-                height: 4,
-              }}
-              unselectedStyle={{
-                backgroundColor: '#ddd',
-                height: 4,
-              }}
-              containerStyle={styles.slider}
-            />
-          </View>
-          <View style={styles.precioLabels}>
-            <Text style={styles.precioLabel}>{formatearPrecio(rangoPrecio[0])}</Text>
-            <Text style={styles.precioLabel}>{formatearPrecio(rangoPrecio[1])}</Text>
-          </View>
+        {/* Decant Selection */}
+        <View style={[styles.decantCountContainer]}>
+          <Pressable
+            style={[
+              styles.decantCountButton,
+              decantCount === 4 && styles.decantCountButtonActive,
+              { padding: 12, margin: 4 }
+            ]}
+            onPress={() => setDecantCount(4)}
+          >
+            <Text style={[
+              styles.decantCountText,
+              decantCount === 4 && styles.decantCountTextActive,
+            ]}>4 Decants</Text>
+          </Pressable>
+          <Pressable
+            style={[
+              styles.decantCountButton,
+              decantCount === 8 && styles.decantCountButtonActive,
+              { padding: 12, margin: 4 }
+            ]}
+            onPress={() => setDecantCount(8)}
+          >
+            <Text style={[
+              styles.decantCountText,
+              decantCount === 8 && styles.decantCountTextActive,
+            ]}>8 Decants</Text>
+          </Pressable>
+        </View>
+
+        {/* Price Range Selection */}
+        <View style={styles.priceRangeContainer}>
+          <PriceRangeButtons
+            currentRange={rangoPrecio}
+            setCurrentRange={setRangoPrecio}
+          />
         </View>
 
         {/* Tarjetas de Caja Regalo */}
@@ -147,102 +160,104 @@ export default function PantallaCajaRegalo() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.BACKGROUND,
   },
   content: {
-    padding: 20,
+    padding: SPACING.LARGE,
     maxWidth: 1200,
-    alignSelf: 'center',
+    marginHorizontal: 'auto',
+    alignItems: 'flex-start',
     width: '100%',
   },
   generoContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 32,
-    gap: 16,
+    justifyContent: 'flex-start',
+    marginBottom: SPACING.XLARGE,
+    gap: SPACING.MEDIUM,
+    width: '100%',
+    paddingHorizontal: SPACING.MEDIUM,
   },
   generoOpcion: {
     flex: 1,
     alignItems: 'center',
-    padding: 24,
+    padding: SPACING.LARGE,
     borderRadius: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+    backgroundColor: COLORS.BACKGROUND,
+    maxWidth: 200,
   },
   generoLabel: {
-    marginTop: 8,
-    fontSize: 16,
+    marginTop: SPACING.SMALL,
+    fontSize: FONT_SIZES.REGULAR,
     fontWeight: '600',
-    color: '#333',
+    color: COLORS.TEXT_PRIMARY,
   },
-  sliderContainer: {
-    marginBottom: 32,
+  decantCountContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginBottom: SPACING.SMALL,
+    gap: SPACING.MEDIUM,
+    width: '100%',
+    maxWidth: 600,
   },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 16,
-  },
-  sliderWrapper: {
-    marginBottom: 8,
+  decantCountButton: {
+    flex: 1,
+    borderRadius: 8,
+    backgroundColor: COLORS.BACKGROUND,
+    borderWidth: 1,
+    borderColor: COLORS.BORDER,
     alignItems: 'center',
   },
-  slider: {
-    height: 40,
+  decantCountButtonActive: {
+    backgroundColor: COLORS.ACCENT,
+    borderColor: COLORS.ACCENT,
   },
-  precioLabels: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    width: '100%',
+  decantCountText: {
+    fontSize: FONT_SIZES.REGULAR,
+    color: COLORS.TEXT_PRIMARY,
   },
-  precioLabel: {
-    fontSize: 14,
-    color: '#666',
+  decantCountTextActive: {
+    color: COLORS.BACKGROUND,
   },
   cardsContainer: {
-    gap: 16,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: SPACING.MEDIUM,
+    marginTop: SPACING.XLARGE,
+    width: '100%',
+    paddingHorizontal: SPACING.MEDIUM,
   },
   card: {
-    flexDirection: 'row',
-    padding: 20,
+    width: '48%',
+    padding: SPACING.LARGE,
     borderRadius: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
-    alignItems: 'center',
+    backgroundColor: COLORS.BACKGROUND,
   },
   cardIconContainer: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: 'rgba(255, 255, 255, 0.8)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
+    marginBottom: SPACING.MEDIUM,
   },
   cardContent: {
-    flex: 1,
+    gap: SPACING.SMALL,
   },
   cardTitle: {
-    fontSize: 18,
+    fontSize: FONT_SIZES.LARGE,
     fontWeight: '600',
-    color: '#333',
-    marginBottom: 4,
+    color: COLORS.TEXT_PRIMARY,
   },
   cardDescription: {
-    fontSize: 14,
-    color: '#666',
-    lineHeight: 20,
+    fontSize: FONT_SIZES.REGULAR,
+    color: COLORS.TEXT_SECONDARY,
+  },
+  priceRangeContainer: {
+    width: '100%'
   },
 });

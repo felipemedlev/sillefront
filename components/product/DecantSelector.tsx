@@ -7,15 +7,17 @@ type DecantSize = 3 | 5 | 10;
 interface DecantSelectorProps {
   decantCount: DecantCount;
   setDecantCount: (count: DecantCount) => void;
-  decantSize: DecantSize;
-  setDecantSize: (size: DecantSize) => void;
+  decantSize?: DecantSize;
+  setDecantSize?: (size: DecantSize) => void;
+  showSizeSelection?: boolean;
 }
 
 const DecantSelector: React.FC<DecantSelectorProps> = ({
   decantCount,
   setDecantCount,
-  decantSize,
-  setDecantSize,
+  decantSize = 5,
+  setDecantSize = () => {},
+  showSizeSelection = true,
 }) => {
   return (
     <>
@@ -50,27 +52,29 @@ const DecantSelector: React.FC<DecantSelectorProps> = ({
         </View>
       </View>
 
-      {/* Size Selection */}
-      <View style={[styles.section, styles.filterSection]}>
-        <Text style={[styles.sectionTitle, styles.filterTitle]}>Tamaño de Decants</Text>
-        <View style={styles.sizeContainer}>
-          {[3, 5, 10].map((size) => (
-            <Pressable
-              key={size}
-              style={[
-                styles.sizeButton,
-                decantSize === size && styles.sizeButtonActive,
-              ]}
-              onPress={() => setDecantSize(size as DecantSize)}
-            >
-              <Text style={[
-                styles.sizeText,
-                decantSize === size && styles.sizeTextActive,
-              ]}>{size}ml</Text>
-            </Pressable>
-          ))}
+      {/* Size Selection - Only shown if showSizeSelection is true */}
+      {showSizeSelection && (
+        <View style={[styles.section, styles.filterSection]}>
+          <Text style={[styles.sectionTitle, styles.filterTitle]}>Tamaño de Decants</Text>
+          <View style={styles.sizeContainer}>
+            {[3, 5, 10].map((size) => (
+              <Pressable
+                key={size}
+                style={[
+                  styles.sizeButton,
+                  decantSize === size && styles.sizeButtonActive,
+                ]}
+                onPress={() => setDecantSize(size as DecantSize)}
+              >
+                <Text style={[
+                  styles.sizeText,
+                  decantSize === size && styles.sizeTextActive,
+                ]}>{size}ml</Text>
+              </Pressable>
+            ))}
+          </View>
         </View>
-      </View>
+      )}
     </>
   );
 };
@@ -99,6 +103,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 8,
     paddingHorizontal: 4,
+    maxWidth: '100%', // Add maxWidth constraint
   },
   decantCountButton: {
     flex: 1,
@@ -108,6 +113,8 @@ const styles = StyleSheet.create({
     borderColor: '#E6E6E6',
     alignItems: 'center',
     backgroundColor: '#FFFFFF',
+    maxWidth: 150, // Add maxWidth constraint
+    flexShrink: 1, // Allow button to shrink
   },
   decantCountButtonActive: {
     backgroundColor: '#809CAC',
@@ -126,6 +133,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 8,
     paddingHorizontal: 4,
+    maxWidth: '100%', // Add maxWidth constraint
   },
   sizeButton: {
     flex: 1,
@@ -135,6 +143,8 @@ const styles = StyleSheet.create({
     borderColor: '#E6E6E6',
     alignItems: 'center',
     backgroundColor: '#FFFFFF',
+    maxWidth: 150, // Add maxWidth constraint
+    flexShrink: 1, // Allow button to shrink
   },
   sizeButtonActive: {
     backgroundColor: '#809CAC',

@@ -6,6 +6,7 @@ import SearchBar from '../../../components/search/SearchBar';
 import SearchResults from '../../../components/search/SearchResults';
 import PerfumeModal from '../../../components/product/PerfumeModal';
 import { PerfumeModalRef } from '../../../components/product/PerfumeModal';
+import { router } from 'expo-router';
 
 export default function SearchScreen() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -36,11 +37,16 @@ export default function SearchScreen() {
     modalRef.current?.show(perfume);
   };
 
+  const handleManualBoxPress = () => {
+    router.push('/manual-box');
+  };
+
   return (
     <View style={styles.container}>
       <SearchBar
         value={searchQuery}
         onChangeText={setSearchQuery}
+        onManualBoxPress={handleManualBoxPress}
       />
       <SearchResults
         perfumes={filteredPerfumes}

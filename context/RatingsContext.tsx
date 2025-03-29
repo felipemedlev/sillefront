@@ -19,11 +19,13 @@ export function RatingsProvider({ children }: { children: ReactNode }) {
       try {
         setIsLoadingRatings(true);
         const savedRatings = await AsyncStorage.getItem(STORAGE_KEYS.RATINGS);
+        console.log('Loading ratings from storage:', savedRatings);
         if (savedRatings) {
           setRatings(JSON.parse(savedRatings));
         }
       } catch (err) {
         const appError = handleError(err);
+        console.error('Error loading ratings:', appError);
         setError(`Error loading ratings: ${appError.message}`);
       } finally {
         setIsLoadingRatings(false);
@@ -57,9 +59,11 @@ export function RatingsProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const saveRatings = async () => {
       try {
+        console.log('Saving ratings to storage:', ratings);
         await AsyncStorage.setItem(STORAGE_KEYS.RATINGS, JSON.stringify(ratings));
       } catch (err) {
         const appError = handleError(err);
+        console.error('Error saving ratings:', appError);
         setError(`Error saving ratings: ${appError.message}`);
       }
     };

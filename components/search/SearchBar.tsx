@@ -1,14 +1,16 @@
 import React from 'react';
-import { View, TextInput, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, TextInput, StyleSheet, TouchableOpacity, Text } from 'react-native';
 import { Feather } from '@expo/vector-icons';
+import { COLORS, FONT_SIZES, SPACING } from '../../types/constants';
 
 interface SearchBarProps {
   value: string;
   onChangeText: (text: string) => void;
   placeholder?: string;
+  onManualBoxPress?: () => void;
 }
 
-export default function SearchBar({ value, onChangeText, placeholder = 'Buscar perfumes...' }: SearchBarProps) {
+export default function SearchBar({ value, onChangeText, placeholder = 'Buscar perfumes...', onManualBoxPress }: SearchBarProps) {
   return (
     <View style={styles.container}>
       <View style={styles.searchContainer}>
@@ -26,6 +28,13 @@ export default function SearchBar({ value, onChangeText, placeholder = 'Buscar p
           </TouchableOpacity>
         )}
       </View>
+      <TouchableOpacity
+        style={styles.manualBoxButton}
+        onPress={onManualBoxPress}
+      >
+        <Feather name="box" size={18} color={COLORS.BACKGROUND} style={styles.buttonIcon} />
+        <Text style={styles.buttonText}>Mi Box Manual</Text>
+      </TouchableOpacity>
     </View>
   );
 }
@@ -34,6 +43,8 @@ const styles = StyleSheet.create({
   container: {
     padding: 16,
     backgroundColor: '#FFFEFC',
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0F0F0',
   },
   searchContainer: {
     flexDirection: 'row',
@@ -42,6 +53,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingHorizontal: 12,
     height: 48,
+    marginBottom: 12,
   },
   searchIcon: {
     marginRight: 8,
@@ -53,5 +65,29 @@ const styles = StyleSheet.create({
   },
   clearButton: {
     padding: 4,
+  },
+  manualBoxButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: COLORS.PRIMARY,
+    borderRadius: 12,
+    paddingVertical: 12,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  buttonIcon: {
+    marginRight: 8,
+  },
+  buttonText: {
+    color: COLORS.BACKGROUND,
+    fontSize: FONT_SIZES.REGULAR,
+    fontWeight: '600',
   },
 });

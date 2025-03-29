@@ -31,6 +31,7 @@ export default function RatingModal({ visible, onClose, perfume }: RatingModalPr
 
   const handleRatingPress = (selectedRating: number) => {
     setRating(selectedRating);
+    console.log('Adding rating for perfume:', perfume.id, 'rating:', selectedRating);
     addRating(perfume.id, selectedRating);
     setShowFeedback(true);
     setTimeout(() => {

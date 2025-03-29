@@ -90,7 +90,7 @@ export default function ManualBoxScreen() {
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <View style={styles.header}>
         <TouchableOpacity
-          onPress={() => router.push('/(tabs)/(search)')}
+          onPress={() => router.back()}
           style={styles.backButton}
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
         >
@@ -130,9 +130,18 @@ export default function ManualBoxScreen() {
               </TouchableOpacity>
             </View>
           ) : (
-            selectedPerfumes.map((perfume: Perfume, index: number) => (
-              <SelectedPerfumeItem key={perfume.id} perfume={perfume} index={index} />
-            ))
+            <>
+              {selectedPerfumes.map((perfume: Perfume, index: number) => (
+                <SelectedPerfumeItem key={perfume.id} perfume={perfume} index={index} />
+              ))}
+              <TouchableOpacity
+                onPress={() => router.push('/(tabs)/(search)')}
+                style={styles.addMoreButton}
+              >
+                <Feather name="plus-circle" size={24} color={COLORS.ACCENT} />
+                <Text style={styles.addMoreText}>Añadir más perfumes</Text>
+              </TouchableOpacity>
+            </>
           )}
         </View>
       </ScrollView>
@@ -265,5 +274,22 @@ const styles = StyleSheet.create({
     padding: SPACING.SMALL,
     borderRadius: 20,
     backgroundColor: COLORS.BACKGROUND_ALT,
+  },
+  addMoreButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: SPACING.MEDIUM,
+    borderRadius: 8,
+    backgroundColor: COLORS.BACKGROUND,
+    borderWidth: 1,
+    borderColor: COLORS.BORDER,
+    marginTop: SPACING.SMALL,
+  },
+  addMoreText: {
+    fontSize: FONT_SIZES.REGULAR,
+    color: COLORS.ACCENT,
+    fontWeight: '600',
+    marginLeft: SPACING.SMALL,
   },
 });

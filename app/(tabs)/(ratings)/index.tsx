@@ -144,9 +144,7 @@ export default function RatingsScreen() {
             setIsRatingModalVisible(false);
             setSelectedPerfume(null);
           }}
-          // Assuming RatingModal still expects a number ID based on its original definition.
-          // If RatingModal was updated to accept string, remove parseInt.
-          perfume={{ ...selectedPerfume, id: parseInt(selectedPerfume.id, 10) }}
+          perfume={selectedPerfume}
         />
       )}
     </SafeAreaView>

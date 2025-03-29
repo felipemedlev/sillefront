@@ -1,6 +1,8 @@
 import React from 'react';
 import { View, Text, StyleSheet, useWindowDimensions, ScrollView, Pressable } from 'react-native';
 import { router } from 'expo-router';
+import { Feather } from '@expo/vector-icons'; // <-- Add Feather import
+import { COLORS } from '../../types/constants'; // <-- Add COLORS import
 
 const OCCASIONS = [
   { id: 1, title: 'Romántica', color: '#F5E6E6' },
@@ -29,6 +31,16 @@ export default function AIBoxScreen() {
           <Text style={styles.mainTitle}>¡Está listo tu Box AI!</Text>
           <Pressable style={styles.openButton} onPress={handleOpenPress}>
             <Text style={styles.openButtonText}>Abrir</Text>
+          </Pressable>
+        </View>
+
+        {/* Manual Box Card */}
+        <View style={[styles.mainCard, styles.manualCard]}>
+          <Feather name="edit-3" size={28} color={COLORS.PRIMARY} style={styles.cardIcon} />
+          <Text style={styles.subtitle}>Crea tu Propia Selección</Text>
+          <Text style={styles.mainTitle}>Box Manual</Text>
+          <Pressable style={styles.openButton} onPress={() => router.push('../manual-box')}>
+            <Text style={styles.openButtonText}>Configurar</Text>
           </Pressable>
         </View>
 
@@ -128,5 +140,13 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#333',
     textAlign: 'center',
+  },
+  // Styles for Manual Box Card
+  manualCard: {
+    backgroundColor: '#F0F4F8', // A slightly different background for distinction
+    marginTop: 16, // Add some space above it
+  },
+  cardIcon: {
+    marginBottom: 12, // Space below the icon
   },
 });

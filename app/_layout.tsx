@@ -4,6 +4,7 @@ import * as Font from 'expo-font';
 import { StatusBar } from 'expo-status-bar';
 import { View, ActivityIndicator, Text, StyleSheet } from 'react-native';
 import { RatingsProvider } from '../context/RatingsContext';
+import { ManualBoxProvider } from '../context/ManualBoxContext'; // <-- Add this import
 import { FontLoadingState, LayoutStyles } from '../types/layout';
 import { FONTS, COLORS, FONT_SIZES, SPACING } from '../types/constants';
 import { handleError } from '../types/error';
@@ -65,10 +66,11 @@ export default function RootLayout() {
   }
 
   return (
-    <RatingsProvider>
-      <View style={styles.container}>
-        <StatusBar style="dark" translucent={true} />
-        <Stack
+    <ManualBoxProvider>
+      <RatingsProvider>
+        <View style={styles.container}>
+          <StatusBar style="dark" translucent={true} />
+          <Stack
           screenOptions={{
             headerShown: false,
             contentStyle: styles.stackContent,
@@ -82,12 +84,15 @@ export default function RootLayout() {
               contentStyle: styles.stackContent,
             }}
           />
+          {/* Add Manual Box screen to the main stack */}
+          <Stack.Screen name="manual-box" options={{ headerShown: false }} />
           <Stack.Screen name="landing/index" options={{ headerShown: false }} />
           <Stack.Screen name="survey" options={{ headerShown: false }} />
           <Stack.Screen name="auth" options={{ headerShown: false }} />
         </Stack>
       </View>
     </RatingsProvider>
+  </ManualBoxProvider>
   );
 }
 

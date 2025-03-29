@@ -1,0 +1,254 @@
+import React, { useCallback } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Animated } from 'react-native';
+import { Feather } from '@expo/vector-icons';
+import { useManualBox } from '../context/ManualBoxContext';
+import DecantSelector from '../components/product/DecantSelector';
+import BottomBar from '../components/product/BottomBar';
+import { COLORS, FONT_SIZES, SPACING } from '../types/constants';
+import { Perfume } from '../types/perfume';
+import { router } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+export default function ManualBoxScreen() {
+  const insets = useSafeAreaInsets();
+  const {
+    selectedPerfumes,
+    decantCount,
+    decantSize,
+    setDecantCount,
+    setDecantSize,
+    removePerfume,
+  } = useManualBox();
+
+  const calculateTotalPrice = useCallback(() => {
+    // Add explicit types for reduce parameters
+    return selectedPerfumes.reduce((total: number, perfume: Perfume) => {
+      const pricePerML = perfume.pricePerML ?? 0;
+      return total + pricePerML * decantSize;
+    }, 0);
+  }, [selectedPerfumes, decantSize]);
+
+  const handleAddToCart = useCallback(() => {
+    console.log('Adding manual box to cart:', {
+      decantCount,
+      decantSize,
+      // Add explicit type for map parameter
+      selectedPerfumes: selectedPerfumes.map((p: Perfume) => p.id),
+      totalPrice: calculateTotalPrice(),
+    });
+    // Add actual cart logic here
+  }, [decantCount, decantSize, selectedPerfumes, calculateTotalPrice]);
+
+  const SelectedPerfumeItem = ({ perfume, index }: { perfume: Perfume; index: number }) => {
+    const fadeAnim = React.useRef(new Animated.Value(0)).current;
+    const translateY = React.useRef(new Animated.Value(20)).current;
+
+    React.useEffect(() => {
+      Animated.parallel([
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+        Animated.timing(translateY, {
+          toValue: 0,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    }, []);
+
+    return (
+      <Animated.View
+        style={[
+          styles.perfumeItem,
+          {
+            opacity: fadeAnim,
+            transform: [{ translateY }],
+          },
+        ]}
+      >
+        <View style={styles.perfumeInfo}>
+          <Text style={styles.perfumeBrand}>{perfume.brand}</Text>
+          <Text style={styles.perfumeName}>{perfume.name}</Text>
+          <Text style={styles.perfumePrice}>
+            ${(perfume.pricePerML ?? 0) * decantSize} por {decantSize}ml
+          </Text>
+        </View>
+        <TouchableOpacity
+          onPress={() => removePerfume(perfume.id)}
+          style={styles.removeButton}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        >
+          <Feather name="x-circle" size={24} color={COLORS.ERROR} />
+        </TouchableOpacity>
+      </Animated.View>
+    );
+  };
+
+  return (
+    <View style={[styles.container, { paddingTop: insets.top }]}>
+      <View style={styles.header}>
+        <TouchableOpacity
+          onPress={() => router.push('/(tabs)/(search)')}
+          style={styles.backButton}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        >
+          <Feather name="arrow-left" size={24} color={COLORS.TEXT_PRIMARY} />
+        </TouchableOpacity>
+        <Text style={styles.title}>Tu Box Manual</Text>
+      </View>
+
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <DecantSelector
+          decantCount={decantCount}
+          setDecantCount={setDecantCount}
+          decantSize={decantSize}
+          setDecantSize={setDecantSize}
+        />
+
+        <View style={styles.perfumeListContainer}>
+          <Text style={styles.listHeader}>
+            Perfumes Seleccionados ({selectedPerfumes.length}/{decantCount})
+          </Text>
+          {selectedPerfumes.length === 0 ? (
+            <View style={styles.emptyStateContainer}>
+              <Feather name="info" size={40} color={COLORS.TEXT_SECONDARY} />
+              <Text style={styles.emptyStateText}>
+                Tu box manual está vacío.
+              </Text>
+              <TouchableOpacity
+                onPress={() => router.push('/(tabs)/(search)')}
+                style={styles.emptyStateButton}
+              >
+                <Text style={styles.emptyStateLink}>
+                  Añade perfumes desde la pestaña de búsqueda (+)
+                </Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            selectedPerfumes.map((perfume: Perfume, index: number) => (
+              <SelectedPerfumeItem key={perfume.id} perfume={perfume} index={index} />
+            ))
+          )}
+        </View>
+      </ScrollView>
+
+      <BottomBar
+        totalPrice={calculateTotalPrice()}
+        onAddToCart={handleAddToCart}
+      />
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: COLORS.BACKGROUND_ALT, // Use a slightly different background
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: SPACING.MEDIUM,
+    paddingVertical: SPACING.SMALL,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.BORDER,
+  },
+  backButton: {
+    padding: SPACING.SMALL,
+  },
+  scrollContent: {
+    padding: SPACING.LARGE,
+    paddingBottom: 100, // Ensure space for BottomBar
+  },
+  title: {
+    fontSize: FONT_SIZES.XLARGE,
+    fontWeight: 'bold',
+    color: COLORS.PRIMARY,
+    marginLeft: SPACING.MEDIUM,
+    flex: 1,
+  },
+  perfumeListContainer: {
+    marginTop: SPACING.XLARGE,
+  },
+  listHeader: {
+    fontSize: FONT_SIZES.LARGE,
+    fontWeight: '600',
+    color: COLORS.TEXT_PRIMARY,
+    marginBottom: SPACING.MEDIUM,
+  },
+  emptyStateContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: SPACING.XLARGE * 2,
+    backgroundColor: COLORS.BACKGROUND,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: COLORS.BORDER,
+    marginTop: SPACING.MEDIUM,
+  },
+  emptyStateText: {
+    fontSize: FONT_SIZES.REGULAR,
+    color: COLORS.TEXT_SECONDARY,
+    textAlign: 'center',
+    marginTop: SPACING.MEDIUM,
+    marginBottom: SPACING.SMALL,
+    lineHeight: FONT_SIZES.REGULAR * 1.4,
+  },
+  emptyStateButton: {
+    padding: SPACING.SMALL,
+  },
+  emptyStateLink: {
+    fontSize: FONT_SIZES.REGULAR,
+    color: COLORS.ACCENT, // Use accent color for link
+    textAlign: 'center',
+    textDecorationLine: 'underline',
+  },
+  perfumeItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: COLORS.BACKGROUND,
+    padding: SPACING.MEDIUM,
+    borderRadius: 8,
+    marginBottom: SPACING.MEDIUM,
+    borderWidth: 1,
+    borderColor: COLORS.BORDER,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 3,
+  },
+  perfumeInfo: {
+    flex: 1,
+    marginRight: SPACING.MEDIUM,
+  },
+  perfumeBrand: {
+    fontSize: FONT_SIZES.SMALL,
+    color: COLORS.TEXT_SECONDARY,
+    textTransform: 'uppercase',
+    marginBottom: 2,
+  },
+  perfumeName: {
+    fontSize: FONT_SIZES.REGULAR,
+    fontWeight: '500',
+    color: COLORS.TEXT_PRIMARY,
+    marginBottom: 4,
+  },
+  perfumePrice: {
+    fontSize: FONT_SIZES.SMALL,
+    color: COLORS.ACCENT,
+    fontWeight: '600',
+  },
+  removeButton: {
+    padding: SPACING.SMALL / 2,
+  },
+});

@@ -1,24 +1,15 @@
 import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
-import PerfumeModal, { PerfumeModalRef } from '../components/product/PerfumeModal';
-import { View, Text, StyleSheet, ScrollView, Pressable, Image, ImageSourcePropType, Dimensions } from 'react-native';
+import { View, StyleSheet, ScrollView, Dimensions, Pressable, Text } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import MultiSlider from '@ptomasroos/react-native-multi-slider';
+import PerfumeModal, { PerfumeModalRef } from '../components/product/PerfumeModal';
 import { Perfume } from '../types/perfume';
+import DecantSelector from '../components/product/DecantSelector';
+import PriceRangeSlider from '../components/product/PriceRangeSlider';
+import PerfumeList from '../components/product/PerfumeList';
+import BottomBar from '../components/product/BottomBar';
 
-type DecantCount = 4 | 8;
-type DecantSize = 3 | 5 | 10;
-
-// Simplified info for similar perfumes list (matching PerfumeModal)
-interface BasicPerfumeInfo {
-  id: string;
-  name: string;
-  brand: string;
-  thumbnailUrl: string;
-  fullSizeUrl: string;
-}
-
-// Mock data - updated with numerical ratings
+// Move MOCK_PERFUMES to this file since it was causing circular dependency
 export const MOCK_PERFUMES: Perfume[] = [
   {
     id: '9099',
@@ -39,10 +30,7 @@ export const MOCK_PERFUMES: Perfume[] = [
     priceValueRating: 3.5,
     sillageRating: 1,
     longevityRating: 2,
-    similarPerfumes: [
-      '31861', // Sauvage
-      '410', // Acqua di Gio
-    ],
+    similarPerfumes: ['31861', '410'],
   },
   {
     id: '410',
@@ -63,10 +51,7 @@ export const MOCK_PERFUMES: Perfume[] = [
     priceValueRating: 4.0,
     sillageRating: 1,
     longevityRating: 1,
-    similarPerfumes: [
-      '485', // Light Blue
-      '9099', // Bleu de Chanel
-    ],
+    similarPerfumes: ['485', '9099'],
   },
   {
     id: '31861',
@@ -87,9 +72,7 @@ export const MOCK_PERFUMES: Perfume[] = [
     priceValueRating: 3.0,
     sillageRating: 2,
     longevityRating: 2,
-    similarPerfumes: [
-      '9099', // Bleu de Chanel
-    ],
+    similarPerfumes: ['9099'],
   },
   {
     id: '485',
@@ -110,9 +93,7 @@ export const MOCK_PERFUMES: Perfume[] = [
     priceValueRating: 4.5,
     sillageRating: 1,
     longevityRating: 1,
-    similarPerfumes: [
-      '410', // Acqua di Gio
-    ],
+    similarPerfumes: ['410'],
   },
   {
     id: '14982',
@@ -133,10 +114,7 @@ export const MOCK_PERFUMES: Perfume[] = [
     priceValueRating: 4.0,
     sillageRating: 2,
     longevityRating: 2,
-    similarPerfumes: [
-      '25324', // Black Opium
-      '39681', // Good Girl
-    ],
+    similarPerfumes: ['25324', '39681'],
   },
   {
     id: '25324',
@@ -157,10 +135,7 @@ export const MOCK_PERFUMES: Perfume[] = [
     priceValueRating: 3.8,
     sillageRating: 2,
     longevityRating: 2,
-    similarPerfumes: [
-      '14982', // La Vie Est Belle
-      '39681', // Good Girl
-    ],
+    similarPerfumes: ['14982', '39681'],
   },
   {
     id: '210',
@@ -181,7 +156,7 @@ export const MOCK_PERFUMES: Perfume[] = [
     priceValueRating: 3.2,
     sillageRating: 1,
     longevityRating: 2,
-    similarPerfumes: [], // No similar ones in this mock list
+    similarPerfumes: [],
   },
   {
     id: '39681',
@@ -202,280 +177,12 @@ export const MOCK_PERFUMES: Perfume[] = [
     priceValueRating: 3.9,
     sillageRating: 2,
     longevityRating: 2,
-    similarPerfumes: [
-      '14982', // La Vie Est Belle
-      '25324', // Black Opium
-    ],
+    similarPerfumes: ['14982', '25324'],
   },
 ];
 
-export default function AIBoxSelectionScreen() {
-  const [decantCount, setDecantCount] = useState<DecantCount>(4);
-  const [decantSize, setDecantSize] = useState<DecantSize>(5);
-  const [rangoPrecio, setRangoPrecio] = useState([0, 10000]);
-  const [selectedPerfumeId, setSelectedPerfumeId] = useState<string | null>(null);
-  const [swappingPerfumeId, setSwappingPerfumeId] = useState<string | null>(null);
-  const [selectedPerfumes, setSelectedPerfumes] = useState<string[]>([]);
-  const modalRef = useRef<PerfumeModalRef>(null);
-  const sliderContainerRef = useRef<View>(null);
-  const [isSliderReady, setIsSliderReady] = useState(false);
-
-  // Initialize selected perfumes when component mounts
-  useEffect(() => {
-    const filteredPerfumes = MOCK_PERFUMES.filter(perfume =>
-      (perfume.pricePerML ?? 0) >= rangoPrecio[0] &&
-      (perfume.pricePerML ?? 0) <= rangoPrecio[1]
-    );
-    setSelectedPerfumes(filteredPerfumes.slice(0, decantCount).map(p => p.id));
-  }, [decantCount, rangoPrecio]);
-
-  // Add effect to handle slider container mounting
-  useEffect(() => {
-    if (sliderContainerRef.current) {
-      setIsSliderReady(true);
-    }
-  }, []);
-
-  const handleMaxPriceChange = useCallback((values: number[]) => {
-    setRangoPrecio(values);
-  }, []);
-
-  const handlePerfumePress = (perfumeId: string) => {
-    setSelectedPerfumeId(perfumeId);
-  };
-
-  const handleSwapPress = (perfumeId: string) => {
-    setSwappingPerfumeId(perfumeId);
-    setSelectedPerfumeId(perfumeId);
-  };
-
-  const handleSimilarPerfumeSelect = (newPerfumeId: string) => {
-    if (swappingPerfumeId) {
-      // Replace the old perfume with the new one in the selected perfumes array
-      setSelectedPerfumes(prev =>
-        prev.map(id => id === swappingPerfumeId ? newPerfumeId : id)
-      );
-      // Close the modal
-      modalRef.current?.hide();
-    }
-  };
-
-  // Callback when the modal is dismissed (by background tap, swipe, etc.)
-  const handleModalDismiss = useCallback(() => {
-    // Add a small delay before clearing the selected perfume ID
-    // This ensures the modal is fully closed before state changes
-    setTimeout(() => {
-      setSelectedPerfumeId(null);
-      setSwappingPerfumeId(null);
-    }, 100);
-  }, []);
-
-  const handleAddToCart = () => {
-    // Add to cart functionality to be implemented
-    console.log('Adding to cart:', {
-      decantCount,
-      decantSize,
-      totalPrice: calculateTotalPrice()
-    });
-  };
-
-  const calculateTotalPrice = useCallback(() => {
-    // Calculate total price based on selected perfumes
-    return selectedPerfumes.reduce((total, perfumeId) => {
-      const perfume = MOCK_PERFUMES.find(p => p.id === perfumeId);
-      return total + (perfume?.pricePerML || 0) * decantSize;
-    }, 0);
-  }, [decantCount, decantSize, selectedPerfumes]);
-
-  // Filter perfumes by price range
-  const filteredPerfumes = useMemo(() => {
-    return MOCK_PERFUMES.filter(perfume =>
-      (perfume.pricePerML ?? 0) >= rangoPrecio[0] &&
-      (perfume.pricePerML ?? 0) <= rangoPrecio[1]
-    );
-  }, [rangoPrecio]);
-
-  const selectedPerfume = selectedPerfumeId
-    ? MOCK_PERFUMES.find(p => p.id === selectedPerfumeId)
-    : null;
-
-  // Effect to show the modal when a perfume is selected
-  useEffect(() => {
-    if (selectedPerfume && modalRef.current) {
-      modalRef.current.show(selectedPerfume);
-    }
-  }, [selectedPerfume]); // Dependency array ensures this runs when selectedPerfume changes
-
-  return (
-    <View style={[styles.container, {backgroundColor: '#F5F5F7'}]}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.backButton}>
-          <Feather name="chevron-left" size={24} color="#333" />
-        </Pressable>
-        <Text style={styles.headerTitle}>Selecciona tu Box</Text>
-      </View>
-
-      <ScrollView style={styles.content} contentContainerStyle={styles.contentContainer}>
-        {/* Decant Selection */}
-        <View style={[styles.section, styles.filterSection]}>
-          <Text style={[styles.sectionTitle, styles.filterTitle]}>Cantidad de Decants</Text>
-          <View style={styles.decantCountContainer}>
-            <Pressable
-              style={[
-                styles.decantCountButton,
-                decantCount === 4 && styles.decantCountButtonActive,
-              ]}
-              onPress={() => setDecantCount(4)}
-            >
-              <Text style={[
-                styles.decantCountText,
-                decantCount === 4 && styles.decantCountTextActive,
-              ]}>4 Decants</Text>
-            </Pressable>
-            <Pressable
-              style={[
-                styles.decantCountButton,
-                decantCount === 8 && styles.decantCountButtonActive,
-              ]}
-              onPress={() => setDecantCount(8)}
-            >
-              <Text style={[
-                styles.decantCountText,
-                decantCount === 8 && styles.decantCountTextActive,
-              ]}>8 Decants</Text>
-            </Pressable>
-          </View>
-        </View>
-
-        {/* Size Selection */}
-        <View style={[styles.section, styles.filterSection]}>
-          <Text style={[styles.sectionTitle, styles.filterTitle]}>Tamaño de Decants</Text>
-          <View style={styles.sizeContainer}>
-            {[3, 5, 10].map((size) => (
-              <Pressable
-                key={size}
-                style={[
-                  styles.sizeButton,
-                  decantSize === size && styles.sizeButtonActive,
-                ]}
-                onPress={() => setDecantSize(size as DecantSize)}
-              >
-                <Text style={[
-                  styles.sizeText,
-                  decantSize === size && styles.sizeTextActive,
-                ]}>{size}ml</Text>
-              </Pressable>
-            ))}
-          </View>
-        </View>
-
-        {/* Price Range */}
-        <View style={[styles.section, styles.filterSection]}>
-          <Text style={[styles.sectionTitle, styles.filterTitle]}>Rango de Precio por mL</Text>
-          <View style={styles.priceContainer}>
-            <View style={styles.priceLabelsCompact}>
-              <Text style={styles.priceText}>${rangoPrecio[0].toLocaleString()}</Text>
-              <Text style={styles.priceText}>${rangoPrecio[1].toLocaleString()}</Text>
-            </View>
-            <View ref={sliderContainerRef} style={styles.sliderContainer}>
-              {isSliderReady && (
-                <MultiSlider
-                  values={rangoPrecio}
-                  min={0}
-                  max={20000}
-                  step={100}
-                  onValuesChange={handleMaxPriceChange}
-                  sliderLength={Dimensions.get('window').width - 80}
-                  selectedStyle={{
-                    backgroundColor: '#809CAC',
-                    height: 4,
-                  }}
-                  unselectedStyle={{
-                    backgroundColor: '#E6E6E6',
-                    height: 4,
-                  }}
-                  containerStyle={styles.slider}
-                />
-              )}
-            </View>
-          </View>
-        </View>
-
-        {/* Perfumes List */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Perfumes Seleccionados</Text>
-          {selectedPerfumes.map((perfumeId) => {
-            const perfume = MOCK_PERFUMES.find(p => p.id === perfumeId);
-            if (!perfume) return null;
-
-            return (
-              <Pressable
-                key={perfume.id}
-                style={styles.perfumeCard}
-                onPress={() => handlePerfumePress(perfume.id)}
-              >
-                <View style={styles.imageContainer}>
-                  <Image
-                    source={{ uri: perfume.thumbnailUrl }}
-                    style={styles.perfumeImage}
-                  />
-                  <Image
-                    source={require('../assets/images/decant-general.png')}
-                    style={styles.decantIcon}
-                  />
-                </View>
-                <View style={styles.perfumeInfo}>
-                  <View style={styles.matchBadge}>
-                    <Text style={styles.matchText}>{perfume.matchPercentage}% AI Match</Text>
-                  </View>
-                  <Text style={styles.perfumeName}>{perfume.name}</Text>
-                  <Text style={styles.perfumeBrand}>{perfume.brand}</Text>
-                  <Text style={styles.perfumePrice}>${(perfume.pricePerML ?? 0).toLocaleString()}/mL</Text>
-                  <Text style={styles.perfumeTotalPrice}>Total: ${((perfume.pricePerML ?? 0) * decantSize).toLocaleString()}</Text>
-                  <Pressable
-                    style={styles.swapButton}
-                    onPress={() => handleSwapPress(perfume.id)}
-                  >
-                    <Text style={styles.swapButtonText}>Cambiar</Text>
-                  </Pressable>
-                </View>
-              </Pressable>
-            );
-          })}
-        </View>
-      </ScrollView>
-
-      {/* Fixed Bottom Bar */}
-      <View style={styles.bottomBar}>
-        <View style={styles.totalPriceContainer}>
-          <Text style={styles.totalPriceLabel}>Total:</Text>
-          <Text style={styles.totalPriceValue}>${calculateTotalPrice().toLocaleString()}</Text>
-        </View>
-        <Pressable
-          style={styles.addToCartButton}
-          onPress={handleAddToCart}
-        >
-          <Text style={styles.addToCartButtonText}>Añadir al carro</Text>
-        </Pressable>
-      </View>
-
-      {/* Render PerfumeModal Component conditionally based on selectedPerfume */}
-      {selectedPerfume && (
-        <PerfumeModal
-          ref={modalRef}
-          perfume={selectedPerfume}
-          onClose={handleModalDismiss}
-          isSwapping={!!swappingPerfumeId}
-          onSimilarPerfumeSelect={handleSimilarPerfumeSelect}
-        />
-      )}
-    </View>
-  );
-}
-
-const { height } = Dimensions.get('window');
-const cardHeight = height * 0.3;
+type DecantCount = 4 | 8;
+type DecantSize = 3 | 5 | 10;
 
 const styles = StyleSheet.create({
   container: {
@@ -504,241 +211,139 @@ const styles = StyleSheet.create({
   contentContainer: {
     paddingBottom: 20,
   },
-  section: {
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E6E6E6',
-  },
-  filterSection: {
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 16,
-  },
-  filterTitle: {
-    fontSize: 16,
-    marginBottom: 8,
-  },
-  decantCountContainer: {
-    flexDirection: 'row',
-    gap: 8,
-    paddingHorizontal: 4,
-  },
-  decantCountButton: {
-    flex: 1,
-    padding: 8,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: '#E6E6E6',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-  },
-  decantCountButtonActive: {
-    backgroundColor: '#809CAC',
-    borderColor: '#809CAC',
-    elevation: 3,
-  },
-  decantCountText: {
-    fontSize: 14,
-    color: '#333',
-    fontWeight: '500',
-  },
-  decantCountTextActive: {
-    color: '#FFFFFF',
-  },
-  sizeContainer: {
-    flexDirection: 'row',
-    gap: 8,
-    paddingHorizontal: 4,
-  },
-  sizeButton: {
-    flex: 1,
-    padding: 8,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: '#E6E6E6',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-  },
-  sizeButtonActive: {
-    backgroundColor: '#809CAC',
-    borderColor: '#809CAC',
-    elevation: 3,
-  },
-  sizeText: {
-    fontSize: 14,
-    color: '#333',
-    fontWeight: '500',
-  },
-  sizeTextActive: {
-    color: '#FFFFFF',
-  },
-  priceContainer: {
-    paddingHorizontal: 4,
-  },
-  priceLabelsCompact: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 8,
-  },
-  priceText: {
-    fontSize: 14,
-    color: '#333',
-    fontWeight: '600',
-  },
-  sliderContainer: {
-    position: 'relative',
-    height: 30,
-    justifyContent: 'center',
-    marginHorizontal: 8,
-  },
-  slider: {
-    width: '100%',
-    height: 30,
-    position: 'absolute',
-  },
-  rangeHighlight: {
-    position: 'absolute',
-    height: 4,
-    backgroundColor: '#809CAC',
-    top: '50%',
-    transform: [{ translateY: -2 }],
-    borderRadius: 2,
-  },
-  perfumeCard: {
-    flexDirection: 'row',
-    padding: 20,
-    borderRadius: 12,
-    backgroundColor: '#FFFFFF',
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 6,
-    elevation: 2,
-    height: cardHeight,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#F0F0F0',
-    overflow: 'hidden',
-  },
-  imageContainer: {
-    position: 'relative',
-    marginRight: 30,
-  },
-  decantIcon: {
-    position: 'absolute',
-    right: -10,
-    bottom: '0%',
-    width: 30,
-    height: 70,
-    resizeMode: 'contain',
-  },
-  matchBadge: {
-    backgroundColor: '#809CAC',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
-    marginTop: 20,
-    marginBottom: 6,
-    alignSelf: 'flex-start',
-  },
-  matchText: {
-    color: '#FFFFFF',
-    fontSize: 13,
-    fontWeight: '700',
-    letterSpacing: 0.5,
-  },
-  perfumeImage: {
-    width: cardHeight * 0.55,
-    height: cardHeight * 0.55,
-    borderRadius: 8,
-    resizeMode: 'contain',
-  },
-  perfumeInfo: {
-    flex: 1,
-  },
-  perfumeName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#222',
-    marginBottom: 4,
-    letterSpacing: 0.1,
-  },
-  perfumeBrand: {
-    fontSize: 15,
-    color: '#666',
-    marginBottom: 10,
-  },
-  perfumePrice: {
-    fontSize: 15,
-    color: '#666',
-    fontWeight: '500',
-    marginBottom: 6,
-  },
-  perfumeTotalPrice: {
-    fontSize: 17,
-    fontWeight: '600',
-    color: '#809CAC',
-  },
-  bottomBar: {
-    flexDirection: 'row',
-    padding: 16,
-    borderTopWidth: 1,
-    borderTopColor: '#E6E6E6',
-    backgroundColor: '#FFFFFF',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  totalPriceContainer: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    gap: 8,
-  },
-  totalPriceLabel: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#333',
-  },
-  totalPriceValue: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#333',
-  },
-  addToCartButton: {
-    backgroundColor: '#222222',
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 8,
-    shadowColor: '#809CAC',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  addToCartButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  swapButton: {
-    backgroundColor: '#F5F5F7',
-    paddingVertical: 6,
-    paddingHorizontal: 14,
-    borderRadius: 6,
-    marginTop: 10,
-    marginBottom: 20,
-    alignSelf: 'flex-start',
-    borderWidth: 1,
-    borderColor: '#E6E6E6',
-  },
-  swapButtonText: {
-    color: '#809CAC',
-    fontSize: 14,
-    fontWeight: '600',
-  },
 });
+
+export default function AIBoxSelectionScreen() {
+  const [decantCount, setDecantCount] = useState<DecantCount>(4);
+  const [decantSize, setDecantSize] = useState<DecantSize>(5);
+  const [rangoPrecio, setRangoPrecio] = useState<[number, number]>([500, 10000]);
+  const [selectedPerfumeId, setSelectedPerfumeId] = useState<string | null>(null);
+  const [swappingPerfumeId, setSwappingPerfumeId] = useState<string | null>(null);
+  const [selectedPerfumes, setSelectedPerfumes] = useState<string[]>([]);
+  const modalRef = useRef<PerfumeModalRef>(null);
+  const sliderContainerRef = useRef<View>(null);
+
+  // Initialize selected perfumes when component mounts or when decantCount/rangoPrecio changes
+  useEffect(() => {
+    const filteredPerfumes = MOCK_PERFUMES.filter((perfume: Perfume) =>
+      (perfume.pricePerML ?? 0) >= rangoPrecio[0] &&
+      (perfume.pricePerML ?? 0) <= rangoPrecio[1]
+    );
+
+    // Always set the selected perfumes to the first N perfumes that match the price range
+    setSelectedPerfumes(filteredPerfumes.slice(0, decantCount).map(p => p.id));
+  }, [decantCount, rangoPrecio]);
+
+  const handleMaxPriceChange = useCallback((values: number[]) => {
+    setRangoPrecio(values as [number, number]);
+  }, []);
+
+  const handlePerfumePress = useCallback((perfumeId: string) => {
+    setSelectedPerfumeId(perfumeId);
+  }, []);
+
+  const handleSwapPress = useCallback((perfumeId: string) => {
+    setSwappingPerfumeId(perfumeId);
+    setSelectedPerfumeId(perfumeId);
+  }, []);
+
+  const handleSimilarPerfumeSelect = useCallback((newPerfumeId: string) => {
+    if (swappingPerfumeId) {
+      setSelectedPerfumes(prev =>
+        prev.map(id => id === swappingPerfumeId ? newPerfumeId : id)
+      );
+      modalRef.current?.hide();
+    }
+  }, [swappingPerfumeId]);
+
+  const handleModalDismiss = useCallback(() => {
+    setTimeout(() => {
+      setSelectedPerfumeId(null);
+      setSwappingPerfumeId(null);
+    }, 100);
+  }, []);
+
+  const handleAddToCart = useCallback(() => {
+    console.log('Adding to cart:', {
+      decantCount,
+      decantSize,
+      totalPrice: calculateTotalPrice()
+    });
+  }, [decantCount, decantSize]);
+
+  const calculateTotalPrice = useCallback(() => {
+    return selectedPerfumes.reduce((total, perfumeId) => {
+      const perfume = MOCK_PERFUMES.find(p => p.id === perfumeId);
+      return total + (perfume?.pricePerML || 0) * decantSize;
+    }, 0);
+  }, [decantSize, selectedPerfumes]);
+
+  const filteredPerfumes = useMemo(() => {
+    return MOCK_PERFUMES.filter((perfume: Perfume) =>
+      (perfume.pricePerML ?? 0) >= rangoPrecio[0] &&
+      (perfume.pricePerML ?? 0) <= rangoPrecio[1]
+    );
+  }, [rangoPrecio]);
+
+  const selectedPerfume = useMemo(() => {
+    return selectedPerfumeId
+      ? MOCK_PERFUMES.find((p: Perfume) => p.id === selectedPerfumeId)
+      : null;
+  }, [selectedPerfumeId]);
+
+  useEffect(() => {
+    if (selectedPerfume && modalRef.current) {
+      modalRef.current.show(selectedPerfume);
+    }
+  }, [selectedPerfume]);
+
+  return (
+    <View style={[styles.container, {backgroundColor: '#F5F5F7'}]}>
+      {/* Header */}
+      <View style={styles.header}>
+        <Pressable onPress={() => router.back()} style={styles.backButton}>
+          <Feather name="chevron-left" size={24} color="#333" />
+        </Pressable>
+        <Text style={styles.headerTitle}>Selecciona tu Box</Text>
+      </View>
+
+      <ScrollView style={styles.content} contentContainerStyle={styles.contentContainer}>
+        <DecantSelector
+          decantCount={decantCount}
+          setDecantCount={setDecantCount}
+          decantSize={decantSize}
+          setDecantSize={setDecantSize}
+        />
+
+        <PriceRangeSlider
+          range={rangoPrecio}
+          onRangeChange={handleMaxPriceChange}
+          sliderContainerRef={sliderContainerRef}
+        />
+
+        <PerfumeList
+          selectedPerfumes={selectedPerfumes}
+          onPerfumePress={handlePerfumePress}
+          onSwapPress={handleSwapPress}
+          decantSize={decantSize}
+          perfumes={MOCK_PERFUMES}
+        />
+      </ScrollView>
+
+      <BottomBar
+        totalPrice={calculateTotalPrice()}
+        onAddToCart={handleAddToCart}
+      />
+
+      {selectedPerfume && (
+        <PerfumeModal
+          ref={modalRef}
+          perfume={selectedPerfume}
+          onClose={handleModalDismiss}
+          isSwapping={!!swappingPerfumeId}
+          onSimilarPerfumeSelect={handleSimilarPerfumeSelect}
+        />
+      )}
+    </View>
+  );
+}

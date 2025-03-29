@@ -12,7 +12,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRatings } from '../context/RatingsContext';
 
 interface Perfume {
-  id: number;
+  id: string;
   name: string;
   brand: string;
   image: string;

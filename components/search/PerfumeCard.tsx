@@ -1,8 +1,9 @@
-import React, { useCallback } from 'react';
-import { View, Text, Image, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
+import React, { useCallback, useState, useEffect } from 'react';
+import { View, Text, Image, StyleSheet, TouchableOpacity, Dimensions, Animated } from 'react-native';
 import { Feather, Ionicons } from '@expo/vector-icons'; // Import Ionicons
 import { BasicPerfumeInfo, Perfume } from '../../types/perfume';
 import { useRatings } from '../../context/RatingsContext';
+import { useManualBox } from '../../context/ManualBoxContext'; // <-- Add this
 import { COLORS, FONT_SIZES, SPACING } from '../../types/constants';
 
 interface PerfumeCardProps {
@@ -23,7 +24,29 @@ const CARD_WIDTH = AVAILABLE_WIDTH / NUM_COLUMNS;
 
 export default function PerfumeCard({ perfume, matchPercentage, onPress }: PerfumeCardProps) {
   const { addFavorite, removeFavorite, isFavorite } = useRatings();
+  const { addPerfume, removePerfume, isPerfumeSelected, canAddMorePerfumes } = useManualBox(); // <-- Use ManualBox context
   const favorite = isFavorite(perfume.id);
+  const isSelected = isPerfumeSelected(perfume.id); // <-- Check if selected in manual box
+  const [showToast, setShowToast] = useState(false);
+  const fadeAnim = new Animated.Value(0);
+
+  useEffect(() => {
+    if (showToast) {
+      Animated.sequence([
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+        Animated.delay(2000),
+        Animated.timing(fadeAnim, {
+          toValue: 0,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+      ]).start(() => setShowToast(false));
+    }
+  }, [showToast]);
 
   const handleFavoriteToggle = useCallback(() => {
     if (favorite) {
@@ -31,12 +54,36 @@ export default function PerfumeCard({ perfume, matchPercentage, onPress }: Perfu
     } else {
       addFavorite(perfume.id);
     }
-  }, [addFavorite, removeFavorite, isFavorite, perfume.id, favorite]);
+  }, [addFavorite, removeFavorite, perfume.id, favorite]); // Removed isFavorite dependency as it's derived
+
+  // Handler for adding/removing from manual box
+  const handleManualBoxToggle = useCallback(() => {
+    if (isSelected) {
+      removePerfume(perfume.id);
+    } else if (canAddMorePerfumes()) {
+      // Ensure perfume has all required fields before adding
+      if ('brand' in perfume && 'name' in perfume && 'thumbnailUrl' in perfume) {
+         addPerfume(perfume as Perfume); // Add only if not selected and space available
+         setShowToast(true);
+      } else {
+        console.warn("Cannot add basic perfume info to manual box yet."); // Or fetch full details
+      }
+    } else {
+      // Optional: Add feedback if the box is full
+      console.log("Manual box is full.");
+    }
+  }, [isSelected, removePerfume, addPerfume, perfume, canAddMorePerfumes]);
+
 
   const displayMatch = matchPercentage ?? (perfume as Perfume).matchPercentage;
 
   return (
     <View style={styles.cardOuterContainer}>
+      {showToast && (
+        <Animated.View style={[styles.toast, { opacity: fadeAnim }]}>
+          <Text style={styles.toastText}>Perfume añadido al Box Manual</Text>
+        </Animated.View>
+      )}
       {displayMatch !== undefined && (
         <View style={styles.matchContainer}>
           <Text style={styles.matchPercentage}>{displayMatch}%</Text>
@@ -68,11 +115,20 @@ export default function PerfumeCard({ perfume, matchPercentage, onPress }: Perfu
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.iconButton, styles.addButton]}
-          onPress={onPress}
+          style={[
+            styles.iconButton,
+            styles.addButtonBase, // Base styles for the button
+            isSelected ? styles.addButtonSelected : styles.addButtonNotSelected // Conditional style
+          ]}
+          onPress={handleManualBoxToggle} // <-- Use the new handler
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          disabled={!isSelected && !canAddMorePerfumes()} // Disable if box is full and not selected
         >
-          <Feather name="plus" size={17} color={COLORS.BACKGROUND} />
+          <Feather
+            name={isSelected ? "check" : "plus"} // Show checkmark if selected, plus otherwise
+            size={17}
+            color={isSelected ? COLORS.BACKGROUND : COLORS.PRIMARY} // White icon when selected, primary otherwise
+          />
         </TouchableOpacity>
       </View>
     </View>
@@ -161,10 +217,39 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  addButton: {
-    backgroundColor: COLORS.PRIMARY,
+  // Remove original addButton, replace with base and conditional styles
+  // addButton: { ... }, // <-- Remove or comment out this block
+  addButtonBase: { // Base styles for the add button circle
     borderRadius: 15, // Perfect circle
-    width: 30, // Larger button
+    width: 30,
     height: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1.5, // Add border for the outline effect
+    borderColor: COLORS.PRIMARY, // Border color is primary
+  },
+  addButtonNotSelected: { // Style when not selected (outline)
+    backgroundColor: COLORS.BACKGROUND, // White background
+  },
+  addButtonSelected: { // Style when selected (filled)
+    backgroundColor: COLORS.PRIMARY, // Primary background
+    borderColor: COLORS.PRIMARY, // Ensure border is also primary when filled
+  },
+  toast: {
+    position: 'absolute',
+    top: 10,
+    left: 10,
+    right: 10,
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    zIndex: 1000,
+    alignItems: 'center',
+  },
+  toastText: {
+    color: COLORS.BACKGROUND,
+    fontSize: FONT_SIZES.SMALL,
+    fontWeight: '500',
   },
 });

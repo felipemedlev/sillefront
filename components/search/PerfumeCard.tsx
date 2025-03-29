@@ -24,10 +24,11 @@ const CARD_WIDTH = AVAILABLE_WIDTH / NUM_COLUMNS;
 
 export default function PerfumeCard({ perfume, matchPercentage, onPress }: PerfumeCardProps) {
   const { addFavorite, removeFavorite, isFavorite } = useRatings();
-  const { addPerfume, removePerfume, isPerfumeSelected, canAddMorePerfumes } = useManualBox(); // <-- Use ManualBox context
+  const { addPerfume, removePerfume, isPerfumeSelected, canAddMorePerfumes, decantCount } = useManualBox(); // Add decantCount
   const favorite = isFavorite(perfume.id);
-  const isSelected = isPerfumeSelected(perfume.id); // <-- Check if selected in manual box
+  const isSelected = isPerfumeSelected(perfume.id);
   const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
   const fadeAnim = new Animated.Value(0);
 
   useEffect(() => {
@@ -54,26 +55,26 @@ export default function PerfumeCard({ perfume, matchPercentage, onPress }: Perfu
     } else {
       addFavorite(perfume.id);
     }
-  }, [addFavorite, removeFavorite, perfume.id, favorite]); // Removed isFavorite dependency as it's derived
+  }, [addFavorite, removeFavorite, perfume.id, favorite]);
 
-  // Handler for adding/removing from manual box
   const handleManualBoxToggle = useCallback(() => {
     if (isSelected) {
       removePerfume(perfume.id);
+      setToastMessage('Perfume removido del Box Manual');
+      setShowToast(true);
     } else if (canAddMorePerfumes()) {
-      // Ensure perfume has all required fields before adding
       if ('brand' in perfume && 'name' in perfume && 'thumbnailUrl' in perfume) {
-         addPerfume(perfume as Perfume); // Add only if not selected and space available
-         setShowToast(true);
+        addPerfume(perfume as Perfume);
+        setToastMessage('Perfume añadido al Box Manual');
+        setShowToast(true);
       } else {
-        console.warn("Cannot add basic perfume info to manual box yet."); // Or fetch full details
+        console.warn("Cannot add basic perfume info to manual box yet.");
       }
     } else {
-      // Optional: Add feedback if the box is full
-      console.log("Manual box is full.");
+      setToastMessage(`No puedes añadir más perfumes. El box manual tiene un límite de ${decantCount} perfumes.`);
+      setShowToast(true);
     }
-  }, [isSelected, removePerfume, addPerfume, perfume, canAddMorePerfumes]);
-
+  }, [isSelected, removePerfume, addPerfume, perfume, canAddMorePerfumes, decantCount]);
 
   const displayMatch = matchPercentage ?? (perfume as Perfume).matchPercentage;
 
@@ -81,7 +82,7 @@ export default function PerfumeCard({ perfume, matchPercentage, onPress }: Perfu
     <View style={styles.cardOuterContainer}>
       {showToast && (
         <Animated.View style={[styles.toast, { opacity: fadeAnim }]}>
-          <Text style={styles.toastText}>Perfume añadido al Box Manual</Text>
+          <Text style={styles.toastText}>{toastMessage}</Text>
         </Animated.View>
       )}
       {displayMatch !== undefined && (
@@ -117,17 +118,16 @@ export default function PerfumeCard({ perfume, matchPercentage, onPress }: Perfu
         <TouchableOpacity
           style={[
             styles.iconButton,
-            styles.addButtonBase, // Base styles for the button
-            isSelected ? styles.addButtonSelected : styles.addButtonNotSelected // Conditional style
+            styles.addButtonBase,
+            isSelected ? styles.addButtonSelected : styles.addButtonNotSelected
           ]}
-          onPress={handleManualBoxToggle} // <-- Use the new handler
+          onPress={handleManualBoxToggle}
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-          disabled={!isSelected && !canAddMorePerfumes()} // Disable if box is full and not selected
         >
           <Feather
-            name={isSelected ? "check" : "plus"} // Show checkmark if selected, plus otherwise
+            name={isSelected ? "check" : "plus"}
             size={17}
-            color={isSelected ? COLORS.BACKGROUND : COLORS.PRIMARY} // White icon when selected, primary otherwise
+            color={isSelected ? COLORS.BACKGROUND : COLORS.PRIMARY}
           />
         </TouchableOpacity>
       </View>

@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, useWindowDimensions, ScrollView, Pressable } from 'react-native';
 import { router } from 'expo-router';
 import { Feather } from '@expo/vector-icons'; // <-- Add Feather import
-import { COLORS } from '../../types/constants'; // <-- Add COLORS import
+import { COLORS, SPACING, FONTS, FONT_SIZES } from '../../types/constants';
 
 const OCCASIONS = [
   { id: 1, title: 'Romántica', color: '#F5E6E6' },
@@ -36,9 +36,11 @@ export default function AIBoxScreen() {
 
         {/* Manual Box Card */}
         <View style={[styles.mainCard, styles.manualCard]}>
-          <Feather name="edit-3" size={28} color={COLORS.PRIMARY} style={styles.cardIcon} />
-          <Text style={styles.subtitle}>Crea tu Propia Selección</Text>
-          <Text style={styles.mainTitle}>Box Manual</Text>
+          {/* <Feather name="edit-3" size={28} color={COLORS.PRIMARY} style={styles.cardIcon} /> */}
+          <View style={styles.cardTextContainer}>
+            <Text style={styles.subtitle}>Crea tu Propia Selección</Text>
+            <Text style={styles.mainTitle}>Box Manual</Text>
+          </View>
           <Pressable style={styles.openButton} onPress={() => router.push('../manual-box')}>
             <Text style={styles.openButtonText}>Configurar</Text>
           </Pressable>
@@ -76,36 +78,49 @@ const styles = StyleSheet.create({
   },
   mainCard: {
     width: '100%',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COLORS.BACKGROUND,
     borderRadius: 16,
-    padding: 24,
+    padding: SPACING.LARGE,
     alignItems: 'center',
-    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+    shadowColor: COLORS.PRIMARY,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
     elevation: 5,
-    marginBottom: 32,
+    marginBottom: SPACING.SMALL,
+    borderWidth: 1,
+    borderColor: COLORS.BORDER,
   },
   subtitle: {
-    fontSize: 16,
-    color: '#666',
-    marginBottom: 8,
+    fontSize: FONT_SIZES.REGULAR,
+    color: COLORS.TEXT_SECONDARY,
+    marginBottom: SPACING.SMALL,
+    fontFamily: FONTS.INSTRUMENT_SANS,
   },
   mainTitle: {
-    fontSize: 24,
+    fontSize: FONT_SIZES.XLARGE,
     fontWeight: '600',
-    color: '#333',
-    marginBottom: 20,
+    color: COLORS.TEXT_PRIMARY,
+    marginBottom: SPACING.LARGE,
     textAlign: 'center',
+    fontFamily: FONTS.INSTRUMENT_SANS,
   },
   openButton: {
-    backgroundColor: '#000',
-    paddingHorizontal: 32,
-    paddingVertical: 12,
+    backgroundColor: COLORS.PRIMARY,
+    paddingHorizontal: SPACING.XLARGE,
+    paddingVertical: SPACING.SMALL,
     borderRadius: 8,
+    shadowColor: COLORS.PRIMARY,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
   },
   openButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
+    color: COLORS.BACKGROUND,
+    fontSize: FONT_SIZES.REGULAR,
     fontWeight: '600',
+    letterSpacing: 0.5,
   },
   sectionTitle: {
     fontSize: 20,
@@ -143,10 +158,14 @@ const styles = StyleSheet.create({
   },
   // Styles for Manual Box Card
   manualCard: {
-    backgroundColor: '#F0F4F8', // A slightly different background for distinction
-    marginTop: 16, // Add some space above it
+    backgroundColor: COLORS.BACKGROUND_ALT,
+    marginTop: SPACING.LARGE,
+    padding: SPACING.MEDIUM
   },
   cardIcon: {
-    marginBottom: 12, // Space below the icon
+    marginRight: SPACING.SMALL,
+  },
+  cardTextContainer: {
+    flex: 1,
   },
 });

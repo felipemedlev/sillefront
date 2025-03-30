@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, ReactNode, useEffect, useCa
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Rating, RatingsContextType } from '../types/rating';
 import { STORAGE_KEYS } from '../types/constants';
-import { AppError, handleError } from '../types/error';
+import { handleError } from '../types/error';
 
 const RatingsContext = createContext<RatingsContextType | undefined>(undefined);
 

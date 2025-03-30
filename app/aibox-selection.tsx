@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
-import { View, StyleSheet, ScrollView, Dimensions, Pressable, Text } from 'react-native';
+import { View, StyleSheet, ScrollView, Pressable, Text } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import PerfumeModal, { PerfumeModalRef } from '../components/product/PerfumeModal';
@@ -263,14 +263,6 @@ export default function AIBoxSelectionScreen() {
     }, 100);
   }, []);
 
-  const handleAddToCart = useCallback(() => {
-    console.log('Adding to cart:', {
-      decantCount,
-      decantSize,
-      totalPrice: calculateTotalPrice()
-    });
-  }, [decantCount, decantSize]);
-
   const calculateTotalPrice = useCallback(() => {
     return selectedPerfumes.reduce((total, perfumeId) => {
       const perfume = MOCK_PERFUMES.find(p => p.id === perfumeId);
@@ -278,12 +270,14 @@ export default function AIBoxSelectionScreen() {
     }, 0);
   }, [decantSize, selectedPerfumes]);
 
-  const filteredPerfumes = useMemo(() => {
-    return MOCK_PERFUMES.filter((perfume: Perfume) =>
-      (perfume.pricePerML ?? 0) >= rangoPrecio[0] &&
-      (perfume.pricePerML ?? 0) <= rangoPrecio[1]
-    );
-  }, [rangoPrecio]);
+  const handleAddToCart = useCallback(() => {
+    console.log('Adding to cart:', {
+      decantCount,
+      decantSize,
+      totalPrice: calculateTotalPrice()
+    });
+  }, [decantCount, decantSize, calculateTotalPrice]);
+
 
   const selectedPerfume = useMemo(() => {
     return selectedPerfumeId

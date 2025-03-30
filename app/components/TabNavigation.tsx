@@ -58,7 +58,7 @@ export default function TabNavigation({ activeTab, onTabPress, isDesktop }: TabN
       tension: 65,
       friction: 10,
     }).start();
-  }, []);
+  }, [activeTab, lineAnim]);
 
   const handleTabPress = (tab: TabType) => {
     onTabPress(tab);

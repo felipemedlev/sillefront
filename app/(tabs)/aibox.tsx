@@ -1,7 +1,6 @@
 import React from 'react';
-import { View, Text, StyleSheet, useWindowDimensions, ScrollView, Pressable } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
 import { router } from 'expo-router';
-import { Feather } from '@expo/vector-icons'; // <-- Add Feather import
 import { COLORS, SPACING, FONTS, FONT_SIZES } from '../../types/constants';
 
 const OCCASIONS = [

@@ -56,7 +56,7 @@ export default function ManualBoxScreen() {
           useNativeDriver: true,
         }),
       ]).start();
-    }, []);
+    }, [fadeAnim, translateY]);
 
     return (
       <Animated.View

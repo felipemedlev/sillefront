@@ -1,7 +1,6 @@
 import React, { forwardRef, useImperativeHandle, useState } from 'react';
 import { View, Text, StyleSheet, Dimensions, Pressable, Image, Modal, ScrollView, FlatList, ViewStyle } from 'react-native'; // Import ViewStyle
 import { Feather } from '@expo/vector-icons';
-import { ImageSourcePropType } from 'react-native';
 import { MOCK_PERFUMES } from '../../app/aibox-selection';
 import { Perfume, BasicPerfumeInfo } from '../../types/perfume';
 
@@ -246,7 +245,7 @@ const PerfumeModal = forwardRef<PerfumeModalRef, PerfumeModalProps>((props, ref)
   }
 
   const {
-    name, brand, thumbnailUrl, matchPercentage, pricePerML, description,
+    name, brand, matchPercentage, pricePerML, description,
     accords, topNotes, middleNotes, baseNotes, overallRating,
     dayNightRating, seasonRating, priceValueRating, sillageRating,
     longevityRating, similarPerfumes

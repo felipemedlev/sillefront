@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, Pressable, Image, ImageSourcePropType, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, Pressable, Image, Dimensions } from 'react-native';
 import { Perfume } from '../../types/perfume';
 
 interface PerfumeListProps {

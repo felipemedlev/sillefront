@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useRef } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, ActivityIndicator, ScrollView } from 'react-native';
-import { Stack, useRouter } from 'expo-router';
+import { Stack } from 'expo-router';
 import { useRatings } from '../../../context/RatingsContext';
 import { MOCK_PERFUMES } from '../../aibox-selection'; // Import mock data source
 import { Perfume } from '../../../types/perfume'; // Import Perfume type
@@ -12,7 +12,7 @@ export default function FavoritesScreen() {
   const { favorites, isLoadingFavorites } = useRatings();
   const [selectedPerfume, setSelectedPerfume] = useState<Perfume | null>(null);
   const modalRef = useRef<PerfumeModalRef>(null);
-  const router = useRouter(); // Use router for potential back navigation if needed
+  // Removed unused router
 
   // Filter the mock perfumes to get only the favorited ones
   const favoritePerfumes = useMemo(() => {

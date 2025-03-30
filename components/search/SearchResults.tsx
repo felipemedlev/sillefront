@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, FlatList, StyleSheet } from 'react-native';
+import { FlatList, StyleSheet } from 'react-native';
 import { BasicPerfumeInfo } from '../../types/perfume';
 import PerfumeCard from './PerfumeCard';
 

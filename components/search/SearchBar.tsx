@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, TextInput, StyleSheet, TouchableOpacity, Text } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { COLORS, FONT_SIZES, SPACING } from '../../types/constants';
+import { COLORS, FONT_SIZES } from '../../types/constants';
 
 interface SearchBarProps {
   value: string;

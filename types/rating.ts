@@ -1,4 +1,3 @@
-import { Perfume } from './perfume';
 
 export interface Rating {
   perfumeId: string; // Changed to string

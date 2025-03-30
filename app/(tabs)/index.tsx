@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, Animated, useWindowDimensions, Platform, ScrollView } from 'react-native';
+import { View, StyleSheet, Animated, useWindowDimensions, Platform } from 'react-native';
 import AIBoxScreen from './aibox';
 import GiftBoxScreen from './giftbox';
 import TabNavigation from '../components/TabNavigation';
@@ -40,14 +40,10 @@ export default function HomeScreen() {
           onTabPress={setActiveTab}
           isDesktop={isDesktop}
         />
-
-        <ScrollView
-          style={styles.scrollView}
-          contentContainerStyle={styles.scrollViewContent}
-          showsVerticalScrollIndicator={false}
-        >
+        {/* Removed ScrollView wrapper */}
+        <View style={styles.screenContainer}>
           {activeTab === 'aibox' ? <AIBoxScreen /> : <GiftBoxScreen />}
-        </ScrollView>
+        </View>
       </Animated.View>
     </View>
   );
@@ -63,18 +59,16 @@ const styles = StyleSheet.create({
     flex: 1,
     position: 'relative',
     alignItems: 'center',
-    padding: 16,
-    paddingTop: 0,
+    // Removed padding: 16, let screenContainer handle padding if needed
+    // paddingTop: 0, // Already removed by TabNavigation positioning
   },
-  scrollView: {
-    flex: 1,
-    width: '100%',
+  screenContainer: { // New style for the container holding the active screen
+    flex: 1, // Allow the screen content to take available space
+    width: '100%', // Ensure the screen content spans the width
+    // alignItems: 'center', // Remove default alignment, let screen decide
+    // justifyContent: 'flex-start', // Remove default justification
+    padding: 16, // Add padding here if needed globally for both screens
+    paddingTop: 0, // Adjust as needed
   },
-  scrollViewContent: {
-    flexGrow: 1,
-    alignItems: 'center',
-    justifyContent: 'flex-start',
-    paddingTop: 0,
-    paddingBottom: 40,
-  },
+  // Removed scrollView and scrollViewContent styles
 });

@@ -1,4 +1,4 @@
-import React, { useCallback, useState, useEffect } from 'react';
+import React, { useCallback, useState, useEffect, useMemo } from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity, Dimensions, Animated } from 'react-native';
 import { Feather, Ionicons } from '@expo/vector-icons'; // Import Ionicons
 import { BasicPerfumeInfo, Perfume } from '../../types/perfume';
@@ -29,7 +29,7 @@ export default function PerfumeCard({ perfume, matchPercentage, onPress }: Perfu
   const isSelected = isPerfumeSelected(perfume.id);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
-  const fadeAnim = new Animated.Value(0);
+  const fadeAnim = useMemo(() => new Animated.Value(0), []);
 
   useEffect(() => {
     if (showToast) {
@@ -47,7 +47,7 @@ export default function PerfumeCard({ perfume, matchPercentage, onPress }: Perfu
         }),
       ]).start(() => setShowToast(false));
     }
-  }, [showToast]);
+  }, [showToast, fadeAnim]);
 
   const handleFavoriteToggle = useCallback(() => {
     if (favorite) {

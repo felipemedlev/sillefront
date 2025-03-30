@@ -19,7 +19,7 @@ const PriceRangeButtons: React.FC<PriceRangeButtonsProps> = ({
   ];
 
   return (
-    <View style={[styles.section, styles.filterSection]}>
+    <View style={styles.filterSection}> {/* Removed styles.section */}
       <Text style={[styles.sectionTitle, styles.filterTitle]}>Rango de Precio</Text>
       <ScrollView
         horizontal
@@ -54,7 +54,7 @@ const styles = StyleSheet.create({
   },
   filterSection: {
     paddingVertical: 8,
-    paddingHorizontal: 16,
+    // paddingHorizontal: 16, // Removed horizontal padding
   },
   sectionTitle: {
     fontSize: 18,
@@ -68,7 +68,8 @@ const styles = StyleSheet.create({
   },
   buttonsContainer: {
     gap: 8,
-    paddingHorizontal: 4,
+    paddingLeft: 20, // Added left padding to match parent container
+    // paddingHorizontal: 4, // Removed horizontal padding
   },
   rangeButton: {
     paddingHorizontal: 16,

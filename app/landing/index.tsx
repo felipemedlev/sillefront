@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import { InteractionManager } from 'react-native';
 import {
   View,
   Text,
@@ -34,8 +35,11 @@ export default function LandingScreen() {
 
   const handlePrimaryButtonPress = () => {
     if (currentPage < 2) {
-      // Go to next page
-      scrollViewRef.current?.scrollTo({ x: width * (currentPage + 1), animated: true });
+      const nextPage = currentPage + 1;
+      // Update state immediately
+      setCurrentPage(nextPage);
+      // Scroll to the next page
+      scrollViewRef.current?.scrollTo({ x: width * nextPage, animated: true });
     } else {
       // On last page, navigate to survey
       router.push('/survey/1');

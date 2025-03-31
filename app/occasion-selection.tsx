@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { View, StyleSheet, ScrollView, Pressable, Text } from 'react-native'; // Import Alert
 import { Feather } from '@expo/vector-icons';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router'; // Import useLocalSearchParams
 import { MOCK_PERFUMES } from '../data/mockPerfumes';
 import PerfumeModal, { PerfumeModalRef } from '../components/product/PerfumeModal';
 import { Perfume, BasicPerfumeInfo } from '../types/perfume'; // Import BasicPerfumeInfo
@@ -43,7 +43,8 @@ const styles = StyleSheet.create({
   },
 });
 
-export default function AIBoxSelectionScreen() {
+export default function OccasionSelectionScreen() { // Renamed component
+  const { occasion } = useLocalSearchParams<{ occasion: string }>(); // Get occasion param
   const { addItemToCart } = useCart(); // Get cart function
   const [decantCount, setDecantCount] = useState<DecantCount>(4);
   const [decantSize, setDecantSize] = useState<DecantSize>(5);
@@ -65,16 +66,19 @@ export default function AIBoxSelectionScreen() {
     };
   }, []);
 
-  // Initialize selected perfumes when component mounts or when decantCount/rangoPrecio changes
+  // Initialize selected perfumes based on occasion, price range, and decant count
   useEffect(() => {
-    const filteredPerfumes = MOCK_PERFUMES.filter((perfume: Perfume) =>
-      (perfume.pricePerML ?? 0) >= rangoPrecio[0] &&
-      (perfume.pricePerML ?? 0) <= rangoPrecio[1]
-    );
+    const decodedOccasion = occasion ? decodeURIComponent(occasion) : ''; // Decode occasion from URL param
 
-    // Always set the selected perfumes to the first N perfumes that match the price range
+    const filteredPerfumes = MOCK_PERFUMES.filter((perfume: Perfume) => {
+      const matchesOccasion = decodedOccasion ? perfume.occasions?.includes(decodedOccasion) : true; // Filter by occasion if present
+      const matchesPrice = (perfume.pricePerML ?? 0) >= rangoPrecio[0] && (perfume.pricePerML ?? 0) <= rangoPrecio[1];
+      return matchesOccasion && matchesPrice;
+    });
+
+    // Set the selected perfumes to the first N perfumes that match the filters
     setSelectedPerfumeIds(filteredPerfumes.slice(0, decantCount).map(p => p.id));
-  }, [decantCount, rangoPrecio]);
+  }, [decantCount, rangoPrecio, occasion]); // Add occasion to dependency array
 
   const handleMaxPriceChange = useCallback((values: number[]) => {
     setRangoPrecio(values as [number, number]);
@@ -126,8 +130,8 @@ export default function AIBoxSelectionScreen() {
       }));
 
     const itemData = {
-      productType: 'AI_BOX' as const, // Use const assertion for literal type
-      name: `AI Box (${decantCount} x ${decantSize}ml)`,
+      productType: 'OCCASION_BOX' as const, // Use const assertion for literal type
+      name: `AI Box Ocasión (${decantCount} x ${decantSize}ml)`,
       details: {
         decantCount,
         decantSize,
@@ -150,9 +154,10 @@ export default function AIBoxSelectionScreen() {
       // Set new timeout to clear the message
       feedbackTimeoutRef.current = setTimeout(() => {
         setFeedbackMessage(null);
+        router.push('/(tabs)/(cart)');
       }, 2000); // Clear after 2 seconds
 
-      // router.push('/(tabs)/(cart)'); // Optional navigation
+      
     } catch (error) {
       console.error("Error adding AI Box to cart:", error);
       setFeedbackMessage("Error al añadir."); // Show error feedback
@@ -187,7 +192,7 @@ export default function AIBoxSelectionScreen() {
         <Pressable onPress={() => router.back()} style={styles.backButton}>
           <Feather name="chevron-left" size={24} color="#333" />
         </Pressable>
-        <Text style={styles.headerTitle}>Selecciona tu Box AI</Text>
+        <Text style={styles.headerTitle}>Box AI: {occasion ? decodeURIComponent(occasion) : 'Selección'}</Text>
       </View>
 
       <ScrollView style={styles.content} contentContainerStyle={styles.contentContainer}>

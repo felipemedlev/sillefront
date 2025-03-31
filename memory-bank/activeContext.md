@@ -1,12 +1,16 @@
 # Active Context
 
 ## Current Focus
-[Description of current work focus]
+
+
+- [2025-03-31 20:05:51] - Completed implementation of 'Filter by Occasion' feature. Awaiting user validation/feedback after UMB.
+- [2025-03-31 19:53:22] - Current focus is implementing the 'Filter by Occasion' feature. Plan documented in `memory-bank/occasion-feature-plan.md`.
+- Memory Bank maintenance and updates
 
 ## Recent Changes
-- [List recent significant changes]
+- 2025-03-31 16:51:20 - Performed Memory Bank review and maintenance via UMB command
+- 2025-03-31 14:40:25 - Performed full Memory Bank review via UMB command
+- 2025-03-29 12:09:49 - Initialized active context file
 
 ## Open Questions/Issues
-- [List any open questions or issues]
-
-[2025-03-29 12:09:49] - Initialized active context file
+- Need to populate product context with actual project details

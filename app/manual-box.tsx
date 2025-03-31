@@ -1,5 +1,5 @@
 import React, { useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Animated, Alert } from 'react-native'; // Import Alert
+import { View, Text, StyleSheet, Pressable, ScrollView, TouchableOpacity, Animated } from 'react-native'; // Import Alert
 import { Feather } from '@expo/vector-icons';
 import { useManualBox } from '../context/ManualBoxContext';
 import { useCart } from '../context/CartContext'; // Import useCart
@@ -42,11 +42,22 @@ export default function ManualBoxScreen() {
   }, [selectedPerfumes, decantSize]);
 
   const handleAddToCart = useCallback(async () => {
-    // Ensure there are perfumes selected before adding to cart
-    if (selectedPerfumes.length === 0) {
-      console.log("Cannot add empty manual box to cart.");
-      // Optionally show a message to the user
-      return;
+    // Ensure the number of selected perfumes matches the decant count
+    if (selectedPerfumes.length !== decantCount) {
+      const errorMsg = `Debes seleccionar ${decantCount} perfumes (tienes ${selectedPerfumes.length}).`;
+      setFeedbackMessage(errorMsg); // Use existing feedback mechanism
+      console.log(`Cannot add manual box to cart. Expected ${decantCount} perfumes, got ${selectedPerfumes.length}.`);
+
+      // Clear previous timeout if exists
+      if (feedbackTimeoutRef.current) {
+        clearTimeout(feedbackTimeoutRef.current);
+      }
+      // Set new timeout to clear the error message
+      feedbackTimeoutRef.current = setTimeout(() => {
+        setFeedbackMessage(null);
+      }, 3000); // Clear after 3 seconds
+      // DO NOT NAVIGATE ON MISMATCH ERROR
+      return; // Stop execution
     }
 
     const totalPrice = calculateTotalPrice();
@@ -60,8 +71,8 @@ export default function ManualBoxScreen() {
     }));
 
     const itemData = {
-      productType: 'MANUAL_BOX' as const,
-      name: `Manual Box (${decantCount} x ${decantSize}ml)`,
+      productType: 'BOX_PERSONALIZADO' as const,
+      name: `Box Personalizado (${decantCount} x ${decantSize}ml)`,
       details: {
         decantCount,
         decantSize,
@@ -81,12 +92,12 @@ export default function ManualBoxScreen() {
         clearTimeout(feedbackTimeoutRef.current);
       }
 
-      // Set new timeout to clear the message
+      // Set new timeout to clear the message AND navigate
       feedbackTimeoutRef.current = setTimeout(() => {
         setFeedbackMessage(null);
-      }, 2000); // Clear after 2 seconds
+        router.push('/(tabs)/(cart)'); // Navigate after successful add and timeout
+      }, 2000); // Clear and navigate after 2 seconds
 
-      // router.push('/(tabs)/(cart)');
     } catch (error) {
       console.error("Error adding Manual Box to cart:", error);
       setFeedbackMessage("Error al añadir."); // Show error feedback
@@ -94,10 +105,10 @@ export default function ManualBoxScreen() {
       if (feedbackTimeoutRef.current) {
         clearTimeout(feedbackTimeoutRef.current);
       }
-      // Set new timeout to clear the error message
+      // Set new timeout to clear the error message, DO NOT NAVIGATE
       feedbackTimeoutRef.current = setTimeout(() => {
         setFeedbackMessage(null);
-      }, 2000);
+      }, 2000); // Clear error message after 2 seconds
     }
   }, [
     decantCount,
@@ -157,14 +168,10 @@ export default function ManualBoxScreen() {
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => router.back()}
-          style={styles.backButton}
-          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-        >
-          <Feather name="arrow-left" size={24} color={COLORS.TEXT_PRIMARY} />
-        </TouchableOpacity>
-        <Text style={styles.title}>Tu Box Manual</Text>
+        <Pressable onPress={() => router.back()} style={styles.backButton}>
+          <Feather name="chevron-left" size={24} color="#333" />
+        </Pressable>
+        <Text style={styles.headerTitle}>Selecciona tu Box Personalizado</Text>
       </View>
 
       <ScrollView
@@ -231,19 +238,18 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: SPACING.LARGE,
-    paddingVertical: SPACING.MEDIUM,
+    padding: 10,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.BORDER,
+    borderBottomColor: '#E6E6E6',
   },
   backButton: {
-    padding: SPACING.SMALL,
-    marginRight: SPACING.MEDIUM,
+    padding: 8,
   },
-  headerActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#333',
+    marginLeft: 16,
   },
   scrollContent: {
     padding: SPACING.LARGE,

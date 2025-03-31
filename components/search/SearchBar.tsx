@@ -33,7 +33,7 @@ export default function SearchBar({ value, onChangeText, placeholder = 'Buscar p
         onPress={onManualBoxPress}
       >
         <Feather name="box" size={18} color={COLORS.BACKGROUND} style={styles.buttonIcon} />
-        <Text style={styles.buttonText}>Mi Box Manual</Text>
+        <Text style={styles.buttonText}>Mi Box Personalizado</Text>
       </TouchableOpacity>
     </View>
   );
@@ -70,7 +70,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: COLORS.PRIMARY,
+    backgroundColor: '#222222',
     borderRadius: 12,
     paddingVertical: 12,
     shadowColor: '#000',

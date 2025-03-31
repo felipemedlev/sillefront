@@ -21,4 +21,6 @@ export interface Perfume extends BasicPerfumeInfo {
   sillageRating?: number;
   longevityRating?: number;
   similarPerfumes?: string[];
+  occasions?: string[];
+
 }

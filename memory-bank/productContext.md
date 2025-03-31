@@ -1,15 +1,26 @@
 # Product Context
 
 ## Project Overview
-[Brief description of the project, its purpose and goals]
+E-commerce mobile application built with React Native (Expo) and TypeScript. Provides perfume selection and purchase functionality.
 
 ## Key Features
-- [List main features]
+- AI-powered perfume recommendation
+- Manual perfume box creation
+- Shopping cart and checkout
+- User ratings and reviews
+- Customer surveys
 
 ## Architecture
-[High-level architecture description]
+- Frontend: React Native with Expo
+- State Management: React Context
+- Navigation: Expo Router
+- Styling: NativeWind/Tailwind
 
 ## Dependencies
-- [List key dependencies]
+- React Native
+- Expo
+- TypeScript
+- NativeWind
+- React Navigation
 
-[2025-03-29 12:09:19] - Initialized product context file
+[2025-03-31 14:40:47] - Updated with project details from file structure analysis

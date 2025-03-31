@@ -151,7 +151,7 @@ const styles = StyleSheet.create({
     borderColor: '#F0F0F0', // Light border color
   },
   matchContainer: {
-    backgroundColor: '#E8F0FE',
+    backgroundColor: COLORS.BACKGROUND_ALT,
     paddingVertical: 8,
     paddingHorizontal: 12,
     alignItems: 'center',
@@ -161,7 +161,7 @@ const styles = StyleSheet.create({
   matchPercentage: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#1A73E8',
+    color: COLORS.ACCENT,
   },
   matchLabel: {
     fontSize: 12,

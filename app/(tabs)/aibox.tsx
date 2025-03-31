@@ -26,7 +26,7 @@ export default function AIBoxScreen() {
       <View style={styles.content}>
         {/* Main Card */}
         <View style={styles.mainCard}>
-          <Text style={styles.subtitle}>Tu Box Personalizado</Text>
+          <Text style={styles.subtitle}>Elección de la Inteligencia Artificial</Text>
           <Text style={styles.mainTitle}>¡Está listo tu Box AI!</Text>
           <Pressable style={styles.openButton} onPress={handleOpenPress}>
             <Text style={styles.openButtonText}>Abrir</Text>
@@ -38,7 +38,7 @@ export default function AIBoxScreen() {
           {/* <Feather name="edit-3" size={28} color={COLORS.PRIMARY} style={styles.cardIcon} /> */}
           <View style={styles.cardTextContainer}>
             <Text style={styles.subtitle}>Crea tu Propia Selección</Text>
-            <Text style={styles.mainTitle}>Box Manual</Text>
+            <Text style={styles.mainTitle}>Box Personalizado</Text>
           </View>
           <Pressable style={styles.openButton} onPress={() => router.push('../manual-box')}>
             <Text style={styles.openButtonText}>Configurar</Text>
@@ -46,7 +46,7 @@ export default function AIBoxScreen() {
         </View>
 
         {/* Occasions Section */}
-        <Text style={styles.sectionTitle}>Ocasiones</Text>
+        <Text style={styles.sectionTitle}>Box AI por Ocasión </Text>
         <View style={styles.occasionsGrid}>
           {OCCASIONS.map((occasion) => (
             <Pressable
@@ -56,6 +56,7 @@ export default function AIBoxScreen() {
                 { backgroundColor: occasion.color },
                 pressed && styles.occasionCardPressed,
               ]}
+              onPress={() => router.push(`/occasion-selection?occasion=${encodeURIComponent(occasion.title)}`)} // Added navigation
             >
               <Text style={styles.occasionTitle}>{occasion.title}</Text>
             </Pressable>
@@ -79,6 +80,7 @@ const styles = StyleSheet.create({
     width: '100%',
     backgroundColor: COLORS.BACKGROUND,
     borderRadius: 16,
+    marginTop: SPACING.SMALL,
     padding: SPACING.LARGE,
     alignItems: 'center',
     shadowColor: COLORS.PRIMARY,
@@ -125,7 +127,8 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: '600',
     color: '#333',
-    marginBottom: 16,
+    marginTop: SPACING.LARGE,
+    marginBottom: SPACING.MEDIUM,
     alignSelf: 'flex-start',
   },
   occasionsGrid: {
@@ -133,6 +136,7 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     justifyContent: 'space-between',
     width: '100%',
+    paddingBottom: SPACING.XLARGE+20
   },
   occasionCard: {
     width: '48%',

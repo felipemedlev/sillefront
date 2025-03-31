@@ -1,5 +1,4 @@
 import React, { useState, useRef } from 'react';
-import { InteractionManager } from 'react-native';
 import {
   View,
   Text,

@@ -163,7 +163,7 @@ export default function SurveyQuestion() {
             if (currentId > 1) {
               router.push(`/survey/${currentId - 1}`);
             } else {
-              router.push('/landing');
+              router.back();
             }
           }}
           style={styles.backButton}

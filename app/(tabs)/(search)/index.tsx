@@ -1,6 +1,6 @@
 import React, { useState, useRef, useMemo } from 'react';
 import { View, StyleSheet } from 'react-native';
-import { MOCK_PERFUMES } from '../../aibox-selection';
+import { MOCK_PERFUMES } from '../../../data/mockPerfumes';
 import { Perfume } from '../../../types/perfume';
 import SearchBar from '../../../components/search/SearchBar';
 import SearchResults from '../../../components/search/SearchResults';

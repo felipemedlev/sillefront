@@ -6,10 +6,10 @@ import {
   useWindowDimensions,
   TouchableOpacity,
   ScrollView,
-  Pressable,
+  Platform, // Import Platform
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { COLORS, SPACING, FONT_SIZES } from '../../types/constants';
+import { COLORS, SPACING, FONT_SIZES } from '../../types/constants'; // Assuming these constants provide a good base
 
 type Genero = 'masculino' | 'femenino';
 
@@ -26,12 +26,13 @@ interface TarjetaCajaRegalo {
 }
 
 // Corrected < and > symbols
+// Temporarily removing periods from labels for debugging the text node error
 const priceRanges = [
-  { label: '<30.000', value: '<30.000' },
-  { label: '30.000-50.000', value: '30.000-50.000' },
-  { label: '50.000-70.000', value: '50.000-70.000' },
-  { label: '70.000-90.000', value: '70.000-90.000' },
-  { label: '>90.000', value: '>90.000' },
+  { label: '<30k', value: '<30.000' }, // Keep value same, change label
+  { label: '30k-50k', value: '30.000-50.000' },
+  { label: '50k-70k', value: '50.000-70.000' },
+  { label: '70k-90k', value: '70.000-90.000' },
+  { label: '>90k', value: '>90.000' },
 ];
 
 const cajasRegalo: TarjetaCajaRegalo[] = [
@@ -66,48 +67,46 @@ const PriceRangeButtons: React.FC<PriceRangeButtonsProps> = ({
   currentRange,
   setCurrentRange,
 }) => (
-  <View style={styles.filterSection}>
-    <Text style={[styles.sectionTitle, styles.filterTitle]}>Rango de Precio</Text>
+  // Removed wrapping View and Title - Rendered directly in parent now
     <ScrollView
       horizontal
       showsHorizontalScrollIndicator={false}
       contentContainerStyle={styles.buttonsContainer}
     >
-      {priceRanges.map((range) => (
-        <Pressable
+      {priceRanges.map((range, index, arr) => (
+        <TouchableOpacity
           key={range.value}
           style={[
-            styles.rangeButton,
-            // Corrected &amp;&amp; to &&
+            styles.rangeButton, // Base style with marginRight
             currentRange === range.value && styles.rangeButtonActive,
+            index === arr.length - 1 && styles.rangeButtonLast // Remove margin for last item
           ]}
           onPress={() => setCurrentRange(range.value)}
+          activeOpacity={0.7}
         >
           <Text style={[
             styles.rangeButtonText,
-            // Corrected &amp;&amp; to &&
             currentRange === range.value && styles.rangeButtonTextActive,
           ]}>
             {range.label}
           </Text>
-        </Pressable>
+        </TouchableOpacity>
       ))}
     </ScrollView>
-  </View>
 );
 
 export default function PantallaCajaRegalo() {
   useWindowDimensions();
   const [generoSeleccionado, setGeneroSeleccionado] = useState<Genero>('masculino');
-  const [rangoPrecio, setRangoPrecio] = useState('50.000-70.000'); // Initial range
+  const [rangoPrecio, setRangoPrecio] = useState('30.000-50.000'); // Initial range
   const [decantCount, setDecantCount] = useState<4 | 8>(4);
   // const [decantSize, setDecantSize] = useState<3 | 5 | 10>(5); // Removed as it's not used
 
   // Define background colors based on selection and constants
   const colorMasculinoBg = COLORS.BACKGROUND_ALT; // Use a subtle background
-  const colorFemeninoBg = '#FFF0F5'; // Example: Light Pink, consider adding to constants if used elsewhere
-  const colorMasculinoActiveBg = COLORS.ACCENT; // Use accent for active male selection
-  const colorFemeninoActiveBg = '#FFB6C1'; // Example: Lighter Pink for active female, consider adding to constants
+  const colorFemeninoBg = COLORS.BACKGROUND_ALT; // Example: Light Pink, consider adding to constants if used elsewhere
+  const colorMasculinoActiveBg = '#d3dde3'; // Use accent for active male selection
+  const colorFemeninoActiveBg = '#e3c8d9'; // Example: Lighter Pink for active female, consider adding to constants
 
   const getGeneroBgColor = (genero: Genero) => {
     if (genero === 'masculino') {
@@ -116,81 +115,73 @@ export default function PantallaCajaRegalo() {
     return generoSeleccionado === 'femenino' ? colorFemeninoActiveBg : colorFemeninoBg;
   };
 
-  const getGeneroTextColor = (genero: Genero) => {
-    if (genero === 'masculino') {
-      return generoSeleccionado === 'masculino' ? COLORS.BACKGROUND : COLORS.TEXT_PRIMARY;
-    }
-    return generoSeleccionado === 'femenino' ? COLORS.BACKGROUND : COLORS.TEXT_PRIMARY;
-  };
-
-  const getCardBgColor = () => (generoSeleccionado === 'masculino' ? colorMasculinoBg : colorFemeninoBg);
+  const getCardBgColor = () => (generoSeleccionado === 'masculino' ? colorMasculinoActiveBg : colorFemeninoActiveBg);
 
   // Removed formatearPrecio as it's not used in this component
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.scrollContentContainer}>
       <View style={styles.content}>
-        {/* Top Selection Row */}
-        <View style={styles.topSelectionContainer}>
-          {/* Selección de Género */}
+        {/* Top Selection Row - Temporarily commented out for vertical layout debugging */}
+        {/* <View style={styles.topSelectionContainer}> */}
+          {/* Selección de Género - Now stacks vertically */}
           <View style={styles.generoContainer}>
+            {/* Apply marginRight conditionally or use specific styles */}
             <TouchableOpacity
               style={[
-              styles.generoOpcion,
-              { backgroundColor: getGeneroBgColor('masculino') },
-            ]}
-            onPress={() => setGeneroSeleccionado('masculino')}
-            activeOpacity={0.7}
-          >
-            <Feather name="user" size={32} color={getGeneroTextColor('masculino')} />
-            <Text style={[styles.generoLabel, { color: getGeneroTextColor('masculino') }]}>Hombre</Text>
-          </TouchableOpacity>
+                styles.generoOpcion, // Base style with marginRight
+                { backgroundColor: getGeneroBgColor('masculino') },
+              ]}
+              onPress={() => setGeneroSeleccionado('masculino')}
+              activeOpacity={0.7}
+            >
+              <Feather name="user" size={32} color={COLORS.TEXT_PRIMARY} />
+              <Text style={[styles.generoLabel, { color: COLORS.TEXT_PRIMARY }]}>Hombre</Text>
+            </TouchableOpacity>
 
+          {/* Apply last item style to remove margin */}
           <TouchableOpacity
             style={[
               styles.generoOpcion,
+              styles.generoOpcionLast, // Override marginRight
               { backgroundColor: getGeneroBgColor('femenino') },
             ]}
             onPress={() => setGeneroSeleccionado('femenino')}
             activeOpacity={0.7}
           >
-            {/* Consider a different icon for female? */}
-            <Feather name="user" size={32} color={getGeneroTextColor('femenino')} />
-            <Text style={[styles.generoLabel, { color: getGeneroTextColor('femenino') }]}>Mujer</Text>
+            <Feather name="user" size={32} color={COLORS.TEXT_PRIMARY} />
+            <Text style={[styles.generoLabel, { color: COLORS.TEXT_PRIMARY }]}>Mujer</Text>
           </TouchableOpacity>
         </View>
 
         {/* Decant Selection */}
         <View style={styles.decantCountContainer}>
+          {/* Reverted mapping logic as gap handles spacing */}
           {[4, 8].map((count) => (
-            <Pressable
+            <TouchableOpacity
               key={count}
               style={[
                 styles.decantCountButton,
-                // Corrected &amp;&amp; to &&
                 decantCount === count && styles.decantCountButtonActive,
               ]}
               onPress={() => setDecantCount(count as 4 | 8)}
+              activeOpacity={0.7}
             >
               <Text style={[
                 styles.decantCountText,
-                // Corrected &amp;&amp; to &&
                 decantCount === count && styles.decantCountTextActive,
               ]}>
                 {`${count} Decants`}
               </Text>
-            </Pressable>
+            </TouchableOpacity>
           ))}
-        </View>
-       </View> {/* Close topSelectionContainer */}
-       {/* Price Range Selection */}
-       <PriceRangeButtons
-         currentRange={rangoPrecio}
-         setCurrentRange={setRangoPrecio}
-       />
+        </View> {/* Close decantCountContainer */}
+        {/* </View> */} {/* Close temporary comment out of topSelectionContainer */}
+       {/* Price Range Selection - Render directly */}
+       <Text style={[styles.sectionTitle, styles.filterTitle]}>Rango de Precio</Text> {/* Moved title out */}
+       <PriceRangeButtons currentRange={rangoPrecio} setCurrentRange={setRangoPrecio} /> {/* Pass props, but component now only renders ScrollView */}
        {/* Tarjetas de Caja Regalo */}
-       <Text style={styles.sectionTitle}>Elige tu Ocasión</Text>
-        <View style={styles.cardsContainer}>
+<View style={styles.cardsContainer}>
           {cajasRegalo.map((caja) => (
             <TouchableOpacity
               key={caja.id}
@@ -228,57 +219,65 @@ const styles = StyleSheet.create({
     marginHorizontal: 'auto',
     width: '100%', // Ensure content takes full width within constraints
   },
-  topSelectionContainer: { // New container for side-by-side layout
-    flexDirection: 'row',
-    justifyContent: 'space-between', // Adjust as needed (e.g., 'flex-start')
-    alignItems: 'flex-start', // Align items to the top
-    marginBottom: SPACING.XLARGE, // Margin below the row
-    width: '100%',
-    gap: SPACING.LARGE, // Gap between gender and decant sections
-  },
+  // topSelectionContainer: { // Temporarily commented out for vertical layout debugging
+  //   flexDirection: 'row',
+  //   justifyContent: 'space-between',
+  //   alignItems: 'flex-start',
+  //   marginBottom: SPACING.XLARGE,
+  //   width: '100%',
+  // },
   generoContainer: {
     flexDirection: 'row',
-    justifyContent: 'flex-start', // Align gender options to the start
-    // Removed marginBottom, handled by topSelectionContainer
-    gap: SPACING.MEDIUM, // Reduced gap between gender options
-    flex: 1, // Allow generoContainer to take available space
-    width: '50%'
+    justifyContent: 'center', // Center options now that it's full width
+    marginBottom: SPACING.XLARGE, // Add margin below since top container is gone
+    // gap: SPACING.MEDIUM, // Replaced with margin on child
+    // flex: 1, // No longer needed in vertical stack
+    width: '100%', // Take full width now
+    // marginRight: SPACING.LARGE // No longer needed
   },
   generoOpcion: {
     flex: 1, // Allow options to take equal space within generoContainer
-    maxWidth: '100%', // Max width for each option
+    // maxWidth: '48%', // Let flex handle width distribution - Removing duplicate flex below
     alignItems: 'center',
     paddingVertical: SPACING.LARGE,
     paddingHorizontal: SPACING.MEDIUM,
     borderRadius: 12,
     borderWidth: 1,
     borderColor: COLORS.BORDER,
-    transitionProperty: 'background-color', // Smooth transition
-    transitionDuration: '0.3s',
+    // Add margin to the first item to replace gap in generoContainer
+    // This needs to be applied conditionally or target the first child,
+    // applying marginRight to all might be simpler for now.
+    marginRight: SPACING.XLARGE,
+  },
+  generoOpcionLast: { // Style for the last item to remove extra margin
+    marginRight: 0,
   },
   generoLabel: {
     marginTop: SPACING.SMALL,
     fontSize: FONT_SIZES.REGULAR,
-    fontWeight: '600', // Use string for fontWeight
+    fontWeight: 'bold', // Use standard string value
   },
   decantCountContainer: {
-    flexDirection: 'column', // Stack buttons vertically
-    // justifyContent: 'flex-start', // Align buttons to the top of the column
-    alignItems: 'stretch', // Stretch buttons to fill container width if needed, or 'flex-start'
-    gap: SPACING.SMALL, // Vertical gap between buttons
-    // Removed marginBottom, handled by topSelectionContainer
-    // Removed width: '100%', let it size based on content or flex properties
-    // Removed alignSelf, alignment handled by topSelectionContainer
+    flexDirection: 'row', // Keep buttons horizontal
+    justifyContent: 'center', // Center the buttons
+    alignItems: 'center',
+    gap: SPACING.MEDIUM, // Use gap for simplicity
+    marginBottom: SPACING.XLARGE, // Add margin below
+    width: '100%',
   },
   decantCountButton: {
     paddingVertical: SPACING.SMALL, // Adjusted padding
     paddingHorizontal: SPACING.MEDIUM,
-    borderRadius: 20, // More rounded buttons
+    borderRadius: 20,
     backgroundColor: COLORS.BACKGROUND_ALT,
     borderWidth: 1,
     borderColor: COLORS.BORDER,
     alignItems: 'center',
+    // marginBottom: SPACING.SMALL, // Removed, using gap
   },
+  // decantCountButtonLast: { // Removed, using gap
+  //   marginBottom: 0,
+  // },
   decantCountButtonActive: {
     backgroundColor: COLORS.ACCENT,
     borderColor: COLORS.ACCENT,
@@ -290,7 +289,7 @@ const styles = StyleSheet.create({
   },
   decantCountTextActive: {
     color: COLORS.BACKGROUND, // White text on active button
-    fontWeight: '600', // Use string for fontWeight
+    fontWeight: 'bold', // Use standard string value
   },
   filterSection: {
     marginBottom: SPACING.XLARGE, // Consistent margin
@@ -298,7 +297,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: FONT_SIZES.LARGE, // Use constant
-    fontWeight: '600', // Use string for fontWeight
+    fontWeight: 'bold', // Use standard string value
     color: COLORS.TEXT_PRIMARY,
     marginBottom: SPACING.MEDIUM, // Consistent margin
     textAlign: 'center', // Center section titles
@@ -309,7 +308,7 @@ const styles = StyleSheet.create({
     textAlign: 'left', // Align filter title left
   },
   buttonsContainer: {
-    gap: SPACING.SMALL, // Consistent gap
+    // gap: SPACING.SMALL, // Replaced with margin on child
     paddingVertical: SPACING.XSMALL, // Add some vertical padding
     // Removed paddingLeft, let ScrollView handle alignment
   },
@@ -320,6 +319,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: COLORS.BORDER,
     backgroundColor: COLORS.BACKGROUND_ALT,
+    marginRight: SPACING.SMALL, // Added margin to replace gap
+    marginBottom: SPACING.LARGE,
+  },
+  rangeButtonLast: { // Style for the last item to remove extra margin
+     marginRight: 0,
   },
   rangeButtonActive: {
     backgroundColor: COLORS.ACCENT,
@@ -333,7 +337,7 @@ const styles = StyleSheet.create({
   },
   rangeButtonTextActive: {
     color: COLORS.BACKGROUND, // White text
-    fontWeight: '600', // Use string for fontWeight
+    fontWeight: 'bold', // Use standard string value
   },
   cardsContainer: {
     flexDirection: 'row',
@@ -345,7 +349,7 @@ const styles = StyleSheet.create({
     marginBottom: 40, // Align to the left
   },
   card: {
-    flexBasis: '45%', // Adjust basis for better wrapping on different screens
+    flexBasis: '100%', // Adjust basis for better wrapping on different screens
     flexGrow: 1, // Allow cards to grow
     maxWidth: 300, // Max width per card
     padding: SPACING.LARGE,
@@ -370,7 +374,7 @@ const styles = StyleSheet.create({
   },
   cardTitle: {
     fontSize: FONT_SIZES.REGULAR, // Adjusted size
-    fontWeight: '600', // Use string for fontWeight
+    fontWeight: 'bold', // Use standard string value
     color: COLORS.TEXT_PRIMARY,
   },
   cardDescription: {

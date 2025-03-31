@@ -1,7 +1,7 @@
-import React, { forwardRef, useImperativeHandle, useState } from 'react';
+import { forwardRef, useImperativeHandle, useState } from 'react';
 import { View, Text, StyleSheet, Dimensions, Pressable, Image, Modal, ScrollView, FlatList, ViewStyle } from 'react-native'; // Import ViewStyle
 import { Feather } from '@expo/vector-icons';
-import { MOCK_PERFUMES } from '../../app/aibox-selection';
+import { MOCK_PERFUMES } from '@/data/mockPerfumes';
 import { Perfume, BasicPerfumeInfo } from '../../types/perfume';
 
 // --- Placeholder Components (Ideally, these would be separate files) ---

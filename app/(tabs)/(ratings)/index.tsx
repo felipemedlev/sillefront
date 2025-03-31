@@ -1,62 +1,92 @@
-import React, { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Image, SafeAreaView, ActivityIndicator } from 'react-native';
-import { Ionicons } from '@expo/vector-icons'; // Removed Feather import
+import { Ionicons } from '@expo/vector-icons';
 import RatingModal from '../../../components/RatingModal';
 import { useRatings } from '../../../context/RatingsContext';
 import { COLORS, FONT_SIZES, SPACING, FONTS } from '../../../types/constants';
+import { MOCK_PERFUMES } from '../../../data/mockPerfumes'; // Import all mock perfumes
 
-// Define perfume type (Keep updated: id to string, added aiMatch)
-interface Perfume {
+// Define the simplified perfume type needed for this screen
+interface DisplayPerfume {
   id: string;
   name: string;
   brand: string;
   image: string;
-  aiMatch?: number; // Keep AI Match percentage for potential future use if needed
 }
+
+// Map the full mock data to the simplified structure needed for display
+const allPerfumes: DisplayPerfume[] = MOCK_PERFUMES.map(p => ({
+  id: p.id,
+  name: p.name,
+  brand: p.brand,
+  image: p.thumbnailUrl, // Use thumbnailUrl for the image
+}));
 
 export default function RatingsScreen() {
   const [activeTab, setActiveTab] = useState('calificados');
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedPerfume, setSelectedPerfume] = useState<Perfume | null>(null);
+  const [selectedPerfume, setSelectedPerfume] = useState<DisplayPerfume | null>(null);
   const [isRatingModalVisible, setIsRatingModalVisible] = useState(false);
-  // Use context hooks for ratings (Removed favorite hooks)
-  const { getRating, isLoadingRatings, isLoadingFavorites } = useRatings(); // Keep loading states
+  const { ratings, getRating, isLoadingRatings } = useRatings(); // Use ratings map directly
 
-  // Filter perfumes based on search query
-  const filterPerfumes = (perfumes: Perfume[]) => {
-    if (!searchQuery.trim()) return perfumes;
+  // --- Data Derivation ---
+
+  // Get rated perfumes based on the ratings context
+  const ratedPerfumes = useMemo(() => {
+    const ratedIds = new Set(ratings.map(r => r.perfumeId)); // Correctly map array to set of IDs
+    return allPerfumes.filter(perfume => ratedIds.has(perfume.id));
+  }, [ratings]);
+
+  // Get perfumes to be rated (initially all perfumes not yet rated)
+  // TODO: Integrate logic for "ordered" perfumes. Currently shows all unrated perfumes.
+  const porCalificarPerfumes = useMemo(() => {
+    const ratedIds = new Set(ratings.map(r => r.perfumeId)); // Correctly map array to set of IDs
+    return allPerfumes.filter(perfume => !ratedIds.has(perfume.id));
+  }, [ratings]);
+
+  // Filter perfumes based on search query (searches across ALL perfumes)
+  const searchResults = useMemo(() => {
+    if (!searchQuery.trim()) return []; // Return empty if no search query
 
     const query = searchQuery.toLowerCase().trim();
-    return perfumes.filter(perfume =>
+    return allPerfumes.filter(perfume =>
       perfume.name.toLowerCase().includes(query) ||
       perfume.brand.toLowerCase().includes(query)
     );
-  };
+  }, [searchQuery]);
 
-  // Mock data for perfume cards (Keep updated: id to string, added aiMatch)
-  const calificadosPerfumes: Perfume[] = [
-    { id: '53', name: 'Shalimar', brand: 'Guerlain', image: 'https://fimgs.net/mdimg/perfume/s.53.jpg', aiMatch: 85 },
-    { id: '9828', name: 'Aventus', brand: 'Creed', image: 'https://fimgs.net/mdimg/perfume/s.9828.jpg', aiMatch: 92 },
-  ];
+  // Determine which list to display based on search query and active tab
+  const perfumesToDisplay = useMemo(() => {
+    if (searchQuery.trim()) {
+      return searchResults;
+    }
+    return activeTab === 'calificados' ? ratedPerfumes : porCalificarPerfumes;
+  }, [searchQuery, searchResults, activeTab, ratedPerfumes, porCalificarPerfumes]);
 
-  const porCalificarPerfumes: Perfume[] = [
-    { id: '33519', name: 'Baccarat Rouge 540', brand: 'Maison Francis Kurkdjian', image: 'https://fimgs.net/mdimg/perfume/s.33519.jpg', aiMatch: 78 },
-    { id: '1825', name: 'Tobacco Vanille', brand: 'Tom Ford', image: 'https://fimgs.net/mdimg/perfume/s.1825.jpg', aiMatch: 65 },
-  ];
+  // --- Handlers ---
 
-  const handlePerfumePress = (perfume: Perfume) => {
+  const handlePerfumePress = (perfume: DisplayPerfume) => {
     setSelectedPerfume(perfume);
     setIsRatingModalVisible(true);
   };
 
-  // Render perfume card (Reverted to original structure)
-  const renderPerfumeCard = (perfume: Perfume) => {
-    const rating = getRating(perfume.id); // Use string ID
+  const handleCloseModal = () => {
+    setIsRatingModalVisible(false);
+    setSelectedPerfume(null);
+    // Optionally clear search after rating?
+    // setSearchQuery('');
+  };
+
+  // --- Render Functions ---
+
+  // Render perfume card
+  const renderPerfumeCard = (perfume: DisplayPerfume) => {
+    const ratingInfo = getRating(perfume.id); // Get rating info using the function
 
     return (
       <TouchableOpacity
         key={perfume.id}
-        style={styles.cardContainer} // Use original card container style
+        style={styles.cardContainer}
         onPress={() => handlePerfumePress(perfume)}
       >
         <Image
@@ -67,12 +97,13 @@ export default function RatingsScreen() {
         <View style={styles.cardContent}>
           <Text style={styles.brandText}>{perfume.brand}</Text>
           <Text style={styles.nameText} numberOfLines={1} ellipsizeMode="tail">{perfume.name}</Text>
-          {rating && (
+          {/* Display rating stars only if the perfume has been rated */}
+          {ratingInfo && (
             <View style={styles.ratingContainer}>
               {[1, 2, 3, 4, 5].map((star) => (
                 <Ionicons
                   key={star}
-                  name={star <= rating.rating ? "star" : "star-outline"}
+                  name={star <= ratingInfo.rating ? "star" : "star-outline"}
                   size={12}
                   color="#FFD700"
                 />
@@ -84,7 +115,9 @@ export default function RatingsScreen() {
     );
   };
 
-  if (isLoadingRatings || isLoadingFavorites) { // Still check both loading states
+  // --- Loading State ---
+
+  if (isLoadingRatings) { // Only check ratings loading state
     return (
       <SafeAreaView style={[styles.container, styles.loadingContainer]}>
         <ActivityIndicator size="large" color={COLORS.PRIMARY} />
@@ -92,6 +125,8 @@ export default function RatingsScreen() {
       </SafeAreaView>
     );
   }
+
+  // --- Main Render ---
 
   return (
     <SafeAreaView style={styles.container}>
@@ -104,54 +139,76 @@ export default function RatingsScreen() {
         <Ionicons name="search" size={20} color="#888" style={styles.searchIcon} />
         <TextInput
           style={styles.searchInput}
-          placeholder="Buscar en mis perfumes..."
+          placeholder="Buscar perfumes..." // Updated placeholder
           placeholderTextColor="#999"
           value={searchQuery}
           onChangeText={setSearchQuery}
         />
+        {searchQuery.length > 0 && (
+             <TouchableOpacity onPress={() => setSearchQuery('')} style={styles.clearSearchButton}>
+                 <Ionicons name="close-circle" size={20} color="#888" />
+             </TouchableOpacity>
+         )}
       </View>
 
-      {/* Tab Navigation */}
-      <View style={styles.tabContainer}>
-        <TouchableOpacity
-          style={[styles.tab, activeTab === 'porCalificar' && styles.activeTab]}
-          onPress={() => setActiveTab('porCalificar')}
-        >
-          <Text style={[styles.tabText, activeTab === 'porCalificar' && styles.activeTabText]}>Por Calificar</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.tab, activeTab === 'calificados' && styles.activeTab]}
-          onPress={() => setActiveTab('calificados')}
-        >
-          <Text style={[styles.tabText, activeTab === 'calificados' && styles.activeTabText]}>Calificados</Text>
-        </TouchableOpacity>
-      </View>
+      {/* Conditionally render Tabs or Search Results Info */}
+      {!searchQuery.trim() ? (
+        <View style={styles.tabContainer}>
+          <TouchableOpacity
+            style={[styles.tab, activeTab === 'porCalificar' && styles.activeTab]}
+            onPress={() => setActiveTab('porCalificar')}
+          >
+            <Text style={[styles.tabText, activeTab === 'porCalificar' && styles.activeTabText]}>
+              Por Calificar ({porCalificarPerfumes.length})
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.tab, activeTab === 'calificados' && styles.activeTab]}
+            onPress={() => setActiveTab('calificados')}
+          >
+            <Text style={[styles.tabText, activeTab === 'calificados' && styles.activeTabText]}>
+              Calificados ({ratedPerfumes.length})
+            </Text>
+          </TouchableOpacity>
+        </View>
+      ) : (
+        <View style={styles.searchResultsInfo}>
+            <Text style={styles.searchResultsText}>
+                Mostrando {searchResults.length} resultado(s) para "{searchQuery}"
+            </Text>
+        </View>
+      )}
 
       {/* Perfume Cards Grid */}
       <ScrollView style={styles.cardsContainer} showsVerticalScrollIndicator={false}>
-        <View style={styles.cardsGrid}>
-          {filterPerfumes(activeTab === 'calificados' ? calificadosPerfumes : porCalificarPerfumes)
-            .map(perfume => renderPerfumeCard(perfume))
-          }
-        </View>
+        {perfumesToDisplay.length > 0 ? (
+            <View style={styles.cardsGrid}>
+              {perfumesToDisplay.map(perfume => renderPerfumeCard(perfume))}
+            </View>
+        ) : (
+            <View style={styles.emptyStateContainer}>
+                <Text style={styles.emptyStateText}>
+                    {searchQuery.trim() ? 'No se encontraron perfumes.' : (activeTab === 'calificados' ? 'Aún no has calificado perfumes.' : 'No hay perfumes por calificar.')}
+                </Text>
+                 {/* Optional: Add an icon or illustration for empty state */}
+                 <Ionicons name={searchQuery.trim() ? "search-outline" : (activeTab === 'calificados' ? "star-outline" : "list-outline")} size={40} color={COLORS.TEXT_SECONDARY} style={{ marginTop: SPACING.MEDIUM }}/>
+            </View>
+        )}
       </ScrollView>
 
       {/* Rating Modal */}
       {selectedPerfume && (
         <RatingModal
           visible={isRatingModalVisible}
-          onClose={() => {
-            setIsRatingModalVisible(false);
-            setSelectedPerfume(null);
-          }}
-          perfume={selectedPerfume}
+          onClose={handleCloseModal}
+          perfume={selectedPerfume} // Pass the simplified perfume object
         />
       )}
     </SafeAreaView>
   );
 }
 
-// Reverted styles to original structure
+// --- Styles ---
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -165,6 +222,7 @@ const styles = StyleSheet.create({
       marginTop: SPACING.MEDIUM,
       fontSize: FONT_SIZES.REGULAR,
       color: COLORS.TEXT_SECONDARY,
+      fontFamily: FONTS.INSTRUMENT_SANS,
   },
   header: {
     paddingHorizontal: SPACING.LARGE,
@@ -175,7 +233,7 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: '700',
     color: COLORS.PRIMARY,
-    fontFamily: FONTS.INSTRUMENT_SANS, // Keep font usage
+    fontFamily: FONTS.INSTRUMENT_SANS,
   },
   searchContainer: {
     flexDirection: 'row',
@@ -201,6 +259,9 @@ const styles = StyleSheet.create({
     fontSize: FONT_SIZES.REGULAR,
     color: COLORS.PRIMARY,
     fontFamily: FONTS.INSTRUMENT_SANS,
+  },
+  clearSearchButton: {
+      paddingLeft: SPACING.SMALL,
   },
   tabContainer: {
     flexDirection: 'row',
@@ -234,6 +295,15 @@ const styles = StyleSheet.create({
     color: COLORS.PRIMARY,
     fontWeight: '600',
   },
+  searchResultsInfo: {
+      paddingHorizontal: SPACING.LARGE,
+      marginBottom: SPACING.MEDIUM,
+  },
+  searchResultsText: {
+      fontSize: FONT_SIZES.SMALL,
+      color: COLORS.TEXT_SECONDARY,
+      fontFamily: FONTS.INSTRUMENT_SANS,
+  },
   cardsContainer: {
     flex: 1,
     paddingHorizontal: SPACING.LARGE - SPACING.SMALL / 2,
@@ -242,27 +312,27 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
+    paddingBottom: SPACING.LARGE, // Add padding at the bottom
   },
-  // Original card container style
   cardContainer: {
-    width: '48%',
+    width: '48%', // Ensures two cards per row with spacing
     marginBottom: SPACING.LARGE,
     borderRadius: 16,
-    overflow: 'hidden', // Keep overflow hidden here
+    overflow: 'hidden',
     backgroundColor: COLORS.BACKGROUND,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 }, // Original shadow
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
-    elevation: 4, // Original elevation
+    elevation: 4,
   },
   perfumeImage: {
     width: '100%',
-    height: 140, // Keep updated height
-    backgroundColor: COLORS.BACKGROUND,
+    height: 140,
+    backgroundColor: '#F8F8F8', // Lighter background for image
   },
   cardContent: {
-    padding: SPACING.MEDIUM, // Original padding
+    padding: SPACING.MEDIUM,
   },
   brandText: {
     fontSize: FONT_SIZES.SMALL,
@@ -276,12 +346,25 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: COLORS.PRIMARY,
     marginBottom: SPACING.SMALL,
-    // fontFamily: FONTS.INSTRUMENT_SERIF, // Removed specific font
+    fontFamily: FONTS.INSTRUMENT_SANS, // Use consistent font
   },
   ratingContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 2,
+    marginTop: SPACING.SMALL / 2, // Add some top margin
   },
-  // Removed action bar styles
+  emptyStateContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: SPACING.LARGE,
+      marginTop: SPACING.XLARGE, // Push it down a bit
+  },
+  emptyStateText: {
+      fontSize: FONT_SIZES.REGULAR,
+      color: COLORS.TEXT_SECONDARY,
+      textAlign: 'center',
+      fontFamily: FONTS.INSTRUMENT_SANS,
+  },
 });

@@ -2,7 +2,7 @@ import React, { useState, useMemo, useRef } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, ActivityIndicator, ScrollView } from 'react-native';
 import { Stack } from 'expo-router';
 import { useRatings } from '../../../context/RatingsContext';
-import { MOCK_PERFUMES } from '../../aibox-selection'; // Import mock data source
+import { MOCK_PERFUMES } from '@/data/mockPerfumes'; // Import mock data source
 import { Perfume } from '../../../types/perfume'; // Import Perfume type
 import SearchResults from '../../../components/search/SearchResults'; // Reuse SearchResults component
 import PerfumeModal, { PerfumeModalRef } from '../../../components/product/PerfumeModal'; // Reuse PerfumeModal

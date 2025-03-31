@@ -1,7 +1,7 @@
 import { BasicPerfumeInfo } from './perfume';
 
 // Define the types of products that can be added to the cart
-export type ProductType = 'AI_BOX' | 'MANUAL_BOX' | 'GIFT_BOX' | 'OCCASION_BOX'; // Add other types as needed
+export type ProductType = 'AI_BOX' | 'BOX_PERSONALIZADO' | 'GIFT_BOX' | 'OCCASION_BOX'; // Add other types as needed
 
 // Define the possible sizes for decants
 export type DecantSize = 3 | 5 | 10;

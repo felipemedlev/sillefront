@@ -1,24 +1,37 @@
 import React, { useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Animated } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Animated, Alert } from 'react-native'; // Import Alert
 import { Feather } from '@expo/vector-icons';
 import { useManualBox } from '../context/ManualBoxContext';
+import { useCart } from '../context/CartContext'; // Import useCart
 import DecantSelector from '../components/product/DecantSelector';
 import BottomBar from '../components/product/BottomBar';
 import { COLORS, FONT_SIZES, SPACING } from '../types/constants';
-import { Perfume } from '../types/perfume';
+import { Perfume, BasicPerfumeInfo } from '../types/perfume'; // Import BasicPerfumeInfo
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function ManualBoxScreen() {
   const insets = useSafeAreaInsets();
   const {
-    selectedPerfumes,
+    selectedPerfumes, // These are full Perfume objects from ManualBoxContext
     decantCount,
     decantSize,
     setDecantCount,
     setDecantSize,
     removePerfume,
   } = useManualBox();
+  const { addItemToCart } = useCart(); // Get cart function
+  const [feedbackMessage, setFeedbackMessage] = React.useState<string | null>(null); // State for feedback
+  const feedbackTimeoutRef = React.useRef<NodeJS.Timeout | null>(null); // Ref for timeout
+
+  // Clear timeout on unmount
+  React.useEffect(() => {
+    return () => {
+      if (feedbackTimeoutRef.current) {
+        clearTimeout(feedbackTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const calculateTotalPrice = useCallback(() => {
     // Add explicit types for reduce parameters
@@ -28,16 +41,71 @@ export default function ManualBoxScreen() {
     }, 0);
   }, [selectedPerfumes, decantSize]);
 
-  const handleAddToCart = useCallback(() => {
-    console.log('Adding manual box to cart:', {
-      decantCount,
-      decantSize,
-      // Add explicit type for map parameter
-      selectedPerfumes: selectedPerfumes.map((p: Perfume) => p.id),
-      totalPrice: calculateTotalPrice(),
-    });
-    // Add actual cart logic here
-  }, [decantCount, decantSize, selectedPerfumes, calculateTotalPrice]);
+  const handleAddToCart = useCallback(async () => {
+    // Ensure there are perfumes selected before adding to cart
+    if (selectedPerfumes.length === 0) {
+      console.log("Cannot add empty manual box to cart.");
+      // Optionally show a message to the user
+      return;
+    }
+
+    const totalPrice = calculateTotalPrice();
+    // Map full Perfume objects to BasicPerfumeInfo for the cart
+    const perfumesInBox: BasicPerfumeInfo[] = selectedPerfumes.map(p => ({
+      id: p.id,
+      name: p.name,
+      brand: p.brand,
+      thumbnailUrl: p.thumbnailUrl,
+      fullSizeUrl: p.fullSizeUrl,
+    }));
+
+    const itemData = {
+      productType: 'MANUAL_BOX' as const,
+      name: `Manual Box (${decantCount} x ${decantSize}ml)`,
+      details: {
+        decantCount,
+        decantSize,
+        perfumes: perfumesInBox,
+      },
+      price: totalPrice,
+      thumbnailUrl: perfumesInBox[0]?.thumbnailUrl, // Use first perfume's image
+    };
+
+    try {
+      await addItemToCart(itemData);
+      console.log('Manual Box added to cart:', itemData);
+      setFeedbackMessage("¡Añadido al carrito!"); // Set feedback message
+
+      // Clear previous timeout if exists
+      if (feedbackTimeoutRef.current) {
+        clearTimeout(feedbackTimeoutRef.current);
+      }
+
+      // Set new timeout to clear the message
+      feedbackTimeoutRef.current = setTimeout(() => {
+        setFeedbackMessage(null);
+      }, 2000); // Clear after 2 seconds
+
+      // router.push('/(tabs)/(cart)');
+    } catch (error) {
+      console.error("Error adding Manual Box to cart:", error);
+      setFeedbackMessage("Error al añadir."); // Show error feedback
+      // Clear previous timeout if exists
+      if (feedbackTimeoutRef.current) {
+        clearTimeout(feedbackTimeoutRef.current);
+      }
+      // Set new timeout to clear the error message
+      feedbackTimeoutRef.current = setTimeout(() => {
+        setFeedbackMessage(null);
+      }, 2000);
+    }
+  }, [
+    decantCount,
+    decantSize,
+    selectedPerfumes,
+    calculateTotalPrice,
+    addItemToCart,
+  ]);
 
   const SelectedPerfumeItem = ({ perfume, index }: { perfume: Perfume; index: number }) => {
     const fadeAnim = React.useRef(new Animated.Value(0)).current;
@@ -149,6 +217,7 @@ export default function ManualBoxScreen() {
       <BottomBar
         totalPrice={calculateTotalPrice()}
         onAddToCart={handleAddToCart}
+        feedbackMessage={feedbackMessage} // Pass feedback state
       />
     </View>
   );

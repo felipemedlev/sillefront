@@ -4,7 +4,8 @@ import * as Font from 'expo-font';
 import { StatusBar } from 'expo-status-bar';
 import { View, ActivityIndicator, Text, StyleSheet } from 'react-native';
 import { RatingsProvider } from '../context/RatingsContext';
-import { ManualBoxProvider } from '../context/ManualBoxContext'; // <-- Add this import
+import { ManualBoxProvider } from '../context/ManualBoxContext';
+import { CartProvider } from '../context/CartContext'; // <-- Import CartProvider
 import { FontLoadingState, LayoutStyles } from '../types/layout';
 import { FONTS, COLORS, FONT_SIZES, SPACING } from '../types/constants';
 import { handleError } from '../types/error';
@@ -66,33 +67,35 @@ export default function RootLayout() {
   }
 
   return (
-    <ManualBoxProvider>
-      <RatingsProvider>
-        <View style={styles.container}>
-          <StatusBar style="dark" translucent={true} />
-          <Stack
-          screenOptions={{
-            headerShown: false,
-            contentStyle: styles.stackContent,
-            animation: 'fade',
-          }}
-        >
-          <Stack.Screen
-            name="(tabs)"
-            options={{
+    <CartProvider>
+      <ManualBoxProvider>
+        <RatingsProvider>
+          <View style={styles.container}>
+            <StatusBar style="dark" translucent={true} />
+            <Stack
+            screenOptions={{
               headerShown: false,
               contentStyle: styles.stackContent,
+              animation: 'fade',
             }}
-          />
-          {/* Add Manual Box screen to the main stack */}
-          <Stack.Screen name="manual-box" options={{ headerShown: false }} />
-          <Stack.Screen name="landing/index" options={{ headerShown: false }} />
-          <Stack.Screen name="survey" options={{ headerShown: false }} />
-          <Stack.Screen name="auth" options={{ headerShown: false }} />
-        </Stack>
-      </View>
-    </RatingsProvider>
-  </ManualBoxProvider>
+          >
+            <Stack.Screen
+              name="(tabs)"
+              options={{
+                headerShown: false,
+                contentStyle: styles.stackContent,
+              }}
+            />
+            {/* Add Manual Box screen to the main stack */}
+            <Stack.Screen name="manual-box" options={{ headerShown: false }} />
+            <Stack.Screen name="landing/index" options={{ headerShown: false }} />
+            <Stack.Screen name="survey" options={{ headerShown: false }} />
+            <Stack.Screen name="auth" options={{ headerShown: false }} />
+          </Stack>
+        </View>
+      </RatingsProvider>
+    </ManualBoxProvider>
+  </CartProvider>
   );
 }
 

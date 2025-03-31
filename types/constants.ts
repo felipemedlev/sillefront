@@ -2,6 +2,7 @@ export const STORAGE_KEYS = {
   RATINGS: 'perfume_ratings',
   FAVORITES: 'perfume_favorites',
   MANUAL_BOX: 'manual_box_data',
+  CART: 'cart_data', // Added for shopping cart persistence
 } as const;
 
 export const FONTS = {

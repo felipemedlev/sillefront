@@ -2,6 +2,8 @@
 
 ## Current Focus
 
+- [2025-04-01 19:59:00] - Current focus is implementing Profile Screen Features (Personal Info, Password, Purchases, Stats). Plan documented in `memory-bank/profile-features-plan.md`.
+
 - [2025-04-01 10:42:01] - Current focus is implementing the AI Box Subscription feature (client-side). Plan documented in `memory-bank/subscription-feature-plan.md`.
 
 - [2025-03-31 23:24:13] - Current focus is implementing the Local Authentication feature. Plan documented in `memory-bank/local-auth-plan.md`.

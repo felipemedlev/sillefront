@@ -1,10 +1,12 @@
 import React from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, Platform, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, Image, TouchableOpacity, Platform, ScrollView, ActivityIndicator } from 'react-native'; // Added ActivityIndicator
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../../context/AuthContext';
-import { useSubscription } from '../../../context/SubscriptionContext'; // Import useSubscription
-import { COLORS, FONTS, SPACING, FONT_SIZES, SUBSCRIPTION_TIERS } from '../../../types/constants'; // Import constants & tiers
+import { useSubscription } from '../../../context/SubscriptionContext';
+import { useRatings } from '../../../context/RatingsContext'; // Import useRatings
+import { MOCK_PURCHASES } from '../../../data/mockPurchases'; // Import mock purchases
+import { COLORS, FONTS, SPACING, FONT_SIZES } from '../../../types/constants'; // Removed SUBSCRIPTION_TIERS (not used directly here)
 
 type MenuItem = {
   id: string;
@@ -16,28 +18,29 @@ type MenuItem = {
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const { user, logout } = useAuth();
-  const { subscriptionStatus, isLoading: isSubscriptionLoading } = useSubscription(); // Get subscription state
+  const { user, logout, isLoading: isAuthLoading } = useAuth(); // Get auth loading state too
+  const { subscriptionStatus, isLoading: isSubscriptionLoading } = useSubscription();
+  const { ratings, favorites, isLoadingRatings, isLoadingFavorites } = useRatings(); // Get ratings, favorites, and their loading states
 
-  // Define menu items, including logout
+  // Define base menu items
   const menuItems: MenuItem[] = [
     {
       id: 'personal',
       title: 'Información personal',
       icon: 'person-outline',
-      onPress: () => console.log('Personal info'), // Placeholder
+      onPress: () => router.push('/(tabs)/(profile)/personal-info'), // Navigate to personal info screen
     },
     {
       id: 'password',
       title: 'Cambiar contraseña',
       icon: 'lock-closed-outline',
-      onPress: () => console.log('Change password'), // Placeholder
+      onPress: () => router.push('/(tabs)/(profile)/change-password'), // Navigate to change password screen
     },
     {
       id: 'purchases',
       title: 'Mis compras',
       icon: 'bag-outline',
-      onPress: () => console.log('My purchases'), // Placeholder
+      onPress: () => router.push('/(tabs)/(profile)/purchases'), // Navigate to purchases screen
     },
     {
       id: 'favorites',
@@ -73,19 +76,28 @@ export default function ProfileScreen() {
   ];
 
   // Display loading or placeholder if user data isn't available yet
-  // This screen should only be reachable when logged in due to layout protection,
-  // but adding a check for `user` is good practice.
-  // Also check if subscription data is loading
-  if (!user || isSubscriptionLoading) {
-     // This case should ideally not be reached if layout protection works correctly for user.
-     // Show loading indicator while subscription status loads.
+  // Combined loading state check
+  const isLoading = isAuthLoading || isSubscriptionLoading || isLoadingRatings || isLoadingFavorites;
+
+  if (isLoading) {
      return (
         <View style={[styles.container, styles.loadingContainer]}>
-            {/* Optionally add an ActivityIndicator here */}
+            <ActivityIndicator size="large" color={COLORS.ACCENT} />
             <Text style={styles.loadingText}>Cargando perfil...</Text>
         </View>
      );
   }
+
+  // Ensure user is loaded before rendering the rest (should be guaranteed by isLoading check)
+  if (!user) {
+     // Fallback in case something unexpected happens
+     return (
+        <View style={[styles.container, styles.loadingContainer]}>
+            <Text style={styles.loadingText}>Error al cargar datos del usuario.</Text>
+        </View>
+     );
+  }
+
 
   // --- Dynamically create subscription menu item ---
   const subscriptionMenuItem: MenuItem = subscriptionStatus?.isActive
@@ -130,16 +142,24 @@ export default function ProfileScreen() {
           {/* Display User Email */}
           <Text style={styles.userEmail}>{user.email}</Text>
 
-          {/* Stats - These are placeholders, replace with actual data if available */}
+          {/* Dynamic Stats */}
           <View style={styles.statsContainer}>
+            {/* Calificaciones */}
             <View style={styles.statItem}>
-              <Text style={styles.statNumber}>32</Text>
+              <Text style={styles.statNumber}>{ratings.length}</Text>
               <Text style={styles.statLabel}>Calificaciones</Text>
             </View>
             <View style={styles.statDivider} />
+            {/* Compras */}
             <View style={styles.statItem}>
-              <Text style={styles.statNumber}>4</Text>
+              <Text style={styles.statNumber}>{MOCK_PURCHASES.length}</Text>
               <Text style={styles.statLabel}>Compras</Text>
+            </View>
+            <View style={styles.statDivider} />
+             {/* Favoritos */}
+            <View style={styles.statItem}>
+              <Text style={styles.statNumber}>{favorites.length}</Text>
+              <Text style={styles.statLabel}>Favoritos</Text>
             </View>
           </View>
         </View>

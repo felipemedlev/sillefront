@@ -40,4 +40,14 @@
 [2025-04-01 14:19:27] - Started task: Add back button to favorites screen (app/(tabs)/(profile)/favorites.tsx).
 [2025-04-01 14:28:32] - Completed task: Added back button to favorites screen header by modifying the profile layout file (app/(tabs)/(profile)/_layout.tsx) and cleaning up favorites.tsx.
 
+- [2025-04-01 19:59:00] - Update AuthContext for profile details (name, phone, address).
+
+- [2025-04-01 19:59:00] - Implement Personal Info screen (`app/(tabs)/(profile)/personal-info.tsx`).
+
+- [2025-04-01 19:59:00] - Implement Change Password screen (`app/(tabs)/(profile)/change-password.tsx`).
+
+- [2025-04-01 19:59:00] - Implement Purchases screen (`app/(tabs)/(profile)/purchases.tsx`) with mock data (`data/mockPurchases.ts`).
+
+- [2025-04-01 19:59:00] - Update Profile screen statistics (ratings, purchases, favorites).
+
 [2025-03-29 12:10:25] - Initialized progress tracking file

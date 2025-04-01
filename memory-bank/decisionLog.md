@@ -39,4 +39,9 @@
 
 [2025-04-01 14:27:01] - Decided to manage header configuration for nested screens within their parent layout file. Specifically, the header for `app/(tabs)/(profile)/favorites.tsx` (including title and back button) is now defined in `app/(tabs)/(profile)/_layout.tsx` because the layout's Stack navigator options override screen-level options.
 
+
+[2025-04-01 19:59:00] - Approved plan for Profile Screen Features.
+  - Rationale: Implement user-requested features (Personal Info, Change Password, Purchases) and update profile stats.
+  - Details: Expand `AuthContext` user details (name, phone, address) post-signup. Implement local password change (new/confirm fields only). Use mock data for purchase history (`data/mockPurchases.ts`). Update profile stats (ratings, purchases, favorites). Plan saved to `memory-bank/profile-features-plan.md`.
+
 [2025-03-29 12:10:12] - Initialized decision log file

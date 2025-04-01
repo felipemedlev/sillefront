@@ -70,6 +70,42 @@ export default function ProfileLayout() {
         />
         <Stack.Screen name="auth-prompt" options={{ headerShown: false }} />
         {/* Add other profile-related screens here */}
+        <Stack.Screen
+          name="personal-info"
+          options={{
+            title: 'Información Personal',
+            headerShown: true,
+            headerLeft: () => (
+              <Pressable onPress={() => router.back()} style={{ marginLeft: 10, padding: 5 }}>
+                <Feather name="chevron-left" size={24} color={COLORS.TEXT_PRIMARY} />
+              </Pressable>
+            ),
+          }}
+        />
+        <Stack.Screen
+          name="change-password"
+          options={{
+            title: 'Cambiar Contraseña',
+            headerShown: true,
+            headerLeft: () => (
+              <Pressable onPress={() => router.back()} style={{ marginLeft: 10, padding: 5 }}>
+                <Feather name="chevron-left" size={24} color={COLORS.TEXT_PRIMARY} />
+              </Pressable>
+            ),
+          }}
+        />
+        <Stack.Screen
+          name="purchases"
+          options={{
+            title: 'Mis Compras',
+            headerShown: true,
+            headerLeft: () => (
+              <Pressable onPress={() => router.back()} style={{ marginLeft: 10, padding: 5 }}>
+                <Feather name="chevron-left" size={24} color={COLORS.TEXT_PRIMARY} />
+              </Pressable>
+            ),
+          }}
+        />
       </Stack>
     </SurveyProvider>
   );

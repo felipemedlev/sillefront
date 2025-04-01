@@ -95,7 +95,6 @@ export default function ManualBoxScreen() {
       // Set new timeout to clear the message AND navigate
       feedbackTimeoutRef.current = setTimeout(() => {
         setFeedbackMessage(null);
-        router.push('/(tabs)/(cart)'); // Navigate after successful add and timeout
       }, 2000); // Clear and navigate after 2 seconds
 
     } catch (error) {

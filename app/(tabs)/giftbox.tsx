@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react'; // Import useMemo
 import {
   View,
   Text,
@@ -6,10 +6,12 @@ import {
   useWindowDimensions,
   TouchableOpacity,
   ScrollView,
-  Platform, // Import Platform
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { COLORS, SPACING, FONT_SIZES } from '../../types/constants'; // Assuming these constants provide a good base
+import { PREDEFINED_BOXES, PredefinedBox } from '../../data/predefinedBoxes'; // Import new data and type
+import PredefinedBoxModal from '@/components/product/PredefinedBoxModal';
+import { MOCK_PERFUMES } from '../../data/mockPerfumes'; // Import perfume data
 
 type Genero = 'masculino' | 'femenino';
 
@@ -18,12 +20,7 @@ interface PriceRangeButtonsProps {
   setCurrentRange: (range: string) => void;
 }
 
-interface TarjetaCajaRegalo {
-  id: string;
-  titulo: string;
-  descripcion: string;
-  icono: keyof typeof Feather.glyphMap;
-}
+// Removed TarjetaCajaRegalo interface
 
 // Corrected < and > symbols
 // Temporarily removing periods from labels for debugging the text node error
@@ -35,32 +32,7 @@ const priceRanges = [
   { label: '>90k', value: '>90.000' },
 ];
 
-const cajasRegalo: TarjetaCajaRegalo[] = [
-  {
-    id: '1',
-    titulo: 'Uso Casual',
-    descripcion: 'Perfecto para ocasiones cotidianas',
-    icono: 'sun',
-  },
-  {
-    id: '2',
-    titulo: 'Uso Formal',
-    descripcion: 'Fragancias elegantes para momentos especiales',
-    icono: 'briefcase',
-  },
-  {
-    id: '3',
-    titulo: 'Uso Nocturno',
-    descripcion: 'Fragancias sofisticadas para eventos nocturnos',
-    icono: 'moon',
-  },
-  {
-    id: '4',
-    titulo: 'Ocasión Especial',
-    descripcion: 'Fragancias de lujo para momentos memorables',
-    icono: 'star',
-  },
-];
+// Removed old cajasRegalo array
 
 // Extracted PriceRangeButtons component for better structure
 const PriceRangeButtons: React.FC<PriceRangeButtonsProps> = ({
@@ -101,6 +73,9 @@ export default function PantallaCajaRegalo() {
   const [rangoPrecio, setRangoPrecio] = useState('30.000-50.000'); // Initial range
   const [decantCount, setDecantCount] = useState<4 | 8>(4);
   // const [decantSize, setDecantSize] = useState<3 | 5 | 10>(5); // Removed as it's not used
+  // Modal State
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [selectedBox, setSelectedBox] = useState<PredefinedBox | null>(null);
 
   // Define background colors based on selection and constants
   const colorMasculinoBg = COLORS.BACKGROUND_ALT; // Use a subtle background
@@ -117,7 +92,58 @@ export default function PantallaCajaRegalo() {
 
   const getCardBgColor = () => (generoSeleccionado === 'masculino' ? colorMasculinoActiveBg : colorFemeninoActiveBg);
 
+  // Handler for pressing a predefined box card
+  const handleBoxPress = (box: PredefinedBox) => {
+    setSelectedBox(box);
+    setIsModalVisible(true);
+  };
+
   // Removed formatearPrecio as it's not used in this component
+
+  // Helper function to calculate the price of a predefined box based on decant count
+  const calculateBoxPrice = (box: PredefinedBox, count: 4 | 8): number => {
+    const perfumeIdsToConsider = box.perfumeIds.slice(0, count);
+    let totalPrice = 0;
+    perfumeIdsToConsider.forEach(id => {
+      const perfume = MOCK_PERFUMES.find(p => p.id === id);
+      if (perfume) {
+        totalPrice += (perfume.pricePerML ?? 0) * 5; // Fixed 5mL size
+      }
+    });
+    return totalPrice;
+  };
+
+  // Helper function to parse the price range string (e.g., "<30.000", "30.000-50.000", ">90.000")
+  const parsePriceRange = (rangeString: string): { min: number; max: number } => {
+    const cleanedString = rangeString.replace(/\./g, ''); // Remove dots for parsing
+    if (cleanedString.startsWith('<')) {
+      return { min: 0, max: parseInt(cleanedString.substring(1), 10) };
+    }
+    if (cleanedString.startsWith('>')) {
+      return { min: parseInt(cleanedString.substring(1), 10), max: Infinity };
+    }
+    const parts = cleanedString.split('-');
+    if (parts.length === 2) {
+      return { min: parseInt(parts[0], 10), max: parseInt(parts[1], 10) };
+    }
+    return { min: 0, max: Infinity }; // Default fallback
+  };
+
+  // Memoize the filtered boxes based on gender, price range, and decant count
+  const filteredBoxes = useMemo(() => {
+    const { min: minPrice, max: maxPrice } = parsePriceRange(rangoPrecio);
+
+    return PREDEFINED_BOXES.filter(box => {
+      // Filter by gender first
+      if (box.gender !== generoSeleccionado) {
+        return false;
+      }
+      // Calculate box price based on current decant count
+      const boxPrice = calculateBoxPrice(box, decantCount);
+      // Filter by price range
+      return boxPrice >= minPrice && boxPrice <= maxPrice;
+    });
+  }, [generoSeleccionado, rangoPrecio, decantCount]); // Dependencies for re-calculation
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.scrollContentContainer}>
@@ -129,7 +155,7 @@ export default function PantallaCajaRegalo() {
             {/* Apply marginRight conditionally or use specific styles */}
             <TouchableOpacity
               style={[
-                styles.generoOpcion, // Base style with marginRight
+                styles.generoOpcion,
                 { backgroundColor: getGeneroBgColor('masculino') },
               ]}
               onPress={() => setGeneroSeleccionado('masculino')}
@@ -180,26 +206,37 @@ export default function PantallaCajaRegalo() {
        {/* Price Range Selection - Render directly */}
        <Text style={[styles.sectionTitle, styles.filterTitle]}>Rango de Precio</Text> {/* Moved title out */}
        <PriceRangeButtons currentRange={rangoPrecio} setCurrentRange={setRangoPrecio} /> {/* Pass props, but component now only renders ScrollView */}
-       {/* Tarjetas de Caja Regalo */}
-<View style={styles.cardsContainer}>
-          {cajasRegalo.map((caja) => (
-            <TouchableOpacity
-              key={caja.id}
-              style={[styles.card, { backgroundColor: getCardBgColor() }]}
-              activeOpacity={0.8}
-              // Add onPress handler if these cards are interactive
-            >
-              <View style={styles.cardIconContainer}>
-                <Feather name={caja.icono} size={32} color={COLORS.TEXT_PRIMARY} />
-              </View>
-              <View style={styles.cardContent}>
-                <Text style={styles.cardTitle}>{caja.titulo}</Text>
-                <Text style={styles.cardDescription}>{caja.descripcion}</Text>
-              </View>
-            </TouchableOpacity>
-          ))}
+       {/* Tarjetas de Caja Regalo - Updated */}
+      <View style={styles.cardsContainer}>
+          {filteredBoxes.map((box) => ( // Map over the memoized filteredBoxes
+              <TouchableOpacity
+                key={box.id} // Use box.id
+                style={[styles.card, { backgroundColor: getCardBgColor() }]}
+                activeOpacity={0.8}
+                onPress={() => handleBoxPress(box)} // Add onPress handler
+              >
+                <View style={styles.cardIconContainer}>
+                  <Feather name={box.icon} size={32} color={COLORS.TEXT_PRIMARY} /> {/* Use box.icon */}
+                </View>
+                <View style={styles.cardContent}>
+                  <Text style={styles.cardTitle}>{box.title}</Text> {/* Use box.title */}
+                  <Text style={styles.cardDescription}>{box.description}</Text> {/* Use box.description */}
+                </View>
+              </TouchableOpacity>
+            ))}
         </View>
       </View>
+
+
+      {/* Predefined Box Modal */}
+      {selectedBox && (
+        <PredefinedBoxModal
+          isVisible={isModalVisible}
+          onClose={() => setIsModalVisible(false)}
+          boxData={selectedBox}
+          decantCount={decantCount}
+        />
+      )}
     </ScrollView>
   );
 }

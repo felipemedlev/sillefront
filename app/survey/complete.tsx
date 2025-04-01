@@ -33,7 +33,8 @@ export default function CompleteScreen() {
               duration: 1000,
               useNativeDriver: true,
             }).start(() => {
-              router.replace('/(tabs)');
+              // Redirect to home after survey completion
+              router.replace('/home');
             });
     }, 2000);
   }, [fadeAnim, scaleAnim, router]);

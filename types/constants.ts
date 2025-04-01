@@ -2,6 +2,9 @@ export const STORAGE_KEYS = {
   RATINGS: 'perfume_ratings',
   FAVORITES: 'perfume_favorites',
   MANUAL_BOX: 'manual_box_data',
+
+  AUTH_USER_EMAIL: 'auth_user_email', // Added for current logged-in user
+  USER_DATA_PREFIX: 'user_', // Added prefix for storing individual user data
   CART: 'cart_data', // Added for shopping cart persistence
 } as const;
 

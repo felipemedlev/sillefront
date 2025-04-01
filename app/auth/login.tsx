@@ -9,10 +9,13 @@ import {
   Platform,
   ScrollView,
   Dimensions,
+  ActivityIndicator, // Import ActivityIndicator
 } from 'react-native';
 import { Stack, router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useAuth } from '../../context/AuthContext'; // Import useAuth
+import { COLORS, FONTS, SPACING, FONT_SIZES } from '../../types/constants'; // Import constants
 
 const { width } = Dimensions.get('window');
 
@@ -21,14 +24,42 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isFocused, setIsFocused] = useState({ email: false, password: false });
+  const [error, setError] = useState<string | null>(null); // State for error messages
+  const [isLoading, setIsLoading] = useState<boolean>(false); // State for loading indicator
+  const { login } = useAuth(); // Get login function from context
 
-  const handleLogin = () => {
-    // TODO: Implement login logic
-    console.log('Login pressed');
+  const handleLogin = async () => {
+    if (isLoading) return; // Prevent multiple submissions
+    setIsLoading(true);
+    setError(null); // Clear previous errors
+    try {
+      // Basic validation
+      if (!email || !password) {
+        throw new Error("Por favor, ingresa email y contraseña.");
+      }
+      await login(email.trim(), password); // Trim email
+      // Navigation is handled by the root layout (_layout.tsx) upon successful login
+    } catch (err: any) {
+      setError(err.message || 'Ocurrió un error al iniciar sesión.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleGuestAccess = () => {
-    router.replace('/(tabs)');
+  // Remove handleGuestAccess as it's not part of the required flow anymore
+  // const handleGuestAccess = () => {
+  //   router.replace('/(tabs)');
+  // };
+
+  // Clear error when user starts typing again
+  const handleEmailChange = (text: string) => {
+    setEmail(text);
+    if (error) setError(null);
+  };
+
+  const handlePasswordChange = (text: string) => {
+    setPassword(text);
+    if (error) setError(null);
   };
 
   return (
@@ -49,11 +80,13 @@ export default function LoginScreen() {
           <ScrollView
             contentContainerStyle={styles.scrollContent}
             showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled" // Dismiss keyboard on tap outside inputs
           >
             <View style={styles.header}>
               <TouchableOpacity
                 style={styles.backButton}
-                onPress={() => router.replace('/landing')}
+                onPress={() => router.replace('/landing')} // Go back to landing
+                disabled={isLoading}
               >
                 <Ionicons name="chevron-back" size={26} color="#333" />
               </TouchableOpacity>
@@ -63,6 +96,7 @@ export default function LoginScreen() {
                   style={styles.authToggleOption}
                   onPress={() => router.push('/auth/signup')}
                   activeOpacity={0.7}
+                  disabled={isLoading}
                 >
                   <Text style={styles.authToggleInactiveText}>Registrarse</Text>
                 </TouchableOpacity>
@@ -70,6 +104,7 @@ export default function LoginScreen() {
                 <TouchableOpacity
                   style={[styles.authToggleOption, styles.authToggleActive]}
                   activeOpacity={0.7}
+                  disabled={isLoading}
                 >
                   <Text style={styles.authToggleActiveText}>Iniciar Sesión</Text>
                 </TouchableOpacity>
@@ -79,6 +114,7 @@ export default function LoginScreen() {
             <View style={styles.form}>
               <View style={styles.welcomeSection}>
                 <Text style={styles.welcomeTitle}>Iniciar Sesión</Text>
+                {/* Optional: Add subtitle if needed */}
               </View>
 
               <View style={styles.inputSection}>
@@ -87,19 +123,20 @@ export default function LoginScreen() {
                   style={[
                     styles.inputContainer,
                     isFocused.email && styles.inputContainerFocused,
+                    !!error && styles.inputContainerError, // Add error style
                   ]}
                 >
                   <Ionicons
                     name="mail-outline"
                     size={22}
-                    color={isFocused.email ? '#809CAC' : '#999'}
+                    color={isFocused.email ? COLORS.ACCENT : (!!error ? COLORS.ERROR : '#999')}
                     style={styles.inputIcon}
                   />
                   <TextInput
                     style={styles.input}
-                    placeholder="mail@example.com"
+                    placeholder="mail@ejemplo.com" // Updated placeholder
                     value={email}
-                    onChangeText={setEmail}
+                    onChangeText={handleEmailChange} // Use handler to clear error
                     keyboardType="email-address"
                     autoCapitalize="none"
                     onFocus={() =>
@@ -109,6 +146,8 @@ export default function LoginScreen() {
                       setIsFocused((prev) => ({ ...prev, email: false }))
                     }
                     placeholderTextColor="#999"
+                    editable={!isLoading} // Disable input when loading
+                    autoComplete="email" // Added for convenience
                   />
                 </View>
 
@@ -117,19 +156,20 @@ export default function LoginScreen() {
                   style={[
                     styles.inputContainer,
                     isFocused.password && styles.inputContainerFocused,
+                    !!error && styles.inputContainerError, // Add error style
                   ]}
                 >
                   <Ionicons
                     name="lock-closed-outline"
                     size={22}
-                    color={isFocused.password ? '#809CAC' : '#999'}
+                    color={isFocused.password ? COLORS.ACCENT : (!!error ? COLORS.ERROR : '#999')}
                     style={styles.inputIcon}
                   />
                   <TextInput
                     style={styles.input}
                     placeholder="Contraseña"
                     value={password}
-                    onChangeText={setPassword}
+                    onChangeText={handlePasswordChange} // Use handler to clear error
                     secureTextEntry={!showPassword}
                     onFocus={() =>
                       setIsFocused((prev) => ({ ...prev, password: true }))
@@ -138,43 +178,50 @@ export default function LoginScreen() {
                       setIsFocused((prev) => ({ ...prev, password: false }))
                     }
                     placeholderTextColor="#999"
+                    editable={!isLoading} // Disable input when loading
+                    autoComplete="password" // Added for convenience
                   />
                   <TouchableOpacity
                     style={styles.eyeIcon}
                     onPress={() => setShowPassword(!showPassword)}
+                    disabled={isLoading}
                   >
                     <Ionicons
                       name={showPassword ? 'eye-off-outline' : 'eye-outline'}
                       size={22}
-                      color={isFocused.password ? '#809CAC' : '#999'}
+                      color={isFocused.password ? COLORS.ACCENT : '#999'}
                     />
                   </TouchableOpacity>
                 </View>
 
-                <TouchableOpacity style={styles.forgotPassword}>
+                {/* Optional: Forgot Password Link */}
+                <TouchableOpacity style={styles.forgotPassword} disabled={isLoading}>
                   <Text style={styles.forgotPasswordText}>
                     ¿Olvidaste tu contraseña?
                   </Text>
                 </TouchableOpacity>
               </View>
 
+              {/* Display Error Message */}
+              {error && (
+                <Text style={styles.errorTextDisplay}>{error}</Text>
+              )}
+
               <View style={styles.actionSection}>
                 <TouchableOpacity
-                  style={styles.loginButton}
+                  style={[styles.loginButton, isLoading && styles.buttonDisabled]}
                   onPress={handleLogin}
                   activeOpacity={0.9}
+                  disabled={isLoading}
                 >
-                  <Text style={styles.loginButtonText}>Iniciar Sesión</Text>
+                  {isLoading ? (
+                    <ActivityIndicator color="#fff" />
+                  ) : (
+                    <Text style={styles.loginButtonText}>Iniciar Sesión</Text>
+                  )}
                 </TouchableOpacity>
 
-                <TouchableOpacity
-                  style={styles.guestButton}
-                  onPress={handleGuestAccess}
-                >
-                  <Text style={styles.guestButtonText}>
-                    Prefiero continuar como invitado
-                  </Text>
-                </TouchableOpacity>
+                {/* Removed Guest Access Button */}
               </View>
 
               <Text style={styles.termsText}>
@@ -215,7 +262,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#f2f2f2',
     borderRadius: 25,
     padding: 2,
-    width: width * 0.6,
+    width: width * 0.7,
   },
   authToggleOption: {
     flex: 1,
@@ -230,12 +277,12 @@ const styles = StyleSheet.create({
     color: '#333',
     fontWeight: '600',
     fontSize: 16,
-    fontFamily: 'InstrumentSans',
+    fontFamily: FONTS.INSTRUMENT_SANS, // Use constant
   },
   authToggleInactiveText: {
     color: '#666',
-    fontSize: 15,
-    fontFamily: 'InstrumentSans',
+    fontSize: 16, // Adjusted size slightly
+    fontFamily: FONTS.INSTRUMENT_SANS, // Use constant
   },
   form: {
     flex: 1,
@@ -249,39 +296,34 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#333',
     marginBottom: 8,
-    fontFamily: 'InstrumentSans',
+    fontFamily: FONTS.INSTRUMENT_SANS, // Use constant
   },
-  welcomeSubtitle: {
-    fontSize: 17,
-    color: '#666',
-    fontFamily: 'InstrumentSans',
-  },
+  // Removed welcomeSubtitle style as it's not used
   inputSection: {
-    marginBottom: 20,
+    marginBottom: 5, // Reduced margin to make space for error text
   },
   label: {
     fontSize: 15,
     color: '#333',
     marginBottom: 6,
-    fontFamily: 'InstrumentSans',
+    fontFamily: FONTS.INSTRUMENT_SANS, // Use constant
     fontWeight: '500',
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#e8e8e8',
+    borderColor: COLORS.BORDER, // Use constant
     borderRadius: 25,
     marginBottom: 15,
     backgroundColor: '#fff',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
-    elevation: 3,
+    elevation: 2, // Softer shadow
   },
   inputContainerFocused: {
-    borderColor: '#809CAC',
+    borderColor: COLORS.ACCENT, // Use constant
+  },
+  inputContainerError: { // Style for error state
+    borderColor: COLORS.ERROR,
   },
   inputIcon: {
     padding: 15,
@@ -291,7 +333,7 @@ const styles = StyleSheet.create({
     height: 55,
     fontSize: 16,
     color: '#333',
-    fontFamily: 'InstrumentSans',
+    fontFamily: FONTS.INSTRUMENT_SANS, // Use constant
   },
   eyeIcon: {
     padding: 15,
@@ -299,50 +341,51 @@ const styles = StyleSheet.create({
   forgotPassword: {
     alignSelf: 'flex-end',
     marginBottom: 16,
+    paddingVertical: SPACING.XSMALL, // Add padding for easier tap
   },
   forgotPasswordText: {
-    color: '#809CAC',
+    color: COLORS.ACCENT, // Use constant
     fontSize: 14,
-    fontFamily: 'InstrumentSans',
+    fontFamily: FONTS.INSTRUMENT_SANS, // Use constant
+  },
+  errorTextDisplay: { // Style for the error message text
+    color: COLORS.ERROR,
+    fontSize: FONT_SIZES.SMALL,
+    textAlign: 'center',
+    marginBottom: SPACING.MEDIUM,
+    fontFamily: FONTS.INSTRUMENT_SANS,
   },
   actionSection: {
     marginBottom: 20,
   },
   loginButton: {
-    backgroundColor: '#809CAC',
+    backgroundColor: COLORS.ACCENT, // Use constant
     height: 55,
     borderRadius: 30,
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 10,
   },
+  buttonDisabled: { // Style for disabled button
+    backgroundColor: '#aabbc4', // Lighter accent color
+  },
   loginButtonText: {
     color: '#fff',
     fontSize: 18,
     fontWeight: '600',
-    fontFamily: 'InstrumentSans',
+    fontFamily: FONTS.INSTRUMENT_SANS, // Use constant
   },
-  guestButton: {
-    marginTop: 15,
-    alignItems: 'center',
-    padding: 15,
-  },
-  guestButtonText: {
-    color: '#333',
-    fontSize: 16,
-    textDecorationLine: 'underline',
-    fontFamily: 'InstrumentSans',
-  },
+  // Removed guestButton styles
   termsText: {
     marginTop: 20,
     fontSize: 14,
     color: '#666',
     textAlign: 'center',
     lineHeight: 20,
-    fontFamily: 'InstrumentSans',
+    fontFamily: FONTS.INSTRUMENT_SANS, // Use constant
   },
   termsLink: {
-    color: '#809CAC',
+    color: COLORS.ACCENT, // Use constant
     textDecorationLine: 'underline',
   },
 });

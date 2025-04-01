@@ -329,7 +329,7 @@ const styles = StyleSheet.create({
   perfumeImage: {
     width: '100%',
     height: 140,
-    backgroundColor: '#F8F8F8', // Lighter background for image
+    backgroundColor: COLORS.BACKGROUND, // Lighter background for image
   },
   cardContent: {
     padding: SPACING.MEDIUM,

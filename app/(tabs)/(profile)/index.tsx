@@ -2,63 +2,100 @@ import React from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { useAuth } from '../../../context/AuthContext'; // Import useAuth
+import { COLORS, FONTS, SPACING, FONT_SIZES } from '../../../types/constants'; // Import constants
 
 type MenuItem = {
   id: string;
   title: string;
   icon: keyof typeof Ionicons.glyphMap;
   onPress: () => void;
+  color?: string; // Optional color for specific items like logout
 };
 
 export default function ProfileScreen() {
   const router = useRouter();
+  const { user, logout } = useAuth(); // Get user and logout function
 
+  // Define menu items, including logout
   const menuItems: MenuItem[] = [
     {
       id: 'personal',
       title: 'Información personal',
       icon: 'person-outline',
-      onPress: () => console.log('Personal info'),
+      onPress: () => console.log('Personal info'), // Placeholder
     },
     {
       id: 'password',
       title: 'Cambiar contraseña',
       icon: 'lock-closed-outline',
-      onPress: () => console.log('Change password'),
+      onPress: () => console.log('Change password'), // Placeholder
     },
     {
       id: 'purchases',
       title: 'Mis compras',
       icon: 'bag-outline',
-      onPress: () => console.log('My purchases'),
+      onPress: () => console.log('My purchases'), // Placeholder
     },
     {
-      id: 'favorites', // New item ID
-      title: 'Mis Favoritos', // New item title
-      icon: 'heart-outline', // New item icon
-      onPress: () => router.push('/(tabs)/(profile)/favorites'), // Try more explicit path
+      id: 'favorites',
+      title: 'Mis Favoritos',
+      icon: 'heart-outline',
+      // Correct the path using href object for typed routes
+      onPress: () => router.push({ pathname: '/(tabs)/(profile)/favorites' }),
     },
     {
       id: 'test',
       title: 'Editar Test Inicial',
       icon: 'create-outline',
       onPress: () => {
-        // Save the current answers before navigating
+        // Consider saving answers if SurveyContext is used here
         router.push('/survey/1');
       },
     },
+    {
+      id: 'logout',
+      title: 'Cerrar Sesión',
+      icon: 'log-out-outline',
+      color: COLORS.ERROR, // Use error color for logout
+      onPress: async () => {
+        try {
+          await logout();
+          // Navigation is handled by the profile layout (_layout.tsx)
+        } catch (error) {
+          console.error("Error during logout:", error);
+          // Optionally show an error message to the user
+        }
+      },
+    },
   ];
+
+  // Display loading or placeholder if user data isn't available yet
+  // This screen should only be reachable when logged in due to layout protection,
+  // but adding a check for `user` is good practice.
+  if (!user) {
+     // This case should ideally not be reached if layout protection works correctly.
+     // You could show a loading indicator or a message.
+     return (
+        <View style={styles.container}>
+            <Text style={styles.loadingText}>Cargando perfil...</Text>
+        </View>
+     );
+  }
+
 
   return (
     <View style={styles.container}>
       {/* Profile Header */}
       <View style={styles.header}>
         <Image
-          source={require('../../../assets/images/avatar.png')}
+          source={require('../../../assets/images/avatar.png')} // Keep placeholder avatar for now
           style={styles.avatar}
         />
+        {/* Display User Email */}
+        <Text style={styles.userEmail}>{user.email}</Text>
 
-        {/* Stats */}
+        {/* Stats - These are placeholders, replace with actual data if available */}
         <View style={styles.statsContainer}>
           <View style={styles.statItem}>
             <Text style={styles.statNumber}>32</Text>
@@ -74,17 +111,24 @@ export default function ProfileScreen() {
 
       {/* Menu Items */}
       <View style={styles.menuContainer}>
-        {menuItems.map((item) => (
+        {menuItems.map((item, index) => ( // Add index for last item check
           <TouchableOpacity
             key={item.id}
-            style={styles.menuItem}
+            // Remove bottom border for the last item
+            style={[styles.menuItem, index === menuItems.length - 1 && styles.menuItemLast]}
             onPress={item.onPress}
+            activeOpacity={0.7}
           >
             <View style={styles.menuIconContainer}>
-              <Ionicons name={item.icon} size={24} color="#000" />
+              <Ionicons name={item.icon} size={24} color={item.color || COLORS.TEXT_PRIMARY} />
             </View>
-            <Text style={styles.menuText}>{item.title}</Text>
-            <Ionicons name="chevron-forward" size={24} color="#CCCCCC" />
+            <Text style={[styles.menuText, item.color ? { color: item.color } : {}]}>
+              {item.title}
+            </Text>
+            {/* Hide chevron for logout item */}
+            {item.id !== 'logout' && (
+              <Ionicons name="chevron-forward" size={24} color={"#CCCCCC"} />
+            )}
           </TouchableOpacity>
         ))}
       </View>
@@ -95,66 +139,106 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F8F6',
-    paddingTop: Platform.OS === 'web' ? '8%' : 20,
+    backgroundColor: COLORS.BACKGROUND_ALT, // Use constant
+    paddingTop: Platform.OS === 'android' ? SPACING.LARGE : SPACING.XLARGE, // Adjust top padding
   },
   header: {
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingBottom: 30,
+    paddingHorizontal: SPACING.LARGE,
+    paddingBottom: SPACING.LARGE, // Adjusted padding
   },
   avatar: {
     width: 80,
     height: 80,
     borderRadius: 40,
-    marginBottom: 24,
+    marginBottom: SPACING.MEDIUM, // Adjusted margin
+  },
+  userEmail: { // Style for user email
+    fontSize: FONT_SIZES.LARGE,
+    fontWeight: '600',
+    color: COLORS.TEXT_PRIMARY,
+    fontFamily: FONTS.INSTRUMENT_SANS,
+    marginBottom: SPACING.LARGE, // Add margin below email
   },
   statsContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    gap: 10,
-    backgroundColor: '#FFFFFF',
-    padding: 10,
+    gap: SPACING.MEDIUM, // Use constant for gap
+    backgroundColor: COLORS.BACKGROUND, // Use constant
+    paddingVertical: SPACING.MEDIUM, // Adjusted padding
+    paddingHorizontal: SPACING.LARGE,
     borderRadius: 10,
-    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)',
+    // Use platform-specific shadow/elevation if desired
+    shadowColor: "#000",
+    shadowOffset: {
+        width: 0,
+        height: 1,
+    },
+    shadowOpacity: 0.15,
+    shadowRadius: 2.0,
     elevation: 2,
   },
   statItem: {
     alignItems: 'center',
-    paddingHorizontal: 20,
+    minWidth: 80, // Give items some minimum width
   },
   statNumber: {
-    fontSize: 24,
+    fontSize: FONT_SIZES.XLARGE, // Use constant
     fontWeight: '600',
-    color: '#000',
-    marginBottom: 4,
+    color: COLORS.TEXT_PRIMARY, // Use constant
+    fontFamily: FONTS.INSTRUMENT_SANS,
+    marginBottom: SPACING.XSMALL, // Use constant
   },
   statLabel: {
-    fontSize: 16,
-    color: '#666666',
+    fontSize: FONT_SIZES.SMALL, // Use constant
+    color: COLORS.TEXT_SECONDARY, // Use constant
+    fontFamily: FONTS.INSTRUMENT_SANS,
   },
   statDivider: {
     width: 1,
     height: 30,
-    backgroundColor: '#EEEEEE',
+    backgroundColor: COLORS.BORDER, // Use constant
   },
   menuContainer: {
-    paddingHorizontal: 20,
+    paddingHorizontal: SPACING.MEDIUM, // Adjusted padding
+    backgroundColor: COLORS.BACKGROUND, // White background for menu items
+    borderRadius: 10,
+    marginHorizontal: SPACING.MEDIUM, // Add horizontal margin
+    // Add shadow/elevation if desired
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 1.5,
+    elevation: 1,
+    overflow: 'hidden', // Ensure border radius clips children
   },
   menuItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 16,
+    paddingVertical: SPACING.MEDIUM + 2, // Slightly more padding
     borderBottomWidth: 1,
-    borderBottomColor: '#EEEEEE',
+    borderBottomColor: COLORS.BORDER, // Use constant
+    paddingHorizontal: SPACING.SMALL, // Add horizontal padding inside item
+  },
+  menuItemLast: { // Style to remove border for the last item
+    borderBottomWidth: 0,
   },
   menuIconContainer: {
-    marginRight: 12,
+    marginRight: SPACING.MEDIUM, // Use constant
+    width: 30, // Ensure icons align
+    alignItems: 'center',
   },
   menuText: {
     flex: 1,
-    fontSize: 16,
-    color: '#000000',
+    fontSize: FONT_SIZES.REGULAR, // Use constant
+    color: COLORS.TEXT_PRIMARY, // Use constant
+    fontFamily: FONTS.INSTRUMENT_SANS,
   },
+  loadingText: { // Added style for loading text
+      fontSize: FONT_SIZES.REGULAR,
+      color: COLORS.TEXT_SECONDARY,
+      fontFamily: FONTS.INSTRUMENT_SANS,
+      marginTop: SPACING.LARGE,
+  }
 });

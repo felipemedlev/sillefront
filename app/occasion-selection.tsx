@@ -154,10 +154,9 @@ export default function OccasionSelectionScreen() { // Renamed component
       // Set new timeout to clear the message
       feedbackTimeoutRef.current = setTimeout(() => {
         setFeedbackMessage(null);
-        router.push('/(tabs)/(cart)');
       }, 2000); // Clear after 2 seconds
 
-      
+
     } catch (error) {
       console.error("Error adding AI Box to cart:", error);
       setFeedbackMessage("Error al añadir."); // Show error feedback

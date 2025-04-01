@@ -1,6 +1,9 @@
 import React, { useState, useMemo, useRef } from 'react';
+// Removed: import { Pressable } from 'react-native';
 import { View, Text, StyleSheet, SafeAreaView, ActivityIndicator, ScrollView } from 'react-native';
-import { Stack } from 'expo-router';
+// Removed: import { Feather } from '@expo/vector-icons';
+// Removed: import { Stack } from 'expo-router';
+// Removed: import { useRouter } from 'expo-router';
 import { useRatings } from '../../../context/RatingsContext';
 import { MOCK_PERFUMES } from '@/data/mockPerfumes'; // Import mock data source
 import { Perfume } from '../../../types/perfume'; // Import Perfume type
@@ -9,6 +12,7 @@ import PerfumeModal, { PerfumeModalRef } from '../../../components/product/Perfu
 import { COLORS, FONT_SIZES, SPACING, FONTS } from '../../../types/constants'; // Import constants
 
 export default function FavoritesScreen() {
+  // Removed: const router = useRouter();
   const { favorites, isLoadingFavorites } = useRatings();
   const [selectedPerfume, setSelectedPerfume] = useState<Perfume | null>(null);
   const modalRef = useRef<PerfumeModalRef>(null);
@@ -36,8 +40,7 @@ export default function FavoritesScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Keep the header title from the layout */}
-      <Stack.Screen options={{ title: 'Mis Favoritos' }} />
+      {/* Header configuration is now handled by app/(tabs)/(profile)/_layout.tsx */}
 
       {favoritePerfumes.length === 0 ? (
         <View style={[styles.container, styles.centerContent]}>

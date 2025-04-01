@@ -3,7 +3,9 @@ import { Stack, useRouter, useSegments } from 'expo-router'; // Import router an
 import { SurveyProvider } from '../../../context/SurveyContext';
 import { useAuth } from '../../../context/AuthContext'; // Import useAuth
 import { COLORS } from '../../../types/constants'; // Import COLORS
+import { Pressable } from 'react-native';
 import { View, ActivityIndicator } from 'react-native'; // Import for loading indicator
+import { Feather } from '@expo/vector-icons';
 
 export default function ProfileLayout() {
   const { user, isLoading: isAuthLoading } = useAuth();
@@ -54,7 +56,18 @@ export default function ProfileLayout() {
       >
         {/* Define screens within the profile stack */}
         <Stack.Screen name="index" options={{ headerShown: false }} />
-        <Stack.Screen name="favorites" options={{ headerShown: false }} />
+        <Stack.Screen
+          name="favorites"
+          options={{
+            title: 'Mis Favoritos',
+            headerShown: true,
+            headerLeft: () => (
+              <Pressable onPress={() => router.back()} style={{ marginLeft: 10, padding: 5 }}>
+                <Feather name="chevron-left" size={24} color={COLORS.TEXT_PRIMARY} />
+              </Pressable>
+            ),
+          }}
+        />
         <Stack.Screen name="auth-prompt" options={{ headerShown: false }} />
         {/* Add other profile-related screens here */}
       </Stack>

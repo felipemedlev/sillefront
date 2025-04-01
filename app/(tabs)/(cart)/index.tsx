@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, FlatList, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, FlatList, ActivityIndicator, TouchableOpacity, ScrollView } from 'react-native';
 import { useCart } from '../../../context/CartContext';
 import { useAuth } from '../../../context/AuthContext'; // Import useAuth
 import { CartItem } from '../../../types/cart';
@@ -108,22 +108,22 @@ export default function CartScreen() {
   }
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
-      {renderHeader()}
-      {cartItems.length === 0 ? (
-        renderEmptyCart()
-      ) : (
-        <FlatList
-          data={cartItems}
-          renderItem={renderCartItem}
-          keyExtractor={(item) => item.id}
-          ListFooterComponent={renderFooter} // Use the footer component here
-          contentContainerStyle={styles.listContent} // Padding for items
-          showsVerticalScrollIndicator={false}
-          style={{ flex: 1 }} // Allow FlatList to take available space
-        />
-      )}
-    </View>
+      <View style={[styles.container, { paddingTop: insets.top }]}>
+        {renderHeader()}
+        {cartItems.length === 0 ? (
+          renderEmptyCart()
+        ) : (
+          <FlatList
+            data={cartItems}
+            renderItem={renderCartItem}
+            keyExtractor={(item) => item.id}
+            ListFooterComponent={renderFooter} // Use the footer component here
+            contentContainerStyle={styles.listContent} // Padding for items
+            showsVerticalScrollIndicator={false}
+            style={{ flex: 1 }} // Allow FlatList to take available space
+          />
+        )}
+      </View>
   );
 }
 

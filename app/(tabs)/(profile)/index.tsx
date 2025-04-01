@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, Platform } from 'react-native';
+import { View, Text, StyleSheet, Image, TouchableOpacity, Platform, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../../context/AuthContext';
@@ -119,60 +119,61 @@ export default function ProfileScreen() {
   // --- End dynamic menu item creation ---
 
   return (
-    <View style={styles.container}>
-      {/* Profile Header */}
-      <View style={styles.header}>
-        <Image
-          source={require('../../../assets/images/avatar.png')} // Keep placeholder avatar for now
-          style={styles.avatar}
-        />
-        {/* Display User Email */}
-        <Text style={styles.userEmail}>{user.email}</Text>
+    <ScrollView>
+      <View style={styles.container}>
+        {/* Profile Header */}
+        <View style={styles.header}>
+          <Image
+            source={require('../../../assets/images/avatar.png')} // Keep placeholder avatar for now
+            style={styles.avatar}
+          />
+          {/* Display User Email */}
+          <Text style={styles.userEmail}>{user.email}</Text>
 
-        {/* Stats - These are placeholders, replace with actual data if available */}
-        <View style={styles.statsContainer}>
-          <View style={styles.statItem}>
-            <Text style={styles.statNumber}>32</Text>
-            <Text style={styles.statLabel}>Calificaciones</Text>
-          </View>
-          <View style={styles.statDivider} />
-          <View style={styles.statItem}>
-            <Text style={styles.statNumber}>4</Text>
-            <Text style={styles.statLabel}>Compras</Text>
+          {/* Stats - These are placeholders, replace with actual data if available */}
+          <View style={styles.statsContainer}>
+            <View style={styles.statItem}>
+              <Text style={styles.statNumber}>32</Text>
+              <Text style={styles.statLabel}>Calificaciones</Text>
+            </View>
+            <View style={styles.statDivider} />
+            <View style={styles.statItem}>
+              <Text style={styles.statNumber}>4</Text>
+              <Text style={styles.statLabel}>Compras</Text>
+            </View>
           </View>
         </View>
-      </View>
 
-      {/* Menu Items */}
-      <View style={styles.menuContainer}>
-        {finalMenuItems.map((item, index) => ( // Use finalMenuItems array
-          <TouchableOpacity
-            key={item.id}
-            // Remove bottom border for the last item
-            style={[styles.menuItem, index === finalMenuItems.length - 1 && styles.menuItemLast]}
-            onPress={item.onPress}
-            activeOpacity={0.7}
-          >
-            <View style={styles.menuIconContainer}>
-              <Ionicons name={item.icon} size={24} color={item.color || COLORS.TEXT_PRIMARY} />
-            </View>
-            <Text style={[styles.menuText, item.color ? { color: item.color } : {}]}>
-              {item.title}
-            </Text>
-            {/* Hide chevron for logout item */}
-            {item.id !== 'logout' && (
-              <Ionicons name="chevron-forward" size={24} color={"#CCCCCC"} />
-            )}
-          </TouchableOpacity>
-        ))}
+        {/* Menu Items */}
+        <View style={styles.menuContainer}>
+          {finalMenuItems.map((item, index) => ( // Use finalMenuItems array
+            <TouchableOpacity
+              key={item.id}
+              // Remove bottom border for the last item
+              style={[styles.menuItem, index === finalMenuItems.length - 1 && styles.menuItemLast]}
+              onPress={item.onPress}
+              activeOpacity={0.7}
+            >
+              <View style={styles.menuIconContainer}>
+                <Ionicons name={item.icon} size={24} color={item.color || COLORS.TEXT_PRIMARY} />
+              </View>
+              <Text style={[styles.menuText, item.color ? { color: item.color } : {}]}>
+                {item.title}
+              </Text>
+              {/* Hide chevron for logout item */}
+              {item.id !== 'logout' && (
+                <Ionicons name="chevron-forward" size={24} color={"#CCCCCC"} />
+              )}
+            </TouchableOpacity>
+          ))}
+        </View>
       </View>
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
     backgroundColor: COLORS.BACKGROUND_ALT, // Use constant
     paddingTop: Platform.OS === 'android' ? SPACING.LARGE : SPACING.XLARGE, // Adjust top padding
   },
@@ -251,6 +252,7 @@ const styles = StyleSheet.create({
     shadowRadius: 1.5,
     elevation: 1,
     overflow: 'hidden', // Ensure border radius clips children
+    marginBottom: 80,
   },
   menuItem: {
     flexDirection: 'row',

@@ -37,4 +37,6 @@
 - Integrated subscription status into Profile screen
 - Added promotional banner to Checkout flow
 
+[2025-04-01 14:27:01] - Decided to manage header configuration for nested screens within their parent layout file. Specifically, the header for `app/(tabs)/(profile)/favorites.tsx` (including title and back button) is now defined in `app/(tabs)/(profile)/_layout.tsx` because the layout's Stack navigator options override screen-level options.
+
 [2025-03-29 12:10:12] - Initialized decision log file

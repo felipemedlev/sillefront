@@ -7,6 +7,7 @@ import { RatingsProvider } from '../context/RatingsContext';
 import { ManualBoxProvider } from '../context/ManualBoxContext';
 import { CartProvider } from '../context/CartContext';
 import { AuthProvider, useAuth } from '../context/AuthContext'; // <-- Import AuthProvider and useAuth
+import { SubscriptionProvider } from '../context/SubscriptionContext'; // <-- Import SubscriptionProvider
 import { FontLoadingState, LayoutStyles } from '../types/layout';
 import { FONTS, COLORS, FONT_SIZES, SPACING } from '../types/constants';
 import { handleError } from '../types/error';
@@ -124,11 +125,13 @@ export default function RootLayout() {
   return (
     <AuthProvider>
       <CartProvider>
-        <ManualBoxProvider>
-          <RatingsProvider>
-            <RootLayoutNav />
-          </RatingsProvider>
-        </ManualBoxProvider>
+        <SubscriptionProvider> {/* Wrap inside CartProvider */}
+          <ManualBoxProvider>
+            <RatingsProvider>
+              <RootLayoutNav />
+            </RatingsProvider>
+          </ManualBoxProvider>
+        </SubscriptionProvider>
       </CartProvider>
     </AuthProvider>
   );

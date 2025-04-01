@@ -15,54 +15,54 @@ export interface PredefinedBox {
 
 // Array of predefined gift boxes
 export const PREDEFINED_BOXES: PredefinedBox[] = [
-  // Masculine Boxes
+  // Cajas Masculinas
   {
     id: 'box-fresh-citrus-m',
-    title: 'Fresh Citrus Kick (Him)',
-    description: 'Energizing citrus scents for a vibrant start.',
+    title: 'Cítrico Fresco (Para Él)',
+    description: 'Fragancias cítricas energizantes para comenzar con vitalidad.',
     icon: 'zap',
     gender: 'masculino',
-    perfumeIds: ['9099', '410', '485', '50757', '72158', '31861', '13016', '61856'] // Example IDs
+    perfumeIds: ['9099', '410', '485', '50757', '72158', '31861', '13016', '61856']
   },
   {
     id: 'box-woody-elegance-m',
-    title: 'Woody Elegance (Him)',
-    description: 'Sophisticated woody notes for formal occasions.',
+    title: 'Elegancia Amaderada (Para Él)',
+    description: 'Notas amaderadas sofisticadas para ocasiones formales.',
     icon: 'briefcase',
     gender: 'masculino',
-    perfumeIds: ['13016', '61856', '62615', '31623', '75805', '81642', '52802', '9099'] // Example IDs
+    perfumeIds: ['13016', '61856', '62615', '31623', '75805', '81642', '52802', '9099']
   },
   {
     id: 'box-night-out-m',
-    title: 'Night Out Intensity (Him)',
-    description: 'Bold and captivating fragrances for evenings.',
+    title: 'Noche de Seducción (Para Él)',
+    description: 'Fragancias atrevidas y cautivadoras para salidas nocturnas.',
     icon: 'moon',
     gender: 'masculino',
-    perfumeIds: ['81642', '52802', '75805', '62615', '61856', '13016', '31861', '25324'] // Example IDs, mix?
+    perfumeIds: ['81642', '52802', '75805', '62615', '61856', '13016', '31861', '25324']
   },
-  // Feminine Boxes
+  // Cajas Femeninas
   {
     id: 'box-floral-bloom-f',
-    title: 'Floral Bloom (Her)',
-    description: 'A bouquet of delicate and romantic floral notes.',
-    icon: 'gift', // Replaced 'flower' with 'gift'
+    title: 'Explosión Floral (Para Ella)',
+    description: 'Un bouquet romántico con delicadas notas florales.',
+    icon: 'gift',
     gender: 'femenino',
-    perfumeIds: ['210', '14982', '39681', '83483', '485', '9099', '50757', '61856'] // Example IDs
+    perfumeIds: ['210', '14982', '39681', '83483', '485', '9099', '50757', '61856']
   },
   {
     id: 'box-sweet-gourmand-f',
-    title: 'Sweet Gourmand Delight (Her)',
-    description: 'Indulgent and sweet scents for a cozy feel.',
+    title: 'Dulce Tentación (Para Ella)',
+    description: 'Fragancias dulces y exquisitas para una sensación acogedora.',
     icon: 'coffee',
     gender: 'femenino',
-    perfumeIds: ['14982', '25324', '39681', '83483', '75805', '62615', '52802', '81642'] // Example IDs
+    perfumeIds: ['14982', '25324', '39681', '83483', '75805', '62615', '52802', '81642']
   },
   {
     id: 'box-elegant-evening-f',
-    title: 'Elegant Evening (Her)',
-    description: 'Sophisticated and alluring fragrances for special nights.',
+    title: 'Noche de Elegancia (Para Ella)',
+    description: 'Aromas sofisticados y seductores para noches especiales.',
     icon: 'star',
     gender: 'femenino',
-    perfumeIds: ['39681', '25324', '14982', '210', '62615', '13016', '83483', '75805'] // Example IDs
+    perfumeIds: ['39681', '25324', '14982', '210', '62615', '13016', '83483', '75805']
   },
 ];

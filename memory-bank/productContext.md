@@ -23,4 +23,21 @@ E-commerce mobile application built with React Native (Expo) and TypeScript. Pro
 - NativeWind
 - React Navigation
 
+[2025-04-01 10:42:14] - Added AI Box Subscription to Key Features.
+
+- AI Box Subscription
+
+## Architecture
+- Frontend: React Native with Expo
+- State Management: React Context
+- Navigation: Expo Router
+- Styling: NativeWind/Tailwind
+
+## Dependencies
+- React Native
+- Expo
+- TypeScript
+- NativeWind
+- React Navigation
+
 [2025-03-31 14:40:47] - Updated with project details from file structure analysis

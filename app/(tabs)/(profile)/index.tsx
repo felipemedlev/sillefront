@@ -2,8 +2,9 @@ import React from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuth } from '../../../context/AuthContext'; // Import useAuth
-import { COLORS, FONTS, SPACING, FONT_SIZES } from '../../../types/constants'; // Import constants
+import { useAuth } from '../../../context/AuthContext';
+import { useSubscription } from '../../../context/SubscriptionContext'; // Import useSubscription
+import { COLORS, FONTS, SPACING, FONT_SIZES, SUBSCRIPTION_TIERS } from '../../../types/constants'; // Import constants & tiers
 
 type MenuItem = {
   id: string;
@@ -15,7 +16,8 @@ type MenuItem = {
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const { user, logout } = useAuth(); // Get user and logout function
+  const { user, logout } = useAuth();
+  const { subscriptionStatus, isLoading: isSubscriptionLoading } = useSubscription(); // Get subscription state
 
   // Define menu items, including logout
   const menuItems: MenuItem[] = [
@@ -73,16 +75,48 @@ export default function ProfileScreen() {
   // Display loading or placeholder if user data isn't available yet
   // This screen should only be reachable when logged in due to layout protection,
   // but adding a check for `user` is good practice.
-  if (!user) {
-     // This case should ideally not be reached if layout protection works correctly.
-     // You could show a loading indicator or a message.
+  // Also check if subscription data is loading
+  if (!user || isSubscriptionLoading) {
+     // This case should ideally not be reached if layout protection works correctly for user.
+     // Show loading indicator while subscription status loads.
      return (
-        <View style={styles.container}>
+        <View style={[styles.container, styles.loadingContainer]}>
+            {/* Optionally add an ActivityIndicator here */}
             <Text style={styles.loadingText}>Cargando perfil...</Text>
         </View>
      );
   }
 
+  // --- Dynamically create subscription menu item ---
+  const subscriptionMenuItem: MenuItem = subscriptionStatus?.isActive
+    ? {
+        id: 'subscription',
+        title: 'Administrar Suscripción',
+        icon: 'card-outline',
+        onPress: () => router.push({ pathname: '/subscription' as any }), // Cast to any as workaround
+      }
+    : {
+        id: 'subscription',
+        title: 'Ver Planes de Suscripción',
+        icon: 'card-outline',
+        onPress: () => router.push({ pathname: '/subscription' as any }), // Cast to any as workaround
+      };
+
+  // Insert the subscription item into the menu array (e.g., before 'Editar Test')
+  const finalMenuItems = [...menuItems];
+  const editTestIndex = finalMenuItems.findIndex(item => item.id === 'test');
+  if (editTestIndex !== -1) {
+    finalMenuItems.splice(editTestIndex, 0, subscriptionMenuItem);
+  } else {
+    // Fallback: add before logout if 'test' isn't found
+    const logoutIndex = finalMenuItems.findIndex(item => item.id === 'logout');
+    if (logoutIndex !== -1) {
+      finalMenuItems.splice(logoutIndex, 0, subscriptionMenuItem);
+    } else {
+      finalMenuItems.push(subscriptionMenuItem); // Add at the end as last resort
+    }
+  }
+  // --- End dynamic menu item creation ---
 
   return (
     <View style={styles.container}>
@@ -111,11 +145,11 @@ export default function ProfileScreen() {
 
       {/* Menu Items */}
       <View style={styles.menuContainer}>
-        {menuItems.map((item, index) => ( // Add index for last item check
+        {finalMenuItems.map((item, index) => ( // Use finalMenuItems array
           <TouchableOpacity
             key={item.id}
             // Remove bottom border for the last item
-            style={[styles.menuItem, index === menuItems.length - 1 && styles.menuItemLast]}
+            style={[styles.menuItem, index === finalMenuItems.length - 1 && styles.menuItemLast]}
             onPress={item.onPress}
             activeOpacity={0.7}
           >
@@ -199,6 +233,11 @@ const styles = StyleSheet.create({
     width: 1,
     height: 30,
     backgroundColor: COLORS.BORDER, // Use constant
+  },
+  loadingContainer: { // Added style
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   menuContainer: {
     paddingHorizontal: SPACING.MEDIUM, // Adjusted padding

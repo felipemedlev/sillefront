@@ -25,4 +25,16 @@
   - Rationale: Need basic auth flow without a backend for initial development.
   - Details: Use AsyncStorage, plain text passwords (temporary), store user email in context, dedicated profile auth prompt screen (`app/(tabs)/(profile)/auth-prompt.tsx`), inline UI error messages, persistent session until logout. Plan saved to `memory-bank/local-auth-plan.md`.
 
+
+[2025-04-01 10:41:39] - Decided on initial client-side implementation for AI Box Subscription feature.
+  - Rationale: Provide core subscription functionality quickly, deferring backend and payment integration.
+  - Details: Three tiers (Basic, Medium, Pro) with defined pricing/specs. UI elements in Profile and Checkout banner. State managed via React Context and persisted in AsyncStorage. Plan saved to `memory-bank/subscription-feature-plan.md`.
+
+[2025-04-01 11:25:00] - [Subscription Feature Implementation]
+- Chose client-side state management with AsyncStorage for initial implementation
+- Designed three-tier subscription model (Basic, Premium, VIP)
+- Created reusable TierCard component for consistent UI
+- Integrated subscription status into Profile screen
+- Added promotional banner to Checkout flow
+
 [2025-03-29 12:10:12] - Initialized decision log file

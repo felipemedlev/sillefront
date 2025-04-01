@@ -1,11 +1,13 @@
+import { SubscriptionTierDetails } from './subscription';
+
 export const STORAGE_KEYS = {
   RATINGS: 'perfume_ratings',
   FAVORITES: 'perfume_favorites',
   MANUAL_BOX: 'manual_box_data',
-
   AUTH_USER_EMAIL: 'auth_user_email', // Added for current logged-in user
   USER_DATA_PREFIX: 'user_', // Added prefix for storing individual user data
   CART: 'cart_data', // Added for shopping cart persistence
+  SUBSCRIPTION_STATUS: 'subscription_status', // Added for subscription status persistence
 } as const;
 
 export const FONTS = {
@@ -42,3 +44,34 @@ export const SPACING = {
   SMALL: 8,
   XSMALL: 4, // Added
 } as const;
+
+// Define the details for each subscription tier
+export const SUBSCRIPTION_TIERS: SubscriptionTierDetails[] = [
+  {
+    id: 'basic',
+    name: 'Básico',
+    priceCLP: 20000,
+    decantSizeML: 3,
+    decantCount: 4,
+    maxPricePerML: 2000,
+    description: '4 decants de 3mL de perfumes bajo $2.000/mL.',
+  },
+  {
+    id: 'medium',
+    name: 'Medio',
+    priceCLP: 30000,
+    decantSizeML: 5,
+    decantCount: 4,
+    maxPricePerML: 2000,
+    description: '4 decants de 5mL de perfumes bajo $2.000/mL.',
+  },
+  {
+    id: 'pro',
+    name: 'Pro',
+    priceCLP: 50000,
+    decantSizeML: 5,
+    decantCount: 4,
+    minPricePerML: 2000,
+    description: '4 decants de 5mL de perfumes sobre $2.000/mL.',
+  },
+];

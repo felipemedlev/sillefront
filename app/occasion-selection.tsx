@@ -10,6 +10,7 @@ import DecantSelector from '../components/product/DecantSelector';
 import PriceRangeSlider from '../components/product/PriceRangeSlider';
 import PerfumeList from '../components/product/PerfumeList';
 import BottomBar from '../components/product/BottomBar';
+import BoxVisualizer from '../components/product/BoxVisualizer';
 
 type DecantCount = 4 | 8;
 type DecantSize = 3 | 5 | 10;
@@ -195,19 +196,20 @@ export default function OccasionSelectionScreen() { // Renamed component
       </View>
 
       <ScrollView style={styles.content} contentContainerStyle={styles.contentContainer}>
+        {/* Add the BoxVisualizer component here */}
+        <BoxVisualizer decantCount={decantCount} decantSize={decantSize} />
+        
         <DecantSelector
           decantCount={decantCount}
           setDecantCount={setDecantCount}
           decantSize={decantSize}
           setDecantSize={setDecantSize}
         />
-
         <PriceRangeSlider
           range={rangoPrecio}
           onRangeChange={handleMaxPriceChange}
           sliderContainerRef={sliderContainerRef}
         />
-
         <PerfumeList
           selectedPerfumes={selectedPerfumeIds} // Use renamed state variable
           onPerfumePress={handlePerfumePress}

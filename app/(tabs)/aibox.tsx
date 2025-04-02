@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { View, Text, StyleSheet, ScrollView, Pressable, Animated } from 'react-native'; // Import Animated
 import { router } from 'expo-router';
 import { COLORS, SPACING, FONTS, FONT_SIZES } from '../../types/constants';
 
@@ -17,24 +17,49 @@ const OCCASIONS = [
 ];
 
 export default function AIBoxScreen() {
+  const shakeAnimation = useRef(new Animated.Value(0)).current; // Animation value
+
+  useEffect(() => {
+    // Start the shake animation when the component mounts
+    Animated.sequence([
+      Animated.timing(shakeAnimation, { toValue: 50, duration: 150, useNativeDriver: true }),
+      Animated.timing(shakeAnimation, { toValue: -50, duration: 250, useNativeDriver: true }),
+      Animated.timing(shakeAnimation, { toValue: 50, duration: 250, useNativeDriver: true }),
+      Animated.timing(shakeAnimation, { toValue: 50, duration: 150, useNativeDriver: true }),
+      Animated.timing(shakeAnimation, { toValue: -50, duration: 250, useNativeDriver: true }),
+      Animated.timing(shakeAnimation, { toValue: 50, duration: 250, useNativeDriver: true }),
+      Animated.timing(shakeAnimation, { toValue: 0, duration: 150, useNativeDriver: true })
+    ]).start();
+  }, [shakeAnimation]); // Dependency array includes shakeAnimation
+
   const handleOpenPress = () => {
     router.push('/aibox-selection');
+  };
+
+  // Interpolate rotation
+  const rotateInterpolate = shakeAnimation.interpolate({
+    inputRange: [-10, 10],
+    outputRange: ['-1deg', '1deg'] // Adjust degrees for desired shake intensity
+  });
+
+  const animatedStyle = {
+    transform: [{ rotate: rotateInterpolate }]
   };
 
   return (
     <ScrollView style={styles.container}>
       <View style={styles.content}>
-        {/* Main Card */}
-        <View style={styles.mainCard}>
+        {/* Main Card - Apply animation here */}
+        <Animated.View style={[styles.mainCard, animatedStyle]}>
           <Text style={styles.subtitle}>Elección de la Inteligencia Artificial</Text>
           <Text style={styles.mainTitle}>¡Está listo tu Box AI!</Text>
           <Pressable style={styles.openButton} onPress={handleOpenPress}>
             <Text style={styles.openButtonText}>Abrir</Text>
           </Pressable>
-        </View>
+        </Animated.View>
 
         {/* Manual Box Card */}
-        <View style={[styles.mainCard, styles.manualCard]}>
+        <View style={styles.secondCard}>
           {/* <Feather name="edit-3" size={28} color={COLORS.PRIMARY} style={styles.cardIcon} /> */}
           <View style={styles.cardTextContainer}>
             <Text style={styles.subtitle}>Crea tu Propia Selección</Text>
@@ -91,6 +116,21 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.SMALL,
     borderWidth: 1,
     borderColor: COLORS.BORDER,
+  },
+  secondCard: { // Made less prominent
+    width: '100%',
+    backgroundColor: COLORS.BACKGROUND_ALT, // Different background
+    borderRadius: 16,
+    marginTop: SPACING.LARGE, // Increased margin top
+    padding: SPACING.MEDIUM, // Reduced padding
+    alignItems: 'center',
+    shadowColor: COLORS.PRIMARY,
+    shadowOffset: { width: 0, height: 1 }, // Reduced shadow offset
+    shadowOpacity: 0.05, // Reduced shadow opacity
+    shadowRadius: 4, // Reduced shadow radius
+    elevation: 3, // Reduced elevation
+    marginBottom: SPACING.SMALL,
+    // Removed border
   },
   subtitle: {
     fontSize: FONT_SIZES.REGULAR,
@@ -159,12 +199,7 @@ const styles = StyleSheet.create({
     color: '#333',
     textAlign: 'center',
   },
-  // Styles for Manual Box Card
-  manualCard: {
-    backgroundColor: COLORS.BACKGROUND_ALT,
-    marginTop: SPACING.LARGE,
-    padding: SPACING.MEDIUM
-  },
+  // Removed manualCard style (merged into secondCard)
   cardIcon: {
     marginRight: SPACING.SMALL,
   },

@@ -47,7 +47,7 @@ export default function AIBoxSelectionScreen() {
   const { addItemToCart } = useCart(); // Get cart function
   const [decantCount, setDecantCount] = useState<DecantCount>(4);
   const [decantSize, setDecantSize] = useState<DecantSize>(5);
-  const [rangoPrecio, setRangoPrecio] = useState<[number, number]>([500, 10000]);
+  const [rangoPrecio, setRangoPrecio] = useState<[number, number]>([200, 5000]);
   const [selectedPerfumeId, setSelectedPerfumeId] = useState<string | null>(null);
   const [swappingPerfumeId, setSwappingPerfumeId] = useState<string | null>(null);
   const [selectedPerfumeIds, setSelectedPerfumeIds] = useState<string[]>([]); // Renamed for clarity

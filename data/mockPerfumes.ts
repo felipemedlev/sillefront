@@ -8,7 +8,7 @@ export const MOCK_PERFUMES: Perfume[] = [
     name: 'Bleu de Chanel',
     brand: 'Chanel',
     matchPercentage: 95,
-    pricePerML: 1000,
+    pricePerML: 2240,
     thumbnailUrl: 'https://fimgs.net/mdimg/perfume/s.9099.jpg',
     fullSizeUrl: 'https://fimgs.net/mdimg/perfume/375x500.9099.jpg',
     description: 'An aromatic-woody fragrance with a captivating trail. A meeting of strength and elegance.',
@@ -30,7 +30,7 @@ export const MOCK_PERFUMES: Perfume[] = [
     name: 'Acqua di Gio',
     brand: 'Giorgio Armani',
     matchPercentage: 92,
-    pricePerML: 1200,
+    pricePerML: 2000,
     thumbnailUrl: 'https://fimgs.net/mdimg/perfume/s.410.jpg',
     fullSizeUrl: 'https://fimgs.net/mdimg/perfume/375x500.410.jpg',
     description: 'A fresh aquatic fragrance inspired by the Mediterranean sea.',
@@ -52,7 +52,7 @@ export const MOCK_PERFUMES: Perfume[] = [
     name: 'Sauvage',
     brand: 'Dior',
     matchPercentage: 88,
-    pricePerML: 2000,
+    pricePerML: 1800,
     thumbnailUrl: 'https://fimgs.net/mdimg/perfume/s.31861.jpg',
     fullSizeUrl: 'https://fimgs.net/mdimg/perfume/375x500.31861.jpg',
     description: 'A radically fresh composition with powerful woody notes.',
@@ -74,7 +74,7 @@ export const MOCK_PERFUMES: Perfume[] = [
     name: 'Light Blue',
     brand: 'Dolce & Gabbana',
     matchPercentage: 85,
-    pricePerML: 980,
+    pricePerML: 1080,
     thumbnailUrl: 'https://fimgs.net/mdimg/perfume/s.485.jpg',
     fullSizeUrl: 'https://fimgs.net/mdimg/perfume/375x500.485.jpg',
     description: 'A refreshing summer fragrance that evokes the spirit of Sicily.',
@@ -96,7 +96,7 @@ export const MOCK_PERFUMES: Perfume[] = [
     name: 'La Vie Est Belle',
     brand: 'Lancôme',
     matchPercentage: 82,
-    pricePerML: 876,
+    pricePerML: 1700,
     thumbnailUrl: 'https://fimgs.net/mdimg/perfume/s.14982.jpg',
     fullSizeUrl: 'https://fimgs.net/mdimg/perfume/375x500.14982.jpg',
     description: 'A feminine fragrance with an iris gourmand accord.',
@@ -118,7 +118,7 @@ export const MOCK_PERFUMES: Perfume[] = [
     name: 'Black Opium',
     brand: 'Yves Saint Laurent',
     matchPercentage: 80,
-    pricePerML: 930,
+    pricePerML: 1667,
     thumbnailUrl: 'https://fimgs.net/mdimg/perfume/s.25324.jpg',
     fullSizeUrl: 'https://fimgs.net/mdimg/perfume/375x500.25324.jpg',
     description: 'An addictive gourmand fragrance with notes of black coffee and vanilla.',
@@ -140,7 +140,7 @@ export const MOCK_PERFUMES: Perfume[] = [
     name: 'J\'adore',
     brand: 'Dior',
     matchPercentage: 78,
-    pricePerML: 1700,
+    pricePerML: 2800,
     thumbnailUrl: 'https://fimgs.net/mdimg/perfume/s.210.jpg',
     fullSizeUrl: 'https://fimgs.net/mdimg/perfume/375x500.210.jpg',
     description: 'A floral bouquet that celebrates femininity.',
@@ -162,7 +162,7 @@ export const MOCK_PERFUMES: Perfume[] = [
     name: 'Good Girl',
     brand: 'Carolina Herrera',
     matchPercentage: 75,
-    pricePerML: 1300,
+    pricePerML: 2075,
     thumbnailUrl: 'https://fimgs.net/mdimg/perfume/s.39681.jpg',
     fullSizeUrl: 'https://fimgs.net/mdimg/perfume/375x500.39681.jpg',
     description: 'A sensual fragrance with a duality of good girl and bad girl notes.',
@@ -184,7 +184,7 @@ export const MOCK_PERFUMES: Perfume[] = [
     name: 'Khamrah',
     brand: 'Lattafa Perfumes',
     matchPercentage: 80, // Placeholder
-    pricePerML: 500, // Placeholder
+    pricePerML: 698, // Placeholder
     thumbnailUrl: 'https://fimgs.net/mdimg/perfume/s.75805.jpg',
     fullSizeUrl: 'https://fimgs.net/mdimg/perfume/375x500.75805.jpg',
     description: 'A warm spicy and sweet fragrance.',
@@ -206,7 +206,7 @@ export const MOCK_PERFUMES: Perfume[] = [
     name: 'Le Male Elixir',
     brand: 'Jean Paul Gaultier',
     matchPercentage: 85, // Placeholder
-    pricePerML: 1500, // Placeholder
+    pricePerML: 1120, // Placeholder
     thumbnailUrl: 'https://fimgs.net/mdimg/perfume/s.81642.jpg',
     fullSizeUrl: 'https://fimgs.net/mdimg/perfume/375x500.81642.jpg',
     description: 'An intense amber fougere fragrance.',
@@ -228,7 +228,7 @@ export const MOCK_PERFUMES: Perfume[] = [
     name: 'Angels\' Share',
     brand: 'Kilian',
     matchPercentage: 88, // Placeholder
-    pricePerML: 3500, // Placeholder
+    pricePerML: 4100, // Placeholder
     thumbnailUrl: 'https://fimgs.net/mdimg/perfume/s.62615.jpg',
     fullSizeUrl: 'https://fimgs.net/mdimg/perfume/375x500.62615.jpg',
     description: 'A gourmand fragrance inspired by cognac.',
@@ -250,7 +250,7 @@ export const MOCK_PERFUMES: Perfume[] = [
     name: 'Le Male Le Parfum',
     brand: 'Jean Paul Gaultier',
     matchPercentage: 90, // Placeholder
-    pricePerML: 1400, // Placeholder
+    pricePerML: 1080, // Placeholder
     thumbnailUrl: 'https://fimgs.net/mdimg/perfume/s.61856.jpg',
     fullSizeUrl: 'https://fimgs.net/mdimg/perfume/375x500.61856.jpg',
     description: 'An intense and elegant amber fragrance.',
@@ -272,7 +272,7 @@ export const MOCK_PERFUMES: Perfume[] = [
     name: 'Emporio Armani Stronger With You Intensely',
     brand: 'Giorgio Armani',
     matchPercentage: 87, // Placeholder
-    pricePerML: 1300, // Placeholder
+    pricePerML: 3280, // Placeholder
     thumbnailUrl: 'https://fimgs.net/mdimg/perfume/s.52802.jpg',
     fullSizeUrl: 'https://fimgs.net/mdimg/perfume/375x500.52802.jpg',
     description: 'A vibrant and intense amber fougere fragrance.',
@@ -294,7 +294,7 @@ export const MOCK_PERFUMES: Perfume[] = [
     name: 'Le Beau Le Parfum',
     brand: 'Jean Paul Gaultier',
     matchPercentage: 83, // Placeholder
-    pricePerML: 1450, // Placeholder
+    pricePerML: 2814, // Placeholder
     thumbnailUrl: 'https://fimgs.net/mdimg/perfume/s.72158.jpg',
     fullSizeUrl: 'https://fimgs.net/mdimg/perfume/375x500.72158.jpg',
     description: 'An intense amber woody fragrance.',
@@ -316,7 +316,7 @@ export const MOCK_PERFUMES: Perfume[] = [
     name: 'By the Fireplace',
     brand: 'Maison Martin Margiela',
     matchPercentage: 86, // Placeholder
-    pricePerML: 1800, // Placeholder
+    pricePerML: 2698, // Placeholder
     thumbnailUrl: 'https://fimgs.net/mdimg/perfume/s.31623.jpg',
     fullSizeUrl: 'https://fimgs.net/mdimg/perfume/375x500.31623.jpg',
     description: 'A warm and cozy woody fragrance.',
@@ -338,7 +338,7 @@ export const MOCK_PERFUMES: Perfume[] = [
     name: 'Y Eau de Parfum',
     brand: 'Yves Saint Laurent',
     matchPercentage: 91, // Placeholder
-    pricePerML: 1350, // Placeholder
+    pricePerML: 2008, // Placeholder
     thumbnailUrl: 'https://fimgs.net/mdimg/perfume/s.50757.jpg',
     fullSizeUrl: 'https://fimgs.net/mdimg/perfume/375x500.50757.jpg',
     description: 'A fresh and intense aromatic fougere fragrance.',
@@ -360,7 +360,7 @@ export const MOCK_PERFUMES: Perfume[] = [
     name: 'Dior Homme Intense 2011',
     brand: 'Dior',
     matchPercentage: 89, // Placeholder
-    pricePerML: 1600, // Placeholder
+    pricePerML: 3200, // Placeholder
     thumbnailUrl: 'https://fimgs.net/mdimg/perfume/s.13016.jpg',
     fullSizeUrl: 'https://fimgs.net/mdimg/perfume/375x500.13016.jpg',
     description: 'A sophisticated woody floral musk fragrance.',
@@ -382,7 +382,7 @@ export const MOCK_PERFUMES: Perfume[] = [
     name: 'Goddess',
     brand: 'Burberry',
     matchPercentage: 79, // Placeholder
-    pricePerML: 1550, // Placeholder
+    pricePerML: 1990, // Placeholder
     thumbnailUrl: 'https://fimgs.net/mdimg/perfume/s.83483.jpg',
     fullSizeUrl: 'https://fimgs.net/mdimg/perfume/375x500.83483.jpg',
     description: 'A unique aromatic gourmand fragrance.',

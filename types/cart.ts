@@ -1,4 +1,5 @@
 import { BasicPerfumeInfo } from './perfume';
+import { Coupon } from './coupon'; // Import Coupon type
 
 // Define the types of products that can be added to the cart
 export type ProductType = 'AI_BOX' | 'BOX_PERSONALIZADO' | 'GIFT_BOX' | 'OCCASION_BOX' | 'PREDEFINED_BOX'; // Added PREDEFINED_BOX
@@ -27,11 +28,22 @@ export interface CartItem {
 export interface CartContextType {
   cartItems: CartItem[];
   isLoading: boolean;
-  error: string | null;
+  error: string | null; // General cart errors
   addItemToCart: (itemData: Omit<CartItem, 'id'>) => Promise<void>;
   removeItemFromCart: (itemId: string) => Promise<void>;
   clearCart: () => Promise<void>;
-  totalCartPrice: number;
+  totalCartPrice: number; // Price before discount
   totalCartItems: number;
+
+  // Coupon related state and actions
+  appliedCoupon: Coupon | null;
+  couponError: string | null; // Coupon-specific errors
+  applyCoupon: (couponCode: string) => Promise<void>;
+  removeCoupon: () => Promise<void>;
+
+  // Derived values including discount
+  discountAmount: number;
+  finalPrice: number; // Price after discount
+
   // updateItemInCart: (itemId: string, updates: Partial<CartItem>) => Promise<void>; // Optional future enhancement
 }

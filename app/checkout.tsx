@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router'; // Import useLocalSearchParams
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { COLORS, FONT_SIZES, SPACING } from '../types/constants';
@@ -8,8 +8,13 @@ import { COLORS, FONT_SIZES, SPACING } from '../types/constants';
 export default function CheckoutScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  // Retrieve the finalPrice parameter passed from the cart screen
+  const { finalPrice } = useLocalSearchParams<{ finalPrice?: string }>();
 
-  // TODO: Add checkout logic (address, payment, order summary)
+  // Convert finalPrice string to number, default to 0 if undefined or invalid
+  const finalPriceValue = finalPrice ? parseFloat(finalPrice) : 0;
+
+  // TODO: Add checkout logic (address, payment, order summary using finalPriceValue)
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -35,7 +40,11 @@ export default function CheckoutScreen() {
       {/* Main Content */}
       <View style={styles.content}>
         <Text style={styles.placeholderText}>Checkout Screen</Text>
-        <Text style={styles.todoText}>Falta implementar Dirección de env;io, integración de pago y resumen de la orden.</Text>
+        {/* Display the final price received */}
+        <Text style={styles.finalPriceText}>
+          Total a Pagar: ${finalPriceValue.toLocaleString('de-DE')}
+        </Text>
+        <Text style={styles.todoText}>Falta implementar Dirección de envío, integración de pago y resumen de la orden.</Text>
         {/* Add more placeholder UI elements as needed */}
       </View>
     </View>
@@ -89,6 +98,12 @@ const styles = StyleSheet.create({
     fontSize: FONT_SIZES.LARGE,
     color: COLORS.TEXT_PRIMARY,
     marginBottom: SPACING.MEDIUM,
+  },
+  finalPriceText: { // Style for displaying the final price
+    fontSize: FONT_SIZES.LARGE,
+    fontWeight: 'bold',
+    color: COLORS.PRIMARY,
+    marginBottom: SPACING.LARGE,
   },
   todoText: {
     fontSize: FONT_SIZES.REGULAR,

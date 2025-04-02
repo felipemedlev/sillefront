@@ -9,6 +9,7 @@ import { COLORS, FONT_SIZES, SPACING } from '../types/constants';
 import { Perfume, BasicPerfumeInfo } from '../types/perfume'; // Import BasicPerfumeInfo
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import BoxVisualizer from '../components/product/BoxVisualizer'; // Import the new component
 
 export default function ManualBoxScreen() {
   const insets = useSafeAreaInsets();
@@ -177,6 +178,9 @@ export default function ManualBoxScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
+        {/* Add the BoxVisualizer component here */}
+        <BoxVisualizer decantCount={decantCount} decantSize={decantSize} />
+
         <DecantSelector
           decantCount={decantCount}
           setDecantCount={setDecantCount}

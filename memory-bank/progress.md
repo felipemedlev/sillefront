@@ -50,4 +50,10 @@
 
 - [2025-04-01 19:59:00] - Update Profile screen statistics (ratings, purchases, favorites).
 
+
+- [2025-04-02 10:43:47] - Implement Cart Coupon Feature (see `memory-bank/coupon-feature-plan.md`)
+
+
+- [2025-04-02 11:17:09] - Implement Box Visualizer Feature (see `memory-bank/box-visualizer-plan.md`)
+
 [2025-03-29 12:10:25] - Initialized progress tracking file

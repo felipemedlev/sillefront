@@ -2,6 +2,10 @@
 
 ## Current Focus
 
+- [2025-04-02 11:17:49] - Current focus is implementing the Box Visualizer Feature. Plan documented in `memory-bank/box-visualizer-plan.md`.
+
+- [2025-04-02 10:43:58] - Current focus is implementing the Cart Coupon Feature. Plan documented in `memory-bank/coupon-feature-plan.md`.
+
 - [2025-04-01 19:59:00] - Current focus is implementing Profile Screen Features (Personal Info, Password, Purchases, Stats). Plan documented in `memory-bank/profile-features-plan.md`.
 
 - [2025-04-01 10:42:01] - Current focus is implementing the AI Box Subscription feature (client-side). Plan documented in `memory-bank/subscription-feature-plan.md`.

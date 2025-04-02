@@ -10,6 +10,7 @@ import DecantSelector from '../components/product/DecantSelector';
 import PriceRangeSlider from '../components/product/PriceRangeSlider';
 import PerfumeList from '../components/product/PerfumeList';
 import BottomBar from '../components/product/BottomBar';
+import BoxVisualizer from '../components/product/BoxVisualizer'; // Import the new component
 
 type DecantCount = 4 | 8;
 type DecantSize = 3 | 5 | 10;
@@ -191,6 +192,9 @@ export default function AIBoxSelectionScreen() {
       </View>
 
       <ScrollView style={styles.content} contentContainerStyle={styles.contentContainer}>
+        {/* Add the BoxVisualizer component here */}
+        <BoxVisualizer decantCount={decantCount} decantSize={decantSize} />
+
         <DecantSelector
           decantCount={decantCount}
           setDecantCount={setDecantCount}

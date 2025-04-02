@@ -1,14 +1,135 @@
-import React from 'react';
-import { View, Text, StyleSheet, FlatList, ActivityIndicator, TouchableOpacity, ScrollView } from 'react-native';
+import React, { useState, useCallback } from 'react'; // Import useCallback
+import { View, Text, StyleSheet, FlatList, ActivityIndicator, TouchableOpacity, TextInput } from 'react-native'; // Import TextInput
 import { useCart } from '../../../context/CartContext';
 import { useAuth } from '../../../context/AuthContext'; // Import useAuth
 import { CartItem } from '../../../types/cart';
+import { Coupon } from '../../../types/coupon'; // Import Coupon type
 import CartItemComponent from '../../../components/cart/CartItem';
 import { COLORS, FONT_SIZES, SPACING, FONTS } from '../../../types/constants'; // Added FONTS
 import { Feather } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 
+// --- CartFooter Component ---
+interface CartFooterProps {
+  totalCartItems: number;
+  finalPrice: number;
+  discountAmount: number;
+  appliedCoupon: Coupon | null;
+  couponError: string | null;
+  isAuthLoading: boolean;
+  isCartLoading: boolean; // Pass cart loading state
+  applyCoupon: (code: string) => Promise<void>;
+  removeCoupon: () => Promise<void>;
+  onCheckoutPress: () => void;
+}
+
+const CartFooter: React.FC<CartFooterProps> = React.memo(({
+  totalCartItems,
+  finalPrice,
+  discountAmount,
+  appliedCoupon,
+  couponError,
+  isAuthLoading,
+  isCartLoading, // Receive cart loading state
+  applyCoupon,
+  removeCoupon,
+  onCheckoutPress,
+}) => {
+  const [couponInput, setCouponInput] = useState('');
+  const insets = useSafeAreaInsets();
+
+  const handleApplyCoupon = useCallback(() => {
+    if (couponInput.trim()) {
+      applyCoupon(couponInput.trim());
+    }
+  }, [couponInput, applyCoupon]);
+
+  // Estimate Tab Bar height (adjust if necessary)
+  const tabBarHeightEstimate = 60;
+  const totalBottomPadding = insets.bottom + tabBarHeightEstimate + SPACING.MEDIUM;
+
+  // Disable button if cart is empty or auth is loading
+  const isCheckoutDisabled = totalCartItems === 0 || isAuthLoading;
+
+  return (
+    // Add a wrapper View to apply padding below the actual footer content
+    <View style={{ paddingBottom: totalBottomPadding }}>
+      <View style={styles.footer}>
+
+        {/* Coupon Section */}
+        {totalCartItems > 0 && ( // Only show coupon section if cart is not empty
+          <View style={styles.couponSection}>
+            {!appliedCoupon ? (
+              <>
+                <View style={styles.couponInputContainer}>
+                  <TextInput
+                    style={styles.couponInput}
+                    placeholder="Ingresa tu cupón"
+                    placeholderTextColor={COLORS.TEXT_SECONDARY}
+                    value={couponInput}
+                    onChangeText={setCouponInput}
+                    autoCapitalize="characters" // Suggest uppercase
+                    editable={!isCartLoading} // Disable input while loading cart
+                  />
+                  <TouchableOpacity
+                    style={[styles.applyCouponButton, !couponInput.trim() && styles.applyCouponButtonDisabled]}
+                    onPress={handleApplyCoupon}
+                    disabled={!couponInput.trim() || isCartLoading}
+                  >
+                    <Text style={styles.applyCouponButtonText}>Aplicar</Text>
+                  </TouchableOpacity>
+                </View>
+                {couponError && (
+                  <Text style={styles.couponErrorText}>{couponError}</Text>
+                )}
+              </>
+            ) : (
+              <View style={styles.appliedCouponContainer}>
+                <View>
+                  <Text style={styles.appliedCouponLabel}>Cupón Aplicado:</Text>
+                  <Text style={styles.appliedCouponCode}>{appliedCoupon.code}</Text>
+                  <Text style={styles.discountText}>Descuento: -${discountAmount.toLocaleString('de-DE')}</Text>
+                </View>
+                <TouchableOpacity onPress={removeCoupon} style={styles.removeCouponButton}>
+                  <Feather name="x-circle" size={20} color={COLORS.ERROR} />
+                </TouchableOpacity>
+              </View>
+            )}
+          </View>
+        )}
+        {/* End Coupon Section */}
+
+        {/* Total Section */}
+        <View style={[styles.totalContainer, appliedCoupon && styles.totalContainerWithCoupon]}>
+          <Text style={styles.totalLabel}>Total:</Text>
+          {/* Display final price after discount */}
+          <Text style={styles.totalPrice}>${finalPrice.toLocaleString('de-DE')}</Text>
+        </View>
+        {/* End Total Section */}
+
+        {/* Checkout Button */}
+        <TouchableOpacity
+          style={[styles.checkoutButton, isCheckoutDisabled && styles.checkoutButtonDisabled]}
+          onPress={onCheckoutPress} // Use the passed handler
+          disabled={isCheckoutDisabled} // Disable button when appropriate
+          activeOpacity={0.8}
+        >
+          {isAuthLoading ? (
+            <ActivityIndicator color={COLORS.BACKGROUND} />
+          ) : (
+            <Text style={styles.checkoutButtonText}>Continuar al pago</Text>
+          )}
+        </TouchableOpacity>
+        {/* End Checkout Button */}
+      </View>
+    </View>
+  );
+});
+// --- End CartFooter Component ---
+
+
+// --- CartScreen Component ---
 export default function CartScreen() {
   const router = useRouter();
   const {
@@ -17,33 +138,43 @@ export default function CartScreen() {
     error: cartError, // Renamed to avoid conflict
     removeItemFromCart,
     clearCart,
-    totalCartPrice,
     totalCartItems,
+    // Coupon related state and functions
+    appliedCoupon,
+    couponError,
+    applyCoupon,
+    removeCoupon,
+    discountAmount,
+    finalPrice, // Price after discount
   } = useCart();
   const { user, isLoading: isAuthLoading } = useAuth(); // Get user and auth loading state
   const insets = useSafeAreaInsets();
 
-  const handleCheckoutPress = () => {
+  const handleCheckoutPress = useCallback(() => { // Memoize handler
     if (user) {
-      router.push('/checkout'); // Navigate to checkout if logged in
+      // Pass finalPrice to checkout screen
+      router.push({
+        pathname: '/checkout',
+        params: { finalPrice: finalPrice }, // Pass final price
+      });
     } else {
       router.push('/auth/signup'); // Navigate to signup if not logged in
     }
-  };
+  }, [user, finalPrice, router]); // Add dependencies
 
-  const renderCartItem = ({ item }: { item: CartItem }) => (
+  const renderCartItem = useCallback(({ item }: { item: CartItem }) => ( // Memoize renderItem
     <CartItemComponent item={item} onRemove={removeItemFromCart} />
-  );
+  ), [removeItemFromCart]); // Add dependency
 
-  const renderEmptyCart = () => (
+  const renderEmptyCart = useCallback(() => ( // Memoize empty component
     <View style={styles.emptyContainer}>
       <Feather name="shopping-cart" size={60} color={COLORS.TEXT_SECONDARY} />
       <Text style={styles.emptyText}>Tu carrito está vacío.</Text>
       <Text style={styles.emptySubText}>Añade algunos perfumes para empezar.</Text>
     </View>
-  );
+  ), []);
 
-  const renderHeader = () => (
+  const renderHeader = useCallback(() => ( // Memoize header
     <View style={styles.header}>
       <Text style={styles.headerTitle}>Carrito ({totalCartItems})</Text>
       {totalCartItems > 0 && (
@@ -52,52 +183,19 @@ export default function CartScreen() {
         </TouchableOpacity>
       )}
     </View>
-  );
+  ), [totalCartItems, clearCart]); // Add dependencies
 
-  // Define the footer component to be rendered by FlatList
-  const renderFooter = () => {
-    // Estimate Tab Bar height (adjust if necessary)
-    const tabBarHeightEstimate = 60;
-    const totalBottomPadding = insets.bottom + tabBarHeightEstimate + SPACING.MEDIUM;
-
-    // Disable button if cart is empty or auth is loading
-    const isCheckoutDisabled = totalCartItems === 0 || isAuthLoading;
-
-    return (
-      // Add a wrapper View to apply padding below the actual footer content
-      <View style={{ paddingBottom: totalBottomPadding }}>
-        <View style={styles.footer}>
-          <View style={styles.totalContainer}>
-            <Text style={styles.totalLabel}>Total:</Text>
-            <Text style={styles.totalPrice}>${totalCartPrice.toLocaleString('de-DE')}</Text>
-          </View>
-          <TouchableOpacity
-            style={[styles.checkoutButton, isCheckoutDisabled && styles.checkoutButtonDisabled]}
-            onPress={handleCheckoutPress} // Use the new handler
-            disabled={isCheckoutDisabled} // Disable button when appropriate
-            activeOpacity={0.8}
-          >
-            {isAuthLoading ? (
-              <ActivityIndicator color={COLORS.BACKGROUND} />
-            ) : (
-              <Text style={styles.checkoutButtonText}>Continuar al pago</Text>
-            )}
-          </TouchableOpacity>
-        </View>
-      </View>
-    );
-  };
-
-  // Show loading indicator if either cart or auth is loading
-  if (isCartLoading || isAuthLoading) {
+  // Show loading indicator if cart is loading
+  if (isCartLoading) {
     return (
       <View style={[styles.container, styles.centerContent]}>
         <ActivityIndicator size="large" color={COLORS.PRIMARY} />
-        <Text style={styles.loadingText}>Cargando...</Text>
+        <Text style={styles.loadingText}>Cargando Carrito...</Text>
       </View>
     );
   }
 
+  // Display general cart error if present
   if (cartError) {
     return (
       <View style={[styles.container, styles.centerContent]}>
@@ -117,7 +215,21 @@ export default function CartScreen() {
             data={cartItems}
             renderItem={renderCartItem}
             keyExtractor={(item) => item.id}
-            ListFooterComponent={renderFooter} // Use the footer component here
+            // Use the memoized CartFooter component
+            ListFooterComponent={
+              <CartFooter
+                totalCartItems={totalCartItems}
+                finalPrice={finalPrice}
+                discountAmount={discountAmount}
+                appliedCoupon={appliedCoupon}
+                couponError={couponError}
+                isAuthLoading={isAuthLoading}
+                isCartLoading={isCartLoading} // Pass cart loading state
+                applyCoupon={applyCoupon}
+                removeCoupon={removeCoupon}
+                onCheckoutPress={handleCheckoutPress}
+              />
+            }
             contentContainerStyle={styles.listContent} // Padding for items
             showsVerticalScrollIndicator={false}
             style={{ flex: 1 }} // Allow FlatList to take available space
@@ -126,6 +238,7 @@ export default function CartScreen() {
       </View>
   );
 }
+// --- End CartScreen Component ---
 
 const styles = StyleSheet.create({
   container: {
@@ -174,7 +287,7 @@ const styles = StyleSheet.create({
     color: COLORS.TEXT_SECONDARY,
     fontFamily: FONTS.INSTRUMENT_SANS, // Added font
   },
-  errorText: {
+  errorText: { // General error text
     marginTop: SPACING.MEDIUM,
     fontSize: FONT_SIZES.REGULAR,
     color: COLORS.ERROR,
@@ -211,11 +324,96 @@ const styles = StyleSheet.create({
     paddingTop: SPACING.MEDIUM,
     // paddingBottom is now handled by the wrapper View in renderFooter
   },
+  // --- Coupon Styles ---
+  couponSection: {
+    marginBottom: SPACING.LARGE, // Space between coupon and total
+  },
+  couponInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: SPACING.SMALL,
+  },
+  couponInput: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: COLORS.BORDER,
+    borderRadius: 8,
+    paddingHorizontal: SPACING.MEDIUM,
+    paddingVertical: SPACING.SMALL, // Adjust for height
+    fontSize: FONT_SIZES.REGULAR,
+    color: COLORS.TEXT_PRIMARY,
+    marginRight: SPACING.SMALL,
+    height: 44, // Consistent height
+    fontFamily: FONTS.INSTRUMENT_SANS,
+  },
+  applyCouponButton: {
+    backgroundColor: COLORS.ACCENT, // Use accent color
+    paddingHorizontal: SPACING.MEDIUM,
+    paddingVertical: SPACING.SMALL, // Adjust for height
+    borderRadius: 8,
+    height: 44, // Consistent height
+    justifyContent: 'center',
+  },
+  applyCouponButtonDisabled: {
+    backgroundColor: COLORS.BORDER, // Grey out when disabled
+    opacity: 0.7,
+  },
+  applyCouponButtonText: {
+    color: COLORS.BACKGROUND,
+    fontSize: FONT_SIZES.REGULAR,
+    fontWeight: '600',
+    fontFamily: FONTS.INSTRUMENT_SANS,
+  },
+  couponErrorText: {
+    fontSize: FONT_SIZES.SMALL,
+    color: COLORS.ERROR,
+    marginTop: SPACING.XSMALL,
+    fontFamily: FONTS.INSTRUMENT_SANS,
+  },
+  appliedCouponContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#E8F5E9', // Light green background
+    padding: SPACING.MEDIUM,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#A5D6A7', // Green border
+  },
+  appliedCouponLabel: {
+    fontSize: FONT_SIZES.SMALL,
+    color: '#2E7D32', // Dark green text
+    fontFamily: FONTS.INSTRUMENT_SANS,
+    marginBottom: SPACING.XSMALL,
+  },
+  appliedCouponCode: {
+    fontSize: FONT_SIZES.REGULAR,
+    color: '#1B5E20', // Darker green text
+    fontWeight: '700',
+    fontFamily: FONTS.INSTRUMENT_SANS,
+    marginBottom: SPACING.XSMALL,
+  },
+  discountText: {
+    fontSize: FONT_SIZES.SMALL,
+    color: '#2E7D32',
+    fontWeight: '600',
+    fontFamily: FONTS.INSTRUMENT_SANS,
+  },
+  removeCouponButton: {
+    padding: SPACING.SMALL,
+  },
+  // --- End Coupon Styles ---
   totalContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: SPACING.MEDIUM,
+    // Removed borderTop and paddingTop here, moved to totalContainerWithCoupon
+  },
+  totalContainerWithCoupon: { // Added style for when coupon is applied
+    borderTopWidth: 1,
+    borderTopColor: COLORS.BORDER,
+    paddingTop: SPACING.MEDIUM,
   },
   totalLabel: {
     fontSize: FONT_SIZES.REGULAR,

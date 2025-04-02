@@ -34,7 +34,7 @@ const PriceRangeSlider: React.FC<PriceRangeSliderProps> = ({
             <MultiSlider
               values={range}
               min={0}
-              max={20000}
+              max={5000}
               step={100}
               onValuesChange={onRangeChange}
               sliderLength={Dimensions.get('window').width - 80}

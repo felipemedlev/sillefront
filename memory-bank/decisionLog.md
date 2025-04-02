@@ -44,4 +44,14 @@
   - Rationale: Implement user-requested features (Personal Info, Change Password, Purchases) and update profile stats.
   - Details: Expand `AuthContext` user details (name, phone, address) post-signup. Implement local password change (new/confirm fields only). Use mock data for purchase history (`data/mockPurchases.ts`). Update profile stats (ratings, purchases, favorites). Plan saved to `memory-bank/profile-features-plan.md`.
 
+
+[2025-04-02 10:43:00] - Decided on implementation strategy for Cart Coupon Feature.
+  - Rationale: Provide discount functionality using mock coupons initially.
+  - Details: New type `types/coupon.ts`, mock data `data/MOCK_COUPONS.ts`, extend `CartContext` with coupon state/logic, update Cart Screen UI (`app/(tabs)/(cart)/index.tsx`) with input/display logic, pass final price to checkout. Plan saved to `memory-bank/coupon-feature-plan.md`.
+
+
+[2025-04-02 11:16:49] - Decided to implement Box Visualizer feature.
+  - Rationale: Provide users with a visual representation of the selected decant count and size combination on box selection screens.
+  - Details: Create reusable `components/product/BoxVisualizer.tsx` component to display dynamic images based on props. Integrate into `app/aibox-selection.tsx` and `app/manual-box.tsx` above the `DecantSelector`. Plan saved to `memory-bank/box-visualizer-plan.md`.
+
 [2025-03-29 12:10:12] - Initialized decision log file

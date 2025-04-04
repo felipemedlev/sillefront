@@ -22,7 +22,7 @@ const CartItemComponent: React.FC<CartItemProps> = ({ item, onRemove }) => {
   const getProductTypeName = (type: CartItem['productType']) => {
     switch (type) {
       case 'AI_BOX': return 'AI Discovery Box';
-      case 'MANUAL_BOX': return 'Manual Box';
+      case 'BOX_PERSONALIZADO': return 'Personalized Box';
       case 'GIFT_BOX': return 'Gift Box';
       case 'OCCASION_BOX': return 'Occasion Box';
       default: return 'Producto';

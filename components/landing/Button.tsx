@@ -1,3 +1,4 @@
+import { COLORS, SPACING } from '@/types/constants';
 import React from 'react';
 import {
   TouchableOpacity,
@@ -33,7 +34,10 @@ const Button = ({
         primary ? styles.primaryButton : styles.secondaryButton,
         {
           width: screenWidth * 0.7, // Both buttons use same width
-          height: primary ? screenHeight * 0.065 : screenHeight * 0.045, // Smaller height for non-primary
+          ...(primary
+              ? { height: screenHeight * 0.065 } // fixed height for primary
+              : { minHeight: screenHeight * 0.045 } // allow secondary to grow with content
+          ),
         },
         style
       ]}
@@ -59,17 +63,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginVertical: 10,
     paddingHorizontal: 20,
-    paddingVertical: 12,
+    paddingVertical: 5,
   },
   primaryButton: {
     backgroundColor: '#222222',
   },
   secondaryButton: {
-    backgroundColor: 'transparent',
+    backgroundColor: COLORS.ACCENT,
   },
   text: {
     fontSize: 18,
     fontFamily: 'InstrumentSans',
+    textAlign: 'center',
   },
   primaryText: {
     color: '#FFFFFF',

@@ -1,4 +1,4 @@
-import { forwardRef, useImperativeHandle, useState } from 'react';
+import { forwardRef, useImperativeHandle, useState, useRef } from 'react';
 import { View, Text, StyleSheet, Dimensions, Pressable, Image, Modal, ScrollView, FlatList, ViewStyle } from 'react-native'; // Import ViewStyle
 import { Feather } from '@expo/vector-icons';
 import { MOCK_PERFUMES } from '@/data/mockPerfumes';
@@ -72,7 +72,7 @@ const PerfumeModal = forwardRef<PerfumeModalRef, PerfumeModalProps>((props, ref)
   const [currentPerfume, setCurrentPerfume] = useState<Perfume | null>(props.perfume);
   const { width } = Dimensions.get('window');
   const { isSwapping, onSimilarPerfumeSelect } = props;
-
+  const scrollViewRef = useRef<ScrollView>(null);
   useImperativeHandle(ref, () => ({
     show: (perfumeData: Perfume) => {
       setCurrentPerfume(perfumeData);
@@ -99,6 +99,7 @@ const PerfumeModal = forwardRef<PerfumeModalRef, PerfumeModalProps>((props, ref)
       const similarPerfume = MOCK_PERFUMES.find((p: Perfume) => p.id === perfumeId);
       if (similarPerfume) {
         setCurrentPerfume(similarPerfume);
+        scrollViewRef.current?.scrollTo({ y: 0, animated: true });
       }
     }
   };
@@ -262,10 +263,10 @@ const PerfumeModal = forwardRef<PerfumeModalRef, PerfumeModalProps>((props, ref)
         <View style={styles.modalContainer}>
           {/* Close Button */}
           <Pressable style={styles.closeButton} onPress={handleClose}>
-            <Feather name="chevron-down" size={28} color="#333" />
+            <Feather name="x" size={32} color="#333" />
           </Pressable>
 
-          <ScrollView showsVerticalScrollIndicator={false}>
+          <ScrollView ref={scrollViewRef} showsVerticalScrollIndicator={false}>
             {/* Match Percentage at Top */}
             {matchPercentage !== undefined && (
               <View style={styles.matchContainer}>
@@ -499,10 +500,20 @@ const styles = StyleSheet.create({
     elevation: 10,
   },
   closeButton: {
-    alignSelf: 'center',
-    padding: 10,
-    marginBottom: 5,
-    // Make the hit area larger if needed
+    position: 'absolute',
+    top: 15,
+    right: 15,
+    backgroundColor: 'rgba(255,255,255,0.8)',
+    borderRadius: 20,
+    padding: 8,
+    borderWidth: 0.5,
+    borderColor: '#e0e0e0',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 2,
+    elevation: 3,
+    zIndex: 10,
   },
   imageContainer: {
     alignItems: 'center',

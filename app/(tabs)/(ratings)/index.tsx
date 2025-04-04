@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Image, SafeAreaView, ActivityIndicator } from 'react-native';
+import { View, Text, useWindowDimensions, StyleSheet, TextInput, TouchableOpacity, ScrollView, Image, SafeAreaView, ActivityIndicator, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import RatingModal from '../../../components/RatingModal';
 import { useRatings } from '../../../context/RatingsContext';
@@ -21,6 +21,8 @@ const allPerfumes: DisplayPerfume[] = MOCK_PERFUMES.map(p => ({
   brand: p.brand,
   image: p.thumbnailUrl, // Use thumbnailUrl for the image
 }));
+
+const DESKTOP_BREAKPOINT = 768;
 
 export default function RatingsScreen() {
   const [activeTab, setActiveTab] = useState('calificados');
@@ -86,7 +88,7 @@ export default function RatingsScreen() {
     return (
       <TouchableOpacity
         key={perfume.id}
-        style={styles.cardContainer}
+        style={[styles.cardContainer, isDesktop && { width: '17%' }]}
         onPress={() => handlePerfumePress(perfume)}
       >
         <Image
@@ -126,10 +128,14 @@ export default function RatingsScreen() {
     );
   }
 
+  const { width } = useWindowDimensions();
+  const isDesktop = width >= DESKTOP_BREAKPOINT;
+
   // --- Main Render ---
 
   return (
     <SafeAreaView style={styles.container}>
+      {Platform.OS === 'web' && window.innerWidth >= 1024 && <View style={{ marginTop: 80 }} />}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Mis Perfumes</Text>
       </View>
@@ -306,6 +312,7 @@ const styles = StyleSheet.create({
   },
   cardsContainer: {
     flex: 1,
+    marginTop: 20,
     paddingHorizontal: SPACING.LARGE - SPACING.SMALL / 2,
   },
   cardsGrid: {

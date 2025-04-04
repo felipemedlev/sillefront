@@ -4,11 +4,14 @@ import { SurveyProvider } from '../../../context/SurveyContext';
 import { useAuth } from '../../../context/AuthContext'; // Import useAuth
 import { COLORS } from '../../../types/constants'; // Import COLORS
 import { Pressable } from 'react-native';
-import { View, ActivityIndicator } from 'react-native'; // Import for loading indicator
+import { View, ActivityIndicator, useWindowDimensions, Platform } from 'react-native'; // Import for loading indicator
 import { Feather } from '@expo/vector-icons';
 
 export default function ProfileLayout() {
   const { user, isLoading: isAuthLoading } = useAuth();
+  const DESKTOP_BREAKPOINT = 768;
+  const { width } = useWindowDimensions();
+  const isDesktop = width >= DESKTOP_BREAKPOINT;
   const router = useRouter();
   const segments = useSegments(); // Keep default type inference
 
@@ -48,6 +51,7 @@ export default function ProfileLayout() {
     // If SurveyContext depends on user being logged in, this structure is fine.
     // Otherwise, it could potentially wrap individual screens if needed.
     <SurveyProvider>
+      {isDesktop && <View style={{ marginTop: '5%' }} />}
       <Stack
         screenOptions={{
           headerShown: false,

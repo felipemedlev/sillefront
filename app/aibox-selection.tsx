@@ -147,13 +147,12 @@ export default function AIBoxSelectionScreen() {
       if (feedbackTimeoutRef.current) {
         clearTimeout(feedbackTimeoutRef.current);
       }
-
       // Set new timeout to clear the message
       feedbackTimeoutRef.current = setTimeout(() => {
         setFeedbackMessage(null);
+        router.push('/(tabs)/(cart)'); // Optional navigation
       }, 2000); // Clear after 2 seconds
 
-      // router.push('/(tabs)/(cart)'); // Optional navigation
     } catch (error) {
       console.error("Error adding AI Box to cart:", error);
       setFeedbackMessage("Error al añadir."); // Show error feedback

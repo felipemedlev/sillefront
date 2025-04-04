@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, Platform, ScrollView, ActivityIndicator } from 'react-native'; // Added ActivityIndicator
+import { View, Text, StyleSheet, useWindowDimensions, Image, TouchableOpacity, Platform, ScrollView, ActivityIndicator } from 'react-native'; // Added ActivityIndicator
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../../context/AuthContext';
@@ -18,6 +18,9 @@ type MenuItem = {
 
 export default function ProfileScreen() {
   const router = useRouter();
+  const DESKTOP_BREAKPOINT = 768;
+  const { width } = useWindowDimensions();
+  const isDesktop = width >= DESKTOP_BREAKPOINT;
   const { user, logout, isLoading: isAuthLoading } = useAuth(); // Get auth loading state too
   const { subscriptionStatus, isLoading: isSubscriptionLoading } = useSubscription();
   const { ratings, favorites, isLoadingRatings, isLoadingFavorites } = useRatings(); // Get ratings, favorites, and their loading states

@@ -155,6 +155,7 @@ export default function OccasionSelectionScreen() { // Renamed component
       // Set new timeout to clear the message
       feedbackTimeoutRef.current = setTimeout(() => {
         setFeedbackMessage(null);
+        router.push('/(tabs)/(cart)'); // Optional navigation
       }, 2000); // Clear after 2 seconds
 
 
@@ -198,7 +199,7 @@ export default function OccasionSelectionScreen() { // Renamed component
       <ScrollView style={styles.content} contentContainerStyle={styles.contentContainer}>
         {/* Add the BoxVisualizer component here */}
         <BoxVisualizer decantCount={decantCount} decantSize={decantSize} />
-        
+
         <DecantSelector
           decantCount={decantCount}
           setDecantCount={setDecantCount}

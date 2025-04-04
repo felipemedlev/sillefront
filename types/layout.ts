@@ -4,6 +4,7 @@ export interface FontLoadingState {
 }
 
 export interface LayoutStyles {
+  webContainer?: import('react-native').ViewStyle;
   container: {
     flex: number;
   };

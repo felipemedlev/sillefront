@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, Animated } from 'react-native'; // Import Animated
+import { View, Text, StyleSheet, ScrollView, Pressable, Animated, useWindowDimensions } from 'react-native'; // Import Animated and Platform
 import { router } from 'expo-router';
 import { COLORS, SPACING, FONTS, FONT_SIZES } from '../../types/constants';
 
@@ -16,7 +16,11 @@ const OCCASIONS = [
   { id: 10, title: 'Especial', color: '#F5E6E6' },
 ];
 
+const DESKTOP_BREAKPOINT = 768;
+
 export default function AIBoxScreen() {
+  const { width } = useWindowDimensions();
+  const isDesktop = width >= DESKTOP_BREAKPOINT;
   const shakeAnimation = useRef(new Animated.Value(0)).current; // Animation value
 
   useEffect(() => {
@@ -58,6 +62,25 @@ export default function AIBoxScreen() {
           </Pressable>
         </Animated.View>
 
+        {/* Occasions Section */}
+        <Text style={styles.sectionTitle}>Box AI por Ocasión </Text>
+        <View style={styles.occasionsGrid}>
+          {OCCASIONS.map((occasion) => (
+            <Pressable
+              key={occasion.id}
+              style={({ pressed }) => [
+                styles.occasionCard,
+                isDesktop && styles.occasionCardWeb,
+                { backgroundColor: occasion.color },
+                pressed && styles.occasionCardPressed,
+              ]}
+              onPress={() => router.push(`/occasion-selection?occasion=${encodeURIComponent(occasion.title)}`)} // Added navigation
+            >
+              <Text style={styles.occasionTitle}>{occasion.title}</Text>
+            </Pressable>
+          ))}
+        </View>
+
         {/* Manual Box Card */}
         <View style={styles.secondCard}>
           {/* <Feather name="edit-3" size={28} color={COLORS.PRIMARY} style={styles.cardIcon} /> */}
@@ -69,24 +92,7 @@ export default function AIBoxScreen() {
             <Text style={styles.openButtonText}>Configurar</Text>
           </Pressable>
         </View>
-
-        {/* Occasions Section */}
-        <Text style={styles.sectionTitle}>Box AI por Ocasión </Text>
-        <View style={styles.occasionsGrid}>
-          {OCCASIONS.map((occasion) => (
-            <Pressable
-              key={occasion.id}
-              style={({ pressed }) => [
-                styles.occasionCard,
-                { backgroundColor: occasion.color },
-                pressed && styles.occasionCardPressed,
-              ]}
-              onPress={() => router.push(`/occasion-selection?occasion=${encodeURIComponent(occasion.title)}`)} // Added navigation
-            >
-              <Text style={styles.occasionTitle}>{occasion.title}</Text>
-            </Pressable>
-          ))}
-        </View>
+        {!isDesktop && <View style={{ marginBottom: 60 }} />}
       </View>
     </ScrollView>
   );
@@ -176,7 +182,6 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     justifyContent: 'space-between',
     width: '100%',
-    paddingBottom: SPACING.XLARGE+20
   },
   occasionCard: {
     width: '48%',
@@ -205,5 +210,9 @@ const styles = StyleSheet.create({
   },
   cardTextContainer: {
     flex: 1,
+  },
+  occasionCardWeb: {
+    height: 80, // Adjust height as needed for web
+    aspectRatio: undefined, // Explicitly unset aspect ratio on web
   },
 });

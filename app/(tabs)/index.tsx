@@ -41,7 +41,10 @@ export default function HomeScreen() {
           isDesktop={isDesktop}
         />
         {/* Removed ScrollView wrapper */}
-        <View style={styles.screenContainer}>
+        <View style={[
+          styles.screenContainer,
+          isDesktop && styles.screenContainerWeb
+        ]}>
           {activeTab === 'aibox' ? <AIBoxScreen /> : <GiftBoxScreen />}
         </View>
       </Animated.View>
@@ -71,4 +74,9 @@ const styles = StyleSheet.create({
     paddingTop: 0, // Adjust as needed
   },
   // Removed scrollView and scrollViewContent styles
+  screenContainerWeb: {
+    width: '70%',
+    maxWidth: 1200,
+    alignSelf: 'center',
+  },
 });

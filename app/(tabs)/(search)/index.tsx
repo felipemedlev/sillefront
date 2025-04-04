@@ -1,5 +1,6 @@
 import React, { useState, useRef, useMemo } from 'react';
 import { View, StyleSheet } from 'react-native';
+import { Platform, useWindowDimensions } from 'react-native';
 import { MOCK_PERFUMES } from '../../../data/mockPerfumes';
 import { Perfume } from '../../../types/perfume';
 import SearchBar from '../../../components/search/SearchBar';
@@ -8,11 +9,14 @@ import PerfumeModal from '../../../components/product/PerfumeModal';
 import { PerfumeModalRef } from '../../../components/product/PerfumeModal';
 import { router } from 'expo-router';
 
+const DESKTOP_BREAKPOINT = 768;
+
 export default function SearchScreen() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedPerfume, setSelectedPerfume] = useState<Perfume | null>(null);
   const modalRef = useRef<PerfumeModalRef>(null);
-
+  const { width } = useWindowDimensions();
+  const isDesktop = width >= DESKTOP_BREAKPOINT;
   // Generate consistent match percentages for each perfume
   const perfumesWithMatch = useMemo(() => {
     return MOCK_PERFUMES.map(perfume => ({
@@ -43,6 +47,7 @@ export default function SearchScreen() {
 
   return (
     <View style={styles.container}>
+      {isDesktop && <View style={{ marginTop: 80 }} />}
       <SearchBar
         value={searchQuery}
         onChangeText={setSearchQuery}
@@ -64,6 +69,6 @@ export default function SearchScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFEFC',
+    backgroundColor: '#FFFEFC'
   },
 });

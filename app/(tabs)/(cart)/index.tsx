@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react'; // Import useCallback
-import { View, Text, StyleSheet, FlatList, ActivityIndicator, TouchableOpacity, TextInput } from 'react-native'; // Import TextInput
+import { View, Text, StyleSheet, FlatList, ActivityIndicator, TouchableOpacity, TextInput, Platform, useWindowDimensions } from 'react-native'; // Import TextInput and useWindowDimensions
 import { useCart } from '../../../context/CartContext';
 import { useAuth } from '../../../context/AuthContext'; // Import useAuth
 import { CartItem } from '../../../types/cart';
@@ -132,28 +132,35 @@ const CartFooter: React.FC<CartFooterProps> = React.memo(({
 // --- CartScreen Component ---
 export default function CartScreen() {
   const router = useRouter();
-  const {
-    cartItems,
-    isLoading: isCartLoading, // Renamed to avoid conflict
-    error: cartError, // Renamed to avoid conflict
-    removeItemFromCart,
-    clearCart,
-    totalCartItems,
-    // Coupon related state and functions
-    appliedCoupon,
-    couponError,
-    applyCoupon,
-    removeCoupon,
-    discountAmount,
-    finalPrice, // Price after discount
-  } = useCart();
+const {
+  cartItems,
+  isLoading: isCartLoading,
+  error: cartError,
+  removeItemFromCart,
+  clearCart,
+  totalCartItems,
+  appliedCoupon,
+  couponError,
+  applyCoupon,
+  removeCoupon,
+  discountAmount,
+  finalPrice,
+} = useCart();
+
+const DESKTOP_BREAKPOINT = 768;
+const { width } = useWindowDimensions();
+const isDesktop = width >= DESKTOP_BREAKPOINT;
   const { user, isLoading: isAuthLoading } = useAuth(); // Get user and auth loading state
+
+
   const insets = useSafeAreaInsets();
 
   const handleCheckoutPress = useCallback(() => { // Memoize handler
     if (user) {
       // Pass finalPrice to checkout screen
       router.push({
+
+
         pathname: '/checkout',
         params: { finalPrice: finalPrice }, // Pass final price
       });
@@ -207,6 +214,7 @@ export default function CartScreen() {
 
   return (
       <View style={[styles.container, { paddingTop: insets.top }]}>
+        {isDesktop && <View style={{ marginTop: 80 }} />}
         {renderHeader()}
         {cartItems.length === 0 ? (
           renderEmptyCart()

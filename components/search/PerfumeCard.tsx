@@ -10,19 +10,25 @@ interface PerfumeCardProps {
   perfume: Perfume | BasicPerfumeInfo;
   matchPercentage?: number;
   onPress: () => void;
+  isDesktop: boolean;
 }
 
+
+import { Platform } from 'react-native';
 const { width } = Dimensions.get('window');
-// Adjust card width calculation slightly if needed for better spacing
 const CARD_MARGIN_HORIZONTAL = SPACING.MEDIUM;
 const NUM_COLUMNS = 2;
 const TOTAL_HORIZONTAL_PADDING = SPACING.LARGE * 2; // Assuming SearchResults has LARGE padding
 const TOTAL_MARGINS = CARD_MARGIN_HORIZONTAL * (NUM_COLUMNS - 1);
-const AVAILABLE_WIDTH = width - TOTAL_HORIZONTAL_PADDING - TOTAL_MARGINS;
-const CARD_WIDTH = AVAILABLE_WIDTH / NUM_COLUMNS;
 
-
-export default function PerfumeCard({ perfume, matchPercentage, onPress }: PerfumeCardProps) {
+export default function PerfumeCard({ perfume, matchPercentage, onPress, isDesktop }: PerfumeCardProps) {
+  let cardWidth: number;
+  if (isDesktop) {
+    cardWidth = 180;
+  } else {
+    const AVAILABLE_WIDTH = width - TOTAL_HORIZONTAL_PADDING - TOTAL_MARGINS;
+    cardWidth = (AVAILABLE_WIDTH / NUM_COLUMNS) - 8; // Slightly reduce width to create gap on mobile
+  }
   const { addFavorite, removeFavorite, isFavorite } = useRatings();
   const { addPerfume, removePerfume, isPerfumeSelected, canAddMorePerfumes, decantCount } = useManualBox(); // Add decantCount
   const favorite = isFavorite(perfume.id);
@@ -79,7 +85,7 @@ export default function PerfumeCard({ perfume, matchPercentage, onPress }: Perfu
   const displayMatch = matchPercentage ?? (perfume as Perfume).matchPercentage;
 
   return (
-    <View style={styles.cardOuterContainer}>
+    <View style={[styles.cardOuterContainer, { width: cardWidth }]}>
       {showToast && (
         <Animated.View style={[styles.toast, { opacity: fadeAnim }]}>
           <Text style={styles.toastText}>{toastMessage}</Text>
@@ -93,7 +99,7 @@ export default function PerfumeCard({ perfume, matchPercentage, onPress }: Perfu
       )}
 
       <TouchableOpacity style={styles.cardTouchableArea} onPress={onPress}>
-        <View style={styles.imageContainer}>
+        <View style={[styles.imageContainer, { height: cardWidth * 0.7 }]}>
           <Image source={{ uri: perfume.thumbnailUrl }} style={styles.image} />
         </View>
         <View style={styles.infoContainer}>
@@ -137,7 +143,6 @@ export default function PerfumeCard({ perfume, matchPercentage, onPress }: Perfu
 
 const styles = StyleSheet.create({
   cardOuterContainer: {
-    width: CARD_WIDTH,
     marginBottom: SPACING.LARGE, // Increased bottom margin for more space
     backgroundColor: COLORS.BACKGROUND,
     borderRadius: 14, // Slightly larger radius
@@ -175,7 +180,6 @@ const styles = StyleSheet.create({
     width: '100%',
     alignItems: 'center',
     justifyContent: 'center',
-    height: CARD_WIDTH, // Make image container square based on width
     backgroundColor: COLORS.BACKGROUND, // Slightly different placeholder color
     borderBottomWidth: 1, // Separator line below image
     borderBottomColor: '#F0F0F0',

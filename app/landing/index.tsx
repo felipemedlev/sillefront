@@ -161,7 +161,7 @@ export default function LandingScreen() {
         />
         {currentPage === 2 && (
           <Button
-            title="Saltar intro"
+            title="Elegir mis propios decants"
             onPress={handleSkipPress}
             primary={false}
           />
@@ -231,7 +231,7 @@ const styles = StyleSheet.create({
   description: {
     fontFamily: 'InstrumentSans',
     fontWeight: 'regular',
-    fontSize: 16,
+    fontSize: 18,
     lineHeight: 16 * 1.4, // Increase for better readability
     textAlign: 'center',
     color: '#717171',
@@ -248,7 +248,7 @@ const styles = StyleSheet.create({
   bottomContainer: {
     width: '100%',
     alignItems: 'center',
-    marginBottom: 0,
+    marginBottom: 20,
     paddingHorizontal: 20,
   },
   bottomContainerFirstTwo: {

@@ -1,6 +1,5 @@
-import { forwardRef, useImperativeHandle, useState, useRef, useMemo, useCallback, useEffect } from 'react'; // Added useEffect
-import { View, Text, StyleSheet, Dimensions, Pressable, Image, ScrollView, FlatList, ViewStyle } from 'react-native'; // Removed Modal
-import BottomSheet, { BottomSheetScrollView } from "@gorhom/bottom-sheet"; // Added BottomSheet imports
+import { forwardRef, useImperativeHandle, useState, useRef } from 'react';
+import { View, Text, StyleSheet, Dimensions, Pressable, Image, Modal, ScrollView, FlatList, ViewStyle } from 'react-native'; // Import ViewStyle
 import { Feather } from '@expo/vector-icons';
 import { MOCK_PERFUMES } from '@/data/mockPerfumes';
 import { Perfume, BasicPerfumeInfo } from '../../types/perfume';
@@ -76,11 +75,7 @@ const PerfumeModal = forwardRef<PerfumeModalRef, PerfumeModalProps>((props, ref)
   const [currentPerfume, setCurrentPerfume] = useState<Perfume | null>(props.perfume ?? null);
   const { width } = Dimensions.get('window');
   const { isSwapping, onSimilarPerfumeSelect } = props;
-
-  // Define snap points for the bottom sheet - Changed 60% to 80%
-  const snapPoints = useMemo(() => ["25%" , "50%", "80%"], []);
-
-  // Expose show/hide methods via ref
+  const scrollViewRef = useRef<ScrollView>(null);
   useImperativeHandle(ref, () => ({
     show: (perfumeData: Perfume) => {
       // Only update the state here. useEffect will handle expanding.
@@ -120,6 +115,7 @@ const PerfumeModal = forwardRef<PerfumeModalRef, PerfumeModalProps>((props, ref)
       const similarPerfume = MOCK_PERFUMES.find((p: Perfume) => p.id === perfumeId);
       if (similarPerfume) {
         setCurrentPerfume(similarPerfume);
+        scrollViewRef.current?.scrollTo({ y: 0, animated: true });
       }
     }
   };
@@ -285,20 +281,20 @@ const PerfumeModal = forwardRef<PerfumeModalRef, PerfumeModalProps>((props, ref)
   // Let's adjust aibox-selection.tsx later if needed.
 
   return (
-     // The BottomSheet component replaces the Modal
-    <BottomSheet
-      ref={sheetRef}
-      index={-1} // Start closed
-      snapPoints={snapPoints}
-      onChange={handleSheetChange}
-      enablePanDownToClose={true} // Allow closing by dragging down
-      // You might want to add backgroundStyle or handleIndicatorStyle props for customization
-      // backgroundStyle={{ backgroundColor: 'white' }} // Example
+    <Modal
+      visible={isVisible}
+      transparent={true}
+      animationType="slide"
+      onRequestClose={handleClose}
     >
-        {/* Use BottomSheetScrollView for scrollable content */}
-        <BottomSheetScrollView contentContainerStyle={styles.contentContainer}>
-             {/* Close Button - Placed inside the scroll view or fixed at the top */}
-             {/* Let's keep it inside for now, adjust styling if needed */}
+      <View style={styles.modalOverlay}>
+        <View style={styles.modalContainer}>
+          {/* Close Button */}
+          <Pressable style={styles.closeButton} onPress={handleClose}>
+            <Feather name="x" size={32} color="#333" />
+          </Pressable>
+
+          <ScrollView ref={scrollViewRef} showsVerticalScrollIndicator={false}>
             {/* Match Percentage at Top */}
             {matchPercentage !== undefined && (
               <View style={styles.matchContainer}>
@@ -511,13 +507,39 @@ const getAccordColor = (accord: string): string => {
 };
 
 const styles = StyleSheet.create({
-  // Removed modalOverlay and modalContainer styles
-
-  // Style for the content container inside BottomSheetScrollView
-  contentContainer: {
-     paddingHorizontal: 20,
-     paddingBottom: 40, // Add padding at the bottom
-     backgroundColor: 'white', // Ensure content area has a background
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end', // Aligns modal to bottom
+  },
+  modalContainer: {
+    backgroundColor: 'white',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    height: '90%', // Adjust height as needed
+    paddingTop: 15, // Space for close button handle area
+    paddingHorizontal: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -3 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 10,
+  },
+  closeButton: {
+    position: 'absolute',
+    top: 15,
+    right: 15,
+    backgroundColor: 'rgba(255,255,255,0.8)',
+    borderRadius: 20,
+    padding: 8,
+    borderWidth: 0.5,
+    borderColor: '#e0e0e0',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 2,
+    elevation: 3,
+    zIndex: 10,
   },
   imageContainer: {
     alignItems: 'center',

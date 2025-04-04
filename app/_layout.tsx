@@ -99,21 +99,6 @@ function RootLayoutNav() {
 
 export default function RootLayout() {
   return (
-<<<<<<< HEAD
-    <GestureHandlerRootView style={{ flex: 1 }}> {/* <-- Wrap with GestureHandlerRootView */}
-      <AuthProvider>
-        <CartProvider>
-          <SubscriptionProvider> {/* Wrap inside CartProvider */}
-            <ManualBoxProvider>
-              <RatingsProvider>
-                <RootLayoutNav />
-              </RatingsProvider>
-            </ManualBoxProvider>
-          </SubscriptionProvider>
-        </CartProvider>
-      </AuthProvider>
-    </GestureHandlerRootView>
-=======
     <AuthProvider>
       <CartProvider>
         <SubscriptionProvider>
@@ -125,7 +110,6 @@ export default function RootLayout() {
         </SubscriptionProvider>
       </CartProvider>
     </AuthProvider>
->>>>>>> tmp
   );
 }
 

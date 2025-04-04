@@ -54,7 +54,7 @@ const RatingBar = ({ rating, labels, style }: RatingBarProps) => {
 // --- Interfaces ---
 
 interface PerfumeModalProps {
-  perfume?: Perfume | null; // Made perfume prop optional
+  perfume: Perfume | null;
   onClose?: () => void;
   isSwapping?: boolean;
   onSimilarPerfumeSelect?: (perfumeId: string) => void;
@@ -68,44 +68,28 @@ export interface PerfumeModalRef {
 // --- Component ---
 
 const PerfumeModal = forwardRef<PerfumeModalRef, PerfumeModalProps>((props, ref) => {
-  // BottomSheet ref
-  const sheetRef = useRef<BottomSheet>(null);
-
-  // State for the perfume data - Initialize with null if prop is not provided
-  const [currentPerfume, setCurrentPerfume] = useState<Perfume | null>(props.perfume ?? null);
+  const [isVisible, setIsVisible] = useState(false);
+  const [currentPerfume, setCurrentPerfume] = useState<Perfume | null>(props.perfume);
   const { width } = Dimensions.get('window');
   const { isSwapping, onSimilarPerfumeSelect } = props;
   const scrollViewRef = useRef<ScrollView>(null);
   useImperativeHandle(ref, () => ({
     show: (perfumeData: Perfume) => {
-      // Only update the state here. useEffect will handle expanding.
       setCurrentPerfume(perfumeData);
+      setIsVisible(true);
     },
     hide: () => {
+      setIsVisible(false);
       // Optional: Delay clearing perfume data until animation finishes
-      // The onChange handler can be used for this
-      sheetRef.current?.close(); // Close the sheet
+      setTimeout(() => setCurrentPerfume(null), 300);
+      props.onClose?.();
     }
   }));
 
-  // Effect to control sheet expansion based on currentPerfume state
-  useEffect(() => {
-    if (currentPerfume) {
-      sheetRef.current?.expand();
-    }
-    // No explicit close needed here, handleSheetChange handles closing and setting state to null
-  }, [currentPerfume]);
-
-  // Callback when the sheet position changes
-  const handleSheetChange = useCallback((index: number) => {
-    console.log("handleSheetChange", index);
-    // If the sheet is fully closed (index -1), call onClose and clear data
-    if (index === -1) {
-       props.onClose?.();
-       // Delay clearing to allow animation to finish smoothly
-       setTimeout(() => setCurrentPerfume(null), 150);
-    }
-  }, [props.onClose]);
+  const handleClose = () => {
+    setIsVisible(false);
+    props.onClose?.();
+  };
 
   const handleSimilarPerfumePress = (perfumeId: string) => {
     if (isSwapping && onSimilarPerfumeSelect) {
@@ -256,29 +240,17 @@ const PerfumeModal = forwardRef<PerfumeModalRef, PerfumeModalProps>((props, ref)
     return rating / maxRating;
   };
 
-  // Render content only if there's a perfume selected.
-  // The BottomSheet component itself will be rendered by the parent,
-  // but its content visibility is controlled by the sheet's state (snap points).
-  if (!currentPerfume) {
-     // We might return null here, or return the BottomSheet structure
-     // but let its internal state keep it hidden/closed.
-     // Let's return null for now to keep it simple, matching the previous logic.
-     // If issues arise, we can revisit rendering an empty/closed BottomSheet.
+
+  if (!isVisible || !currentPerfume) {
     return null;
   }
+
   const {
     name, brand, matchPercentage, pricePerML, description,
     accords, topNotes, middleNotes, baseNotes, overallRating,
     dayNightRating, seasonRating, priceValueRating, sillageRating,
     longevityRating, similarPerfumes
   } = currentPerfume;
-
-  // Note: The BottomSheet component should be rendered directly by the parent component
-  // that uses this PerfumeModal component via ref.
-  // However, to keep the structure similar for now, we return the BottomSheet here.
-  // The parent component (aibox-selection.tsx) will need to ensure it's rendered
-  // conditionally based on `selectedPerfume`, not just calling `modalRef.current.show()`.
-  // Let's adjust aibox-selection.tsx later if needed.
 
   return (
     <Modal
@@ -454,8 +426,10 @@ const PerfumeModal = forwardRef<PerfumeModalRef, PerfumeModalProps>((props, ref)
             {/* Spacer at the bottom */}
             <View style={{ height: 80 }} />
 
-         </BottomSheetScrollView>
-    </BottomSheet>
+          </ScrollView>
+        </View>
+      </View>
+    </Modal>
   );
 });
 

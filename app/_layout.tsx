@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { GestureHandlerRootView } from 'react-native-gesture-handler'; // <-- Import GestureHandlerRootView
 import { Stack, useRouter, useSegments } from 'expo-router';
 import * as Font from 'expo-font';
 import { StatusBar } from 'expo-status-bar';
@@ -123,17 +124,19 @@ function RootLayoutNav() {
 export default function RootLayout() {
   // Wrap everything with AuthProvider first, then other providers
   return (
-    <AuthProvider>
-      <CartProvider>
-        <SubscriptionProvider> {/* Wrap inside CartProvider */}
-          <ManualBoxProvider>
-            <RatingsProvider>
-              <RootLayoutNav />
-            </RatingsProvider>
-          </ManualBoxProvider>
-        </SubscriptionProvider>
-      </CartProvider>
-    </AuthProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}> {/* <-- Wrap with GestureHandlerRootView */}
+      <AuthProvider>
+        <CartProvider>
+          <SubscriptionProvider> {/* Wrap inside CartProvider */}
+            <ManualBoxProvider>
+              <RatingsProvider>
+                <RootLayoutNav />
+              </RatingsProvider>
+            </ManualBoxProvider>
+          </SubscriptionProvider>
+        </CartProvider>
+      </AuthProvider>
+    </GestureHandlerRootView>
   );
 }
 

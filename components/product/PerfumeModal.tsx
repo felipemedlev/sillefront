@@ -1,5 +1,6 @@
-import { forwardRef, useImperativeHandle, useState } from 'react';
-import { View, Text, StyleSheet, Dimensions, Pressable, Image, Modal, ScrollView, FlatList, ViewStyle } from 'react-native'; // Import ViewStyle
+import { forwardRef, useImperativeHandle, useState, useRef, useMemo, useCallback, useEffect } from 'react'; // Added useEffect
+import { View, Text, StyleSheet, Dimensions, Pressable, Image, ScrollView, FlatList, ViewStyle } from 'react-native'; // Removed Modal
+import BottomSheet, { BottomSheetScrollView } from "@gorhom/bottom-sheet"; // Added BottomSheet imports
 import { Feather } from '@expo/vector-icons';
 import { MOCK_PERFUMES } from '@/data/mockPerfumes';
 import { Perfume, BasicPerfumeInfo } from '../../types/perfume';
@@ -54,7 +55,7 @@ const RatingBar = ({ rating, labels, style }: RatingBarProps) => {
 // --- Interfaces ---
 
 interface PerfumeModalProps {
-  perfume: Perfume | null;
+  perfume?: Perfume | null; // Made perfume prop optional
   onClose?: () => void;
   isSwapping?: boolean;
   onSimilarPerfumeSelect?: (perfumeId: string) => void;
@@ -68,28 +69,48 @@ export interface PerfumeModalRef {
 // --- Component ---
 
 const PerfumeModal = forwardRef<PerfumeModalRef, PerfumeModalProps>((props, ref) => {
-  const [isVisible, setIsVisible] = useState(false);
-  const [currentPerfume, setCurrentPerfume] = useState<Perfume | null>(props.perfume);
+  // BottomSheet ref
+  const sheetRef = useRef<BottomSheet>(null);
+
+  // State for the perfume data - Initialize with null if prop is not provided
+  const [currentPerfume, setCurrentPerfume] = useState<Perfume | null>(props.perfume ?? null);
   const { width } = Dimensions.get('window');
   const { isSwapping, onSimilarPerfumeSelect } = props;
 
+  // Define snap points for the bottom sheet - Changed 60% to 80%
+  const snapPoints = useMemo(() => ["25%" , "50%", "80%"], []);
+
+  // Expose show/hide methods via ref
   useImperativeHandle(ref, () => ({
     show: (perfumeData: Perfume) => {
+      // Only update the state here. useEffect will handle expanding.
       setCurrentPerfume(perfumeData);
-      setIsVisible(true);
     },
     hide: () => {
-      setIsVisible(false);
       // Optional: Delay clearing perfume data until animation finishes
-      setTimeout(() => setCurrentPerfume(null), 300);
-      props.onClose?.();
+      // The onChange handler can be used for this
+      sheetRef.current?.close(); // Close the sheet
     }
   }));
 
-  const handleClose = () => {
-    setIsVisible(false);
-    props.onClose?.();
-  };
+  // Effect to control sheet expansion based on currentPerfume state
+  useEffect(() => {
+    if (currentPerfume) {
+      sheetRef.current?.expand();
+    }
+    // No explicit close needed here, handleSheetChange handles closing and setting state to null
+  }, [currentPerfume]);
+
+  // Callback when the sheet position changes
+  const handleSheetChange = useCallback((index: number) => {
+    console.log("handleSheetChange", index);
+    // If the sheet is fully closed (index -1), call onClose and clear data
+    if (index === -1) {
+       props.onClose?.();
+       // Delay clearing to allow animation to finish smoothly
+       setTimeout(() => setCurrentPerfume(null), 150);
+    }
+  }, [props.onClose]);
 
   const handleSimilarPerfumePress = (perfumeId: string) => {
     if (isSwapping && onSimilarPerfumeSelect) {
@@ -239,11 +260,16 @@ const PerfumeModal = forwardRef<PerfumeModalRef, PerfumeModalProps>((props, ref)
     return rating / maxRating;
   };
 
-
-  if (!isVisible || !currentPerfume) {
+  // Render content only if there's a perfume selected.
+  // The BottomSheet component itself will be rendered by the parent,
+  // but its content visibility is controlled by the sheet's state (snap points).
+  if (!currentPerfume) {
+     // We might return null here, or return the BottomSheet structure
+     // but let its internal state keep it hidden/closed.
+     // Let's return null for now to keep it simple, matching the previous logic.
+     // If issues arise, we can revisit rendering an empty/closed BottomSheet.
     return null;
   }
-
   const {
     name, brand, matchPercentage, pricePerML, description,
     accords, topNotes, middleNotes, baseNotes, overallRating,
@@ -251,21 +277,28 @@ const PerfumeModal = forwardRef<PerfumeModalRef, PerfumeModalProps>((props, ref)
     longevityRating, similarPerfumes
   } = currentPerfume;
 
-  return (
-    <Modal
-      visible={isVisible}
-      transparent={true}
-      animationType="slide"
-      onRequestClose={handleClose}
-    >
-      <View style={styles.modalOverlay}>
-        <View style={styles.modalContainer}>
-          {/* Close Button */}
-          <Pressable style={styles.closeButton} onPress={handleClose}>
-            <Feather name="chevron-down" size={28} color="#333" />
-          </Pressable>
+  // Note: The BottomSheet component should be rendered directly by the parent component
+  // that uses this PerfumeModal component via ref.
+  // However, to keep the structure similar for now, we return the BottomSheet here.
+  // The parent component (aibox-selection.tsx) will need to ensure it's rendered
+  // conditionally based on `selectedPerfume`, not just calling `modalRef.current.show()`.
+  // Let's adjust aibox-selection.tsx later if needed.
 
-          <ScrollView showsVerticalScrollIndicator={false}>
+  return (
+     // The BottomSheet component replaces the Modal
+    <BottomSheet
+      ref={sheetRef}
+      index={-1} // Start closed
+      snapPoints={snapPoints}
+      onChange={handleSheetChange}
+      enablePanDownToClose={true} // Allow closing by dragging down
+      // You might want to add backgroundStyle or handleIndicatorStyle props for customization
+      // backgroundStyle={{ backgroundColor: 'white' }} // Example
+    >
+        {/* Use BottomSheetScrollView for scrollable content */}
+        <BottomSheetScrollView contentContainerStyle={styles.contentContainer}>
+             {/* Close Button - Placed inside the scroll view or fixed at the top */}
+             {/* Let's keep it inside for now, adjust styling if needed */}
             {/* Match Percentage at Top */}
             {matchPercentage !== undefined && (
               <View style={styles.matchContainer}>
@@ -425,10 +458,8 @@ const PerfumeModal = forwardRef<PerfumeModalRef, PerfumeModalProps>((props, ref)
             {/* Spacer at the bottom */}
             <View style={{ height: 80 }} />
 
-          </ScrollView>
-        </View>
-      </View>
-    </Modal>
+         </BottomSheetScrollView>
+    </BottomSheet>
   );
 });
 
@@ -480,29 +511,13 @@ const getAccordColor = (accord: string): string => {
 };
 
 const styles = StyleSheet.create({
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'flex-end', // Aligns modal to bottom
-  },
-  modalContainer: {
-    backgroundColor: 'white',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    height: '90%', // Adjust height as needed
-    paddingTop: 15, // Space for close button handle area
-    paddingHorizontal: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -3 },
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    elevation: 10,
-  },
-  closeButton: {
-    alignSelf: 'center',
-    padding: 10,
-    marginBottom: 5,
-    // Make the hit area larger if needed
+  // Removed modalOverlay and modalContainer styles
+
+  // Style for the content container inside BottomSheetScrollView
+  contentContainer: {
+     paddingHorizontal: 20,
+     paddingBottom: 40, // Add padding at the bottom
+     backgroundColor: 'white', // Ensure content area has a background
   },
   imageContainer: {
     alignItems: 'center',

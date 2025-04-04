@@ -49,7 +49,7 @@ export default function AIBoxSelectionScreen() {
   const [decantCount, setDecantCount] = useState<DecantCount>(4);
   const [decantSize, setDecantSize] = useState<DecantSize>(5);
   const [rangoPrecio, setRangoPrecio] = useState<[number, number]>([200, 5000]);
-  const [selectedPerfumeId, setSelectedPerfumeId] = useState<string | null>(null);
+  // Removed selectedPerfumeId state
   const [swappingPerfumeId, setSwappingPerfumeId] = useState<string | null>(null);
   const [selectedPerfumeIds, setSelectedPerfumeIds] = useState<string[]>([]); // Renamed for clarity
   const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null); // State for feedback
@@ -82,13 +82,26 @@ export default function AIBoxSelectionScreen() {
   }, []);
 
   const handlePerfumePress = useCallback((perfumeId: string) => {
-    setSelectedPerfumeId(perfumeId);
-  }, []);
+    const perfumeToShow = MOCK_PERFUMES.find((p: Perfume) => p.id === perfumeId);
+    if (perfumeToShow && modalRef.current) {
+      // setSelectedPerfumeId(perfumeId); // Removed state update
+      setSwappingPerfumeId(null); // Ensure not in swap mode
+      modalRef.current.show(perfumeToShow);
+    } else {
+      console.warn(`Perfume with ID ${perfumeId} not found.`);
+    }
+  }, []); // Dependencies: MOCK_PERFUMES, modalRef
 
   const handleSwapPress = useCallback((perfumeId: string) => {
-    setSwappingPerfumeId(perfumeId);
-    setSelectedPerfumeId(perfumeId);
-  }, []);
+     const perfumeToSwap = MOCK_PERFUMES.find((p: Perfume) => p.id === perfumeId);
+     if (perfumeToSwap && modalRef.current) {
+       // setSelectedPerfumeId(perfumeId); // Removed state update
+       setSwappingPerfumeId(perfumeId); // Set swap mode
+       modalRef.current.show(perfumeToSwap);
+     } else {
+       console.warn(`Perfume with ID ${perfumeId} not found for swapping.`);
+     }
+  }, []); // Dependencies: MOCK_PERFUMES, modalRef
 
   const handleSimilarPerfumeSelect = useCallback((newPerfumeId: string) => {
     if (swappingPerfumeId) {
@@ -100,10 +113,10 @@ export default function AIBoxSelectionScreen() {
   }, [swappingPerfumeId]);
 
   const handleModalDismiss = useCallback(() => {
-    setTimeout(() => {
-      setSelectedPerfumeId(null);
-      setSwappingPerfumeId(null);
-    }, 100);
+    // The PerfumeModal now clears its internal state on close (via handleSheetChange)
+    // We only need to clear the swapping state here.
+    // setSelectedPerfumeId(null); // Removed state update
+    setSwappingPerfumeId(null);
   }, []);
 
   const calculateTotalPrice = useCallback(() => {
@@ -168,18 +181,7 @@ export default function AIBoxSelectionScreen() {
     }
   }, [decantCount, decantSize, selectedPerfumeIds, calculateTotalPrice, addItemToCart]);
 
-
-  const selectedPerfume = useMemo(() => {
-    return selectedPerfumeId
-      ? MOCK_PERFUMES.find((p: Perfume) => p.id === selectedPerfumeId)
-      : null;
-  }, [selectedPerfumeId]);
-
-  useEffect(() => {
-    if (selectedPerfume && modalRef.current) {
-      modalRef.current.show(selectedPerfume);
-    }
-  }, [selectedPerfume]);
+  // Removed selectedPerfume memo - The modal manages its own current perfume state internally
 
   return (
     <View style={[styles.container, {backgroundColor: '#F5F5F7'}]}>
@@ -223,15 +225,16 @@ export default function AIBoxSelectionScreen() {
         feedbackMessage={feedbackMessage} // Pass feedback state
       />
 
-      {selectedPerfume && (
-        <PerfumeModal
-          ref={modalRef}
-          perfume={selectedPerfume}
-          onClose={handleModalDismiss}
-          isSwapping={!!swappingPerfumeId}
-          onSimilarPerfumeSelect={handleSimilarPerfumeSelect}
-        />
-      )}
+      {/* Render PerfumeModal (BottomSheet) unconditionally.
+          Its visibility is controlled by the ref methods (show/hide)
+          and the internal state of the BottomSheet component. */}
+      <PerfumeModal
+        ref={modalRef}
+        // Removed perfume prop - Modal manages its own state via show()
+        onClose={handleModalDismiss}
+        isSwapping={!!swappingPerfumeId}
+        onSimilarPerfumeSelect={handleSimilarPerfumeSelect}
+      />
     </View>
   );
 }

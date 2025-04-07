@@ -1,11 +1,11 @@
 import React from 'react';
 import { FlatList, StyleSheet, useWindowDimensions, Platform, View } from 'react-native';
-import { BasicPerfumeInfo } from '../../types/perfume';
+import { Perfume } from '../../types/perfume'; // Import Perfume instead of BasicPerfumeInfo
 import PerfumeCard from './PerfumeCard';
 
 interface SearchResultsProps {
-  perfumes: (BasicPerfumeInfo & { matchPercentage?: number })[];
-  onPerfumePress: (perfume: BasicPerfumeInfo) => void;
+  perfumes: Perfume[]; // Use Perfume type directly
+  onPerfumePress: (perfume: Perfume) => void; // Expect Perfume type
 }
 
 const DESKTOP_BREAKPOINT = 768;
@@ -14,7 +14,7 @@ export default function SearchResults({ perfumes, onPerfumePress }: SearchResult
   const { width } = useWindowDimensions();
   const isDesktop = width >= DESKTOP_BREAKPOINT;
   const numColumns = isDesktop ? 6 : 2;
-  const renderItem = ({ item }: { item: BasicPerfumeInfo & { matchPercentage?: number } }) => (
+  const renderItem = ({ item }: { item: Perfume }) => ( // Use Perfume type for item
     <View style={isDesktop ? styles.cardWrapper : undefined}>
       <PerfumeCard
         perfume={item}

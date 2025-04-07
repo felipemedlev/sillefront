@@ -22,5 +22,5 @@ export interface Perfume extends BasicPerfumeInfo {
   longevityRating?: number;
   similarPerfumes?: string[];
   occasions?: string[];
-
+  gender: 'masculino' | 'femenino' | 'unisex';
 }

@@ -1,6 +1,11 @@
 # Decision Log
 
 ## Significant Decisions
+[2025-04-07 15:25:35] - Completed implementation of Search Filtering and Sorting logic.
+- Implemented deterministic AI match percentage.
+- Added sorting by multiple fields with toggle.
+- Integrated filters: brand, occasion, price range, gender, day/night, season.
+- Day/night and season filters use numerical mappings from mock data.
 - [YYYY-MM-DD HH:MM:SS] - [Decision summary]
   - Rationale: [Explanation]
   - Implications: [Impact analysis]
@@ -53,5 +58,16 @@
 [2025-04-02 11:16:49] - Decided to implement Box Visualizer feature.
   - Rationale: Provide users with a visual representation of the selected decant count and size combination on box selection screens.
   - Details: Create reusable `components/product/BoxVisualizer.tsx` component to display dynamic images based on props. Integrate into `app/aibox-selection.tsx` and `app/manual-box.tsx` above the `DecantSelector`. Plan saved to `memory-bank/box-visualizer-plan.md`.
+
+
+[2025-04-07 12:25:25] - Approved plan for Search Screen Filtering and Sorting.
+  - Rationale: Enhance user experience by allowing detailed filtering and sorting of search results.
+  - Details: Filter modal (Brand, Occasion, Price Range, Gender, Day/Night, Season) with Checkboxes/Range Slider. Sorting buttons (Price, AI Match, Rating, Longevity, Sillage, Price/Value) with asc/desc/null toggle. Requires adding `gender` field to `Perfume` type and data. Agreed on Day/Night and Season rating mappings. Plan saved to `memory-bank/search-filter-sort-plan.md`.
+
+[2025-04-07 15:17:07] - Implemented Search Filtering & Sorting UI.
+- Added gender to perfume data.
+- Created FilterModal with right-to-left slide animation.
+- Sorting buttons now in horizontal scroll view.
+- Incorporated user feedback on animations and layout.
 
 [2025-03-29 12:10:12] - Initialized decision log file

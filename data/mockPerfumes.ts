@@ -24,6 +24,7 @@ export const MOCK_PERFUMES: Perfume[] = [
     longevityRating: 2,
     similarPerfumes: ['31861', '410'],
     occasions: ['Formal', 'Oficina', 'Casual', 'Noche'], // Added
+    gender: 'masculino',
   },
   {
     id: '410',
@@ -46,6 +47,7 @@ export const MOCK_PERFUMES: Perfume[] = [
     longevityRating: 1,
     similarPerfumes: ['485', '9099'],
     occasions: ['Casual', 'Deportiva', 'Viaje', 'Relax'], // Added
+    gender: 'masculino',
   },
   {
     id: '31861',
@@ -68,6 +70,7 @@ export const MOCK_PERFUMES: Perfume[] = [
     longevityRating: 2,
     similarPerfumes: ['9099'],
     occasions: ['Casual', 'Noche', 'Fiesta'], // Added
+    gender: 'masculino',
   },
   {
     id: '485',
@@ -90,6 +93,7 @@ export const MOCK_PERFUMES: Perfume[] = [
     longevityRating: 1,
     similarPerfumes: ['410'],
     occasions: ['Casual', 'Deportiva', 'Viaje', 'Relax'], // Added
+    gender: 'femenino', // Typically marketed as feminine
   },
   {
     id: '14982',
@@ -112,6 +116,7 @@ export const MOCK_PERFUMES: Perfume[] = [
     longevityRating: 2,
     similarPerfumes: ['25324', '39681'],
     occasions: ['Romántica', 'Especial', 'Noche', 'Formal'], // Added
+    gender: 'femenino',
   },
   {
     id: '25324',
@@ -134,6 +139,7 @@ export const MOCK_PERFUMES: Perfume[] = [
     longevityRating: 2,
     similarPerfumes: ['14982', '39681'],
     occasions: ['Noche', 'Fiesta', 'Especial'], // Added
+    gender: 'femenino',
   },
   {
     id: '210',
@@ -156,6 +162,7 @@ export const MOCK_PERFUMES: Perfume[] = [
     longevityRating: 2,
     similarPerfumes: [],
     occasions: ['Romántica', 'Formal', 'Especial', 'Casual'], // Added
+    gender: 'femenino',
   },
   {
     id: '39681',
@@ -178,6 +185,7 @@ export const MOCK_PERFUMES: Perfume[] = [
     longevityRating: 2,
     similarPerfumes: ['14982', '25324'],
     occasions: ['Noche', 'Fiesta', 'Romántica', 'Especial'], // Added
+    gender: 'femenino',
   },
   {
     id: '75805',
@@ -200,6 +208,7 @@ export const MOCK_PERFUMES: Perfume[] = [
     longevityRating: 2, // Long lasting
     similarPerfumes: ['62615'], // Placeholder
     occasions: ['Noche', 'Especial', 'Fiesta', 'Romántica'], // Added
+    gender: 'unisex',
   },
   {
     id: '81642',
@@ -222,6 +231,7 @@ export const MOCK_PERFUMES: Perfume[] = [
     longevityRating: 2, // Very long lasting
     similarPerfumes: ['61856', '52802'], // Placeholder
     occasions: ['Noche', 'Fiesta', 'Especial'], // Added
+    gender: 'masculino',
   },
   {
     id: '62615',
@@ -244,6 +254,7 @@ export const MOCK_PERFUMES: Perfume[] = [
     longevityRating: 2, // Very long lasting
     similarPerfumes: ['75805', '31623'], // Placeholder
     occasions: ['Noche', 'Especial', 'Formal', 'Romántica'], // Added
+    gender: 'unisex',
   },
   {
     id: '61856',
@@ -266,6 +277,7 @@ export const MOCK_PERFUMES: Perfume[] = [
     longevityRating: 2, // Long lasting
     similarPerfumes: ['81642', '13016'], // Placeholder
     occasions: ['Noche', 'Formal', 'Especial', 'Romántica'], // Added
+    gender: 'masculino',
   },
   {
     id: '52802',
@@ -288,6 +300,7 @@ export const MOCK_PERFUMES: Perfume[] = [
     longevityRating: 2, // Very long lasting
     similarPerfumes: ['81642'], // Placeholder
     occasions: ['Noche', 'Fiesta', 'Especial', 'Romántica'], // Added
+    gender: 'masculino',
   },
   {
     id: '72158',
@@ -310,6 +323,7 @@ export const MOCK_PERFUMES: Perfume[] = [
     longevityRating: 2, // Long lasting
     similarPerfumes: [], // Placeholder
     occasions: ['Casual', 'Viaje', 'Relax', 'Deportiva'], // Added
+    gender: 'masculino',
   },
   {
     id: '31623',
@@ -332,6 +346,7 @@ export const MOCK_PERFUMES: Perfume[] = [
     longevityRating: 1, // Moderate
     similarPerfumes: ['62615'], // Placeholder
     occasions: ['Noche', 'Relax', 'Especial', 'Romántica'], // Added
+    gender: 'unisex',
   },
   {
     id: '50757',
@@ -354,6 +369,7 @@ export const MOCK_PERFUMES: Perfume[] = [
     longevityRating: 2, // Long lasting
     similarPerfumes: ['31861', '9099'], // Placeholder
     occasions: ['Casual', 'Oficina', 'Deportiva', 'Viaje'], // Added
+    gender: 'masculino',
   },
   {
     id: '13016',
@@ -376,6 +392,7 @@ export const MOCK_PERFUMES: Perfume[] = [
     longevityRating: 2, // Very long lasting
     similarPerfumes: ['61856'], // Placeholder
     occasions: ['Formal', 'Noche', 'Especial', 'Romántica', 'Oficina'], // Added
+    gender: 'masculino',
   },
   {
     id: '83483',
@@ -398,5 +415,6 @@ export const MOCK_PERFUMES: Perfume[] = [
     longevityRating: 2, // Long lasting
     similarPerfumes: [], // Placeholder
     occasions: ['Casual', 'Romántica', 'Especial', 'Relax'], // Added
+    gender: 'femenino',
   },
 ];

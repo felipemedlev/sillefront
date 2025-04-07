@@ -63,7 +63,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginVertical: 10,
     paddingHorizontal: 20,
-    paddingVertical: 5,
+    paddingVertical: 10,
   },
   primaryButton: {
     backgroundColor: '#222222',
@@ -81,7 +81,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   secondaryText: {
-    color: '#000000',
+    color: '#FFFFFF',
     fontWeight: 'bold'
   },
 });

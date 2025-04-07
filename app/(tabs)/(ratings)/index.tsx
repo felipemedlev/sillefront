@@ -272,7 +272,6 @@ const styles = StyleSheet.create({
   tabContainer: {
     flexDirection: 'row',
     marginHorizontal: SPACING.LARGE,
-    marginBottom: SPACING.MEDIUM,
     backgroundColor: '#F0F0F0',
     borderRadius: 12,
     padding: SPACING.SMALL / 2,
@@ -335,7 +334,8 @@ const styles = StyleSheet.create({
   },
   perfumeImage: {
     width: '100%',
-    height: 140,
+    height: 100,
+    marginTop: 10,
     backgroundColor: COLORS.BACKGROUND, // Lighter background for image
   },
   cardContent: {

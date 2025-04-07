@@ -54,7 +54,7 @@ const RatingBar = ({ rating, labels, style }: RatingBarProps) => {
 // --- Interfaces ---
 
 interface PerfumeModalProps {
-  perfume: Perfume | null;
+  perfume?: Perfume | null;
   onClose?: () => void;
   isSwapping?: boolean;
   onSimilarPerfumeSelect?: (perfumeId: string) => void;
@@ -69,7 +69,7 @@ export interface PerfumeModalRef {
 
 const PerfumeModal = forwardRef<PerfumeModalRef, PerfumeModalProps>((props, ref) => {
   const [isVisible, setIsVisible] = useState(false);
-  const [currentPerfume, setCurrentPerfume] = useState<Perfume | null>(props.perfume);
+  const [currentPerfume, setCurrentPerfume] = useState<Perfume | null>(props.perfume ?? null);
   const { width } = Dimensions.get('window');
   const { isSwapping, onSimilarPerfumeSelect } = props;
   const scrollViewRef = useRef<ScrollView>(null);

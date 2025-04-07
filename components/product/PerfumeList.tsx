@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, Pressable, Image, Dimensions } from 'react-native';
+import { Feather } from '@expo/vector-icons';
 import { Perfume } from '../../types/perfume';
 
 interface PerfumeListProps {
@@ -51,12 +52,32 @@ const PerfumeList: React.FC<PerfumeListProps> = ({
               <Text style={styles.perfumeBrand}>{perfume.brand}</Text>
               <Text style={styles.perfumePrice}>${(perfume.pricePerML ?? 0).toLocaleString()}/mL</Text>
               <Text style={styles.perfumeTotalPrice}>Total: ${((perfume.pricePerML ?? 0) * decantSize).toLocaleString()}</Text>
-              <Pressable
-                style={styles.swapButton}
-                onPress={() => onSwapPress(perfume.id)}
-              >
-                <Text style={styles.swapButtonText}>Cambiar</Text>
-              </Pressable>
+              <View style={{ flexDirection: 'row', gap: 8, marginTop: 10 }}>
+                <Pressable
+                  style={styles.swapButton}
+                  onPress={() => onSwapPress(perfume.id)}
+                >
+                  <Text style={styles.swapButtonText}>Cambiar</Text>
+                </Pressable>
+                <Pressable
+                  style={[styles.swapButton, styles.primaryButton]}
+                  onPress={() => onPerfumePress(perfume.id)}
+                >
+                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <Text style={[styles.swapButtonText, styles.primaryButtonText]}>
+                      <Text>
+                        <Text>
+                          <Text>
+                            {/* Feather icon will be inserted here */}
+                          </Text>
+                        </Text>
+                      </Text>
+                    </Text>
+                    <Feather name="info" size={16} color="#FFFFFF" style={{ marginRight: 6 }} />
+                    <Text style={[styles.swapButtonText, styles.primaryButtonText]}>Detalle</Text>
+                  </View>
+                </Pressable>
+              </View>
             </View>
           </Pressable>
         );
@@ -168,6 +189,13 @@ const styles = StyleSheet.create({
     color: '#809CAC',
     fontSize: 14,
     fontWeight: '600',
+  },
+  primaryButton: {
+    backgroundColor: '#809CAC',
+    borderColor: '#809CAC',
+  },
+  primaryButtonText: {
+    color: '#FFFFFF',
   },
 });
 

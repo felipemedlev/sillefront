@@ -2,6 +2,11 @@
 
 ## Current Focus
 
+- [2025-04-07 15:25:54] - Search Filtering and Sorting feature completed. Awaiting next focus/task.
+- [2025-04-07 15:17:38] - Current focus: Search Filtering and Sorting UI completed with user feedback incorporated (horizontal sort buttons, right-to-left modal animation).
+
+- [2025-04-07 12:25:56] - Current focus is implementing Search Screen Filtering and Sorting. Plan documented in `memory-bank/search-filter-sort-plan.md`.
+
 - [2025-04-02 11:17:49] - Current focus is implementing the Box Visualizer Feature. Plan documented in `memory-bank/box-visualizer-plan.md`.
 
 - [2025-04-02 10:43:58] - Current focus is implementing the Cart Coupon Feature. Plan documented in `memory-bank/coupon-feature-plan.md`.
@@ -19,6 +24,7 @@
 - [2025-03-31 19:53:22] - Current focus is implementing the 'Filter by Occasion' feature. Plan documented in `memory-bank/occasion-feature-plan.md`.
 - Memory Bank maintenance and updates
 
+- 2025-04-07 15:25:54 - Completed Search Filtering and Sorting implementation with all filters and sorting options.
 ## Recent Changes
 - 2025-03-31 23:06:00 - Completed Predefined Gift Box feature with price range filtering
 - 2025-03-31 16:51:20 - Performed Memory Bank review and maintenance via UMB command

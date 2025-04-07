@@ -46,7 +46,7 @@ export default function LandingScreen() {
   };
 
   const handleSkipPress = () => {
-    router.push('/auth/signup');
+    router.push('/manual-box');
   };
 
   const handleScroll = (event: any) => {
@@ -161,7 +161,7 @@ export default function LandingScreen() {
         />
         {currentPage === 2 && (
           <Button
-            title="Elegir mis propios decants"
+            title="Elegir mis decants"
             onPress={handleSkipPress}
             primary={false}
           />
@@ -242,7 +242,7 @@ const styles = StyleSheet.create({
     fontFamily: 'InstrumentSans',
     fontSize: 18,
     fontWeight: 500,
-    color: '#222222',
+    color: '#0000EE',
     textDecorationLine: 'underline',
   },
   bottomContainer: {

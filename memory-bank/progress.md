@@ -1,5 +1,6 @@
 # Progress Tracking
 
+- [2025-04-07 15:25:45] - Completed Search Filtering and Sorting feature (see `memory-bank/search-filter-sort-plan.md`). Includes deterministic AI match, sorting, and all filters (brand, occasion, price, gender, day/night, season).
 ## Completed Tasks
 
 - [2025-03-31 20:05:21] - Completed implementation steps for 'Filter by Occasion' feature (see `memory-bank/occasion-feature-plan.md`). Awaiting user validation.
@@ -55,5 +56,22 @@
 
 
 - [2025-04-02 11:17:09] - Implement Box Visualizer Feature (see `memory-bank/box-visualizer-plan.md`)
+
+
+- [2025-04-07 12:25:41] - Add `gender` field to `Perfume` type and `mockPerfumes.ts` (Search Filter/Sort Prerequisite).
+
+- [2025-04-07 12:25:41] - Implement Search Screen state management for filters/sorting.
+
+- [2025-04-07 12:25:41] - Implement Search Bar filter icon UI.
+
+- [2025-04-07 12:25:41] - Implement Search Screen sorting buttons UI and logic.
+
+- [2025-04-07 12:25:41] - Implement Search Filter Modal component (`components/search/FilterModal.tsx`).
+
+- [2025-04-07 12:25:41] - Integrate filtering and sorting logic into Search Screen results.
+
+[2025-04-07 15:17:19] - Completed initial implementation of Search Filtering and Sorting UI with Filter Modal and Sort Buttons.
+
+[2025-04-07 15:17:19] - Incorporated user feedback: horizontal scroll for sort buttons, right-to-left filter modal animation.
 
 [2025-03-29 12:10:25] - Initialized progress tracking file

@@ -1,7 +1,7 @@
 import React, { createContext, useState, useEffect, useContext, ReactNode } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { STORAGE_KEYS } from '../types/constants';
-
+import * as apiService from '../src/services/api';
 // Define the User type
 type User = {
   email: string;
@@ -79,47 +79,66 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   // --- Authentication Functions ---
 
-  // register remains unchanged - only stores email and password initially
+  // Updated register: calls backend API, then logs in user
   const register = async (email: string, pass: string): Promise<void> => {
-    console.log("register called with:", email, pass);
-    const userDataKey = `${STORAGE_KEYS.USER_DATA_PREFIX}${email}`;
-    // Check if user already exists (optional but recommended)
-    const existingData = await AsyncStorage.getItem(userDataKey);
-    if (existingData) {
-        throw new Error("El correo electrónico ya está registrado.");
+    console.log("register (API) called with:", email);
+    try {
+      // Call backend registration endpoint
+      await apiService.register({ email, password: pass });
+    } catch (error: any) {
+      console.error("Backend registration failed:", error);
+      // If backend returns 400 with existing email error, customize message
+      if (error?.data?.email) {
+        throw new Error(error.data.email.join(' ') || 'Error en el registro.');
+      }
+      throw error;
     }
-    // Store only password initially
-    await AsyncStorage.setItem(userDataKey, JSON.stringify({ password: pass }));
-    await AsyncStorage.setItem(STORAGE_KEYS.AUTH_USER_EMAIL, email);
-    // Set user state with only email initially
-    setUser({ email });
+
+    try {
+      // After successful registration, immediately login to get token
+      await apiService.login({ email, password: pass });
+      // Save logged-in user email locally
+      await AsyncStorage.setItem(STORAGE_KEYS.AUTH_USER_EMAIL, email);
+      // Set user state (basic info, can be expanded later)
+      setUser({ email });
+    } catch (error: any) {
+      console.error("Auto-login after registration failed:", error);
+      throw new Error('Registro exitoso, pero error al iniciar sesión automáticamente.');
+    }
   };
 
   const login = async (email: string, pass: string): Promise<void> => {
-    console.log("login called with:", email, pass);
-    const userDataKey = `${STORAGE_KEYS.USER_DATA_PREFIX}${email}`;
-    const storedData = await AsyncStorage.getItem(userDataKey);
-    if (storedData) {
-        const userData = JSON.parse(storedData);
-        if (userData.password === pass) {
-            await AsyncStorage.setItem(STORAGE_KEYS.AUTH_USER_EMAIL, email);
-            // Set state with all stored data (excluding password) on login
-            setUser({
-              email: email,
-              name: userData.name ?? null,
-              phone: userData.phone ?? null,
-              address: userData.address ?? null,
-            });
-        } else {
-            throw new Error("Email o contraseña incorrectos");
-        }
-    } else {
-        throw new Error("Email o contraseña incorrectos");
+    console.log("login (API) called with:", email);
+    try {
+      await apiService.login({ email, password: pass });
+      // Save logged-in user email locally
+      await AsyncStorage.setItem(STORAGE_KEYS.AUTH_USER_EMAIL, email);
+      // Optionally fetch user profile from backend
+      try {
+        const profile = await apiService.get('/auth/users/me/');
+        setUser({
+          email: profile.email,
+          name: profile.name ?? null,
+          phone: profile.phone ?? null,
+          address: profile.address ?? null,
+        });
+      } catch (profileErr) {
+        console.warn('Failed to fetch user profile after login:', profileErr);
+        setUser({ email });
+      }
+    } catch (error: any) {
+      console.error("Backend login failed:", error);
+      throw new Error("Email o contraseña incorrectos");
     }
   };
 
   const logout = async (): Promise<void> => {
-    console.log("logout called");
+    console.log("logout (API) called");
+    try {
+      await apiService.logout();
+    } catch (error) {
+      console.warn("Backend logout failed, proceeding to clear local state anyway:", error);
+    }
     await AsyncStorage.removeItem(STORAGE_KEYS.AUTH_USER_EMAIL);
     setUser(null);
   };
@@ -130,33 +149,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     if (!user) {
       throw new Error("Usuario no autenticado.");
     }
-    console.log("updateProfile called with:", updates);
-    const userDataKey = `${STORAGE_KEYS.USER_DATA_PREFIX}${user.email}`;
+    console.log("updateProfile (API) called with:", updates);
     try {
-      // Retrieve current data
-      const storedData = await AsyncStorage.getItem(userDataKey);
-      const currentData = storedData ? JSON.parse(storedData) : {};
-
-      // Merge updates with current data (keeping existing password)
-      const updatedData = {
-        ...currentData, // Keep existing fields like password
-        name: updates.name ?? currentData.name ?? null,
-        phone: updates.phone ?? currentData.phone ?? null,
-        address: updates.address ?? currentData.address ?? null,
-      };
-
-      // Save updated data
-      await AsyncStorage.setItem(userDataKey, JSON.stringify(updatedData));
-
-      // Update context state (excluding password)
+      const response = await apiService.patch('/auth/users/me/', updates);
       setUser({
-        email: user.email,
-        name: updatedData.name,
-        phone: updatedData.phone,
-        address: updatedData.address,
+        email: response.email,
+        name: response.name ?? null,
+        phone: response.phone ?? null,
+        address: response.address ?? null,
       });
     } catch (error) {
-      console.error("Error actualizando perfil:", error);
+      console.error("Error actualizando perfil en backend:", error);
       throw new Error("No se pudo actualizar el perfil.");
     }
   };
@@ -165,28 +168,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     if (!user) {
       throw new Error("Usuario no autenticado.");
     }
-    console.log("updatePassword called");
-    const userDataKey = `${STORAGE_KEYS.USER_DATA_PREFIX}${user.email}`;
+    console.log("updatePassword (API) called");
     try {
-      // Retrieve current data
-      const storedData = await AsyncStorage.getItem(userDataKey);
-      // Ensure data exists, otherwise something is wrong
-      if (!storedData) {
-          throw new Error("No se encontraron datos del usuario.");
-      }
-      const currentData = JSON.parse(storedData);
-
-      // Update only the password field
-      const updatedData = {
-        ...currentData,
-        password: newPassword,
-      };
-
-      // Save updated data
-      await AsyncStorage.setItem(userDataKey, JSON.stringify(updatedData));
-      // No need to update user state in context for password change
+      await apiService.post('/auth/users/set_password/', {
+        current_password: '', // TODO: Provide current password if required by backend
+        new_password: newPassword,
+      });
     } catch (error) {
-      console.error("Error actualizando contraseña:", error);
+      console.error("Error actualizando contraseña en backend:", error);
       throw new Error("No se pudo actualizar la contraseña.");
     }
   };

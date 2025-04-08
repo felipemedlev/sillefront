@@ -19,7 +19,7 @@ interface RegisterData {
 // IMPORTANT: Replace 'YOUR_MACHINE_IP' with your computer's local network IP address
 // if running Expo Go on a physical device. Find it using 'ipconfig' (Windows) or 'ifconfig' (Mac/Linux).
 // Example: 'http://192.168.1.100:8000/api'
-const API_BASE_URL = Constants.expoConfig?.extra?.apiBaseUrl || 'http://YOUR_MACHINE_IP:8000/api'; // Default placeholder
+const API_BASE_URL = Constants.expoConfig?.extra?.apiBaseUrl || 'http://127.0.0.1:8000/api';
 
 const AUTH_TOKEN_KEY = 'authToken';
 

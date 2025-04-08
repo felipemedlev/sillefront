@@ -74,4 +74,5 @@
 
 [2025-04-07 15:17:19] - Incorporated user feedback: horizontal scroll for sort buttons, right-to-left filter modal animation.
 
+[2025-04-07 16:56:53] - Fixed manual box navigation bug in landing page. Updated router.push() to correct route '/manual-box'. Task complete.
 [2025-03-29 12:10:25] - Initialized progress tracking file

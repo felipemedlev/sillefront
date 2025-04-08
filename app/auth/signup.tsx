@@ -26,7 +26,7 @@ export default function SignUpScreen() {
   const [isFocused, setIsFocused] = useState({ email: false, password: false });
   const [error, setError] = useState<string | null>(null); // State for error messages
   const [isLoading, setIsLoading] = useState<boolean>(false); // State for loading indicator
-  const { signUp } = useAuth(); // Get signUp function from context
+  const { register } = useAuth(); // Get register function from context
 
   const handleSignUp = async () => {
     if (isLoading) return; // Prevent multiple submissions
@@ -39,7 +39,8 @@ export default function SignUpScreen() {
       }
       // Add more validation if needed (e.g., email format, password strength)
 
-      await signUp(email.trim(), password); // Trim email
+      // Call register with email and password object
+      await register(email.trim(), password);
       // Navigation is handled by the root layout (_layout.tsx) upon successful signup/login
     } catch (err: any) {
       setError(err.message || 'Ocurrió un error durante el registro.');

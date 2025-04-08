@@ -2,6 +2,13 @@
 
 ## Current Focus
 
+- [2025-04-08 16:55:00] - Current focus: Integrating Django backend REST API with React Native Expo frontend.
+  - Implemented API service with token auth.
+  - Created AuthContext with login, logout, register.
+  - Updated signup and login screens.
+  - Configured Djoser for email login.
+  - Next: test on device, adjust API URL, expand API usage.
+
 - [2025-04-07 15:25:54] - Search Filtering and Sorting feature completed. Awaiting next focus/task.
 - [2025-04-07 15:17:38] - Current focus: Search Filtering and Sorting UI completed with user feedback incorporated (horizontal sort buttons, right-to-left modal animation).
 
@@ -43,4 +50,5 @@
 
 [2025-04-01 14:53:16] - Completed UMB process. Awaiting next task.
 ## Open Questions/Issues
+[2025-04-07 16:56:47] - Fixed landing page navigation to manual box. Updated router.push() to use correct route '/manual-box'.
 - Need to populate product context with actual project details

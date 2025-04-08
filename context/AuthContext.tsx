@@ -14,7 +14,7 @@ type User = {
 type AuthContextType = {
   user: User | null;
   isLoading: boolean;
-  signUp: (email: string, pass: string) => Promise<void>;
+  register: (email: string, pass: string) => Promise<void>;
   login: (email: string, pass: string) => Promise<void>;
   logout: () => Promise<void>;
   updateProfile: (updates: Omit<User, 'email'>) => Promise<void>; // Added
@@ -79,9 +79,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   // --- Authentication Functions ---
 
-  // signUp remains unchanged - only stores email and password initially
-  const signUp = async (email: string, pass: string): Promise<void> => {
-    console.log("signUp called with:", email, pass);
+  // register remains unchanged - only stores email and password initially
+  const register = async (email: string, pass: string): Promise<void> => {
+    console.log("register called with:", email, pass);
     const userDataKey = `${STORAGE_KEYS.USER_DATA_PREFIX}${email}`;
     // Check if user already exists (optional but recommended)
     const existingData = await AsyncStorage.getItem(userDataKey);
@@ -198,7 +198,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     () => ({
       user,
       isLoading,
-      signUp,
+      register,
       login,
       logout,
       updateProfile, // Added

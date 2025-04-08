@@ -1,4 +1,4 @@
-# Decision Log
+x# Decision Log
 
 ## Significant Decisions
 [2025-04-07 15:25:35] - Completed implementation of Search Filtering and Sorting logic.
@@ -70,4 +70,14 @@
 - Sorting buttons now in horizontal scroll view.
 - Incorporated user feedback on animations and layout.
 
+[2025-04-07 16:56:33] - Fixed navigation bug in app/landing/index.tsx: replaced incorrect router.push('../manual-box.tsx') with router.push('/manual-box') to use correct route path without file extension.
 [2025-03-29 12:10:12] - Initialized decision log file
+
+[2025-04-08 16:54:00] - Integrated Django backend with React Native Expo frontend using Djoser token authentication.
+- Created `src/services/api.ts` with login, logout, register, and CRUD functions using fetch and AsyncStorage.
+- Created `src/context/AuthContext.tsx` with context-based auth state, login, logout, register, and proper TypeScript types.
+- Updated signup and login screens to use the context and API service.
+- Configured Djoser and custom User model to use email as login field.
+- Noted that API_BASE_URL must be set to the developer machine's IP for physical device testing.
+- Added logging to API service for debugging network issues.
+- Next: test on device, adjust API URL, and expand API usage.

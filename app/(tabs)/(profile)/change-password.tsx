@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, Alert } from 'react-native';
-import { useAuth } from '../../../context/AuthContext';
+import { useAuth } from '../../../src/context/AuthContext';
 import { useRouter } from 'expo-router';
 import { COLORS, FONTS, SPACING, FONT_SIZES } from '../../../types/constants';
 import { Feather } from '@expo/vector-icons'; // For potential icons

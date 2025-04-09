@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, Alert } from 'react-native';
-import { useAuth } from '../../../context/AuthContext';
+import { useAuth } from '../../../src/context/AuthContext';
 import { useRouter } from 'expo-router';
 import { COLORS, FONTS, SPACING, FONT_SIZES } from '../../../types/constants';
 import { Feather } from '@expo/vector-icons'; // For potential icons
@@ -8,7 +8,8 @@ import { Feather } from '@expo/vector-icons'; // For potential icons
 export default function PersonalInfoScreen() {
   const router = useRouter();
   const { user, updateProfile, isLoading: isAuthLoading } = useAuth();
-  const [name, setName] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [phone, setPhone] = useState('');
   const [address, setAddress] = useState('');
   const [isSaving, setIsSaving] = useState(false);
@@ -16,7 +17,8 @@ export default function PersonalInfoScreen() {
   // Initialize state with user data from context when available
   useEffect(() => {
     if (user) {
-      setName(user.name || '');
+      setFirstName(user.first_name || '');
+      setLastName(user.last_name || '');
       setPhone(user.phone || '');
       setAddress(user.address || '');
     }
@@ -27,7 +29,7 @@ export default function PersonalInfoScreen() {
 
     setIsSaving(true);
     try {
-      await updateProfile({ name, phone, address });
+      await updateProfile({ first_name: firstName, last_name: lastName, phone, address });
       Alert.alert("Éxito", "Información actualizada correctamente.");
       // Optionally navigate back or stay on the screen
       // router.back();
@@ -72,12 +74,23 @@ export default function PersonalInfoScreen() {
       <Text style={styles.label}>Nombre</Text>
       <TextInput
         style={styles.input}
-        value={name}
-        onChangeText={setName}
-        placeholder="Ingresa tu nombre completo"
+        value={firstName}
+        onChangeText={setFirstName}
+        placeholder="Ingresa tu nombre"
         placeholderTextColor={COLORS.TEXT_SECONDARY}
         autoCapitalize="words"
-        textContentType="name"
+        textContentType="givenName"
+      />
+
+      <Text style={styles.label}>Apellido</Text>
+      <TextInput
+        style={styles.input}
+        value={lastName}
+        onChangeText={setLastName}
+        placeholder="Ingresa tu apellido"
+        placeholderTextColor={COLORS.TEXT_SECONDARY}
+        autoCapitalize="words"
+        textContentType="familyName"
       />
 
       <Text style={styles.label}>Teléfono</Text>

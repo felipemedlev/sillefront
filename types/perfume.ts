@@ -7,6 +7,7 @@ export interface BasicPerfumeInfo {
 }
 
 export interface Perfume extends BasicPerfumeInfo {
+  external_id: string; // Added external ID from backend
   matchPercentage?: number;
   pricePerML?: number;
   description?: string;
@@ -15,12 +16,12 @@ export interface Perfume extends BasicPerfumeInfo {
   middleNotes?: string[];
   baseNotes?: string[];
   overallRating?: number;
-  dayNightRating?: number;
-  seasonRating?: number;
   priceValueRating?: number;
   sillageRating?: number;
   longevityRating?: number;
   similarPerfumes?: string[];
   occasions?: string[];
-  gender: 'masculino' | 'femenino' | 'unisex';
+  gender?: string;
+  bestFor?: string;
+  season?: string;
 }

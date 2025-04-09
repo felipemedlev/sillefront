@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react'; // Import React and useEffect
 import { Stack, useRouter, useSegments } from 'expo-router'; // Import router and segments
 import { SurveyProvider } from '../../../context/SurveyContext';
-import { useAuth } from '../../../context/AuthContext'; // Import useAuth
+import { useAuth } from '../../../src/context/AuthContext'; // Updated import after deleting duplicate
 import { COLORS } from '../../../types/constants'; // Import COLORS
 import { Pressable } from 'react-native';
 import { View, ActivityIndicator, useWindowDimensions, Platform } from 'react-native'; // Import for loading indicator

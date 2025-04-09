@@ -3,6 +3,18 @@ import * as api from '../services/api'; // Import your API service
 import { authUtils } from '../services/api'; // Import token utilities
 
 // Define interfaces for credentials and user data
+
+interface User {
+ id: number;
+ email: string;
+ username: string;
+ first_name?: string;
+ last_name?: string;
+ name?: string | null;
+ phone?: string | null;
+ address?: string | null;
+ // Add other fields matching your backend UserSerializer if needed
+}
 interface LoginCredentials {
   email: string;
   password: string;
@@ -16,13 +28,16 @@ interface RegisterData {
 
 interface AuthContextType {
   token: string | null;
-  user: any | null; // TODO: Replace 'any' with your actual User type from backend models/serializers
+  user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (credentials: LoginCredentials) => Promise<void>; // Use specific type
+  error: string | null;
+  login: (credentials: LoginCredentials) => Promise<void>;
   logout: () => Promise<void>;
-  register: (userData: RegisterData) => Promise<void>; // Use specific type
-  // Add other auth-related functions if needed (e.g., fetchUserProfile)
+  register: (userData: RegisterData) => Promise<void>;
+  fetchUserProfile: () => Promise<void>;
+  updatePassword: (newPassword: string) => Promise<void>;
+  updateProfile: (updates: Partial<Pick<User, 'first_name' | 'last_name' | 'phone' | 'address'>>) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -33,96 +48,141 @@ interface AuthProviderProps {
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [token, setToken] = useState<string | null>(null);
-  const [user, setUser] = useState<any | null>(null); // Replace 'any' with User type
-  const [isLoading, setIsLoading] = useState(true); // Start loading until token is checked
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   // Check for token on initial load
   useEffect(() => {
-    const loadToken = async () => {
+    const loadTokenAndProfile = async () => {
       const storedToken = await authUtils.getToken();
       if (storedToken) {
         setToken(storedToken);
-        // Optionally: Fetch user profile based on the token
-        // await fetchUserProfile(storedToken);
+        try {
+          await fetchUserProfile();
+        } catch (err) {
+          console.error('Failed to fetch user profile on load:', err);
+          await handleLogout();
+        }
       }
       setIsLoading(false);
     };
-    loadToken();
+    loadTokenAndProfile();
   }, []);
 
-  // TODO: Implement fetchUserProfile if needed
-  // const fetchUserProfile = async (currentToken) => {
-  //   if (!currentToken) return;
-  //   try {
-  //     // Assuming you have an endpoint like /auth/users/me/
-  //     const userData = await api.get('/auth/users/me/');
-  //     setUser(userData);
-  //   } catch (error) {
-  //     console.error("Failed to fetch user profile:", error);
-  //     // Token might be invalid, log out
-  //     await handleLogout();
-  //   }
-  // };
-
-  const handleLogin = async ({ email, password }: LoginCredentials) => { // Destructure and type credentials
+  const fetchUserProfile = async () => {
+    if (!token) return;
     try {
       setIsLoading(true);
-      const response = await api.login(email, password);
+      setError(null);
+      const userData = await api.get('/auth/users/me/');
+      setUser(userData);
+    } catch (err: any) {
+      console.error('Failed to fetch user profile:', err);
+      setError(err.message || 'Failed to fetch user profile');
+      await handleLogout();
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleLogin = async ({ email, password }: LoginCredentials) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const response = await api.login({ email, password });
       if (response?.auth_token) {
         setToken(response.auth_token);
-        // Optionally fetch user profile after login
-        // await fetchUserProfile(response.auth_token);
+        await fetchUserProfile();
+        await authUtils.setToken(response.auth_token);
       } else {
-          throw new Error('Login failed: No auth token received');
+        throw new Error('Login failed: No auth token received');
       }
+    } catch (err: any) {
+      console.error('Login error in context:', err);
+      setError(err.message || 'Login failed');
+      await handleLogout();
+      throw err;
+    } finally {
       setIsLoading(false);
-    } catch (error) {
-      setIsLoading(false);
-      console.error('Login error in context:', error);
-      await handleLogout(); // Ensure clean state on login failure
-      throw error; // Re-throw error for the component to handle (e.g., show message)
     }
   };
 
   const handleLogout = async () => {
     try {
       setIsLoading(true);
-      await api.logout(); // Call API logout
+      setError(null);
+      await api.logout();
     } catch (error) {
-        console.error('API logout error:', error);
-        // Continue local logout even if API fails
+      console.error('API logout error:', error);
     } finally {
-        setToken(null);
-        setUser(null);
-        setIsLoading(false);
+      setToken(null);
+      setUser(null);
+      await authUtils.removeToken();
+      setIsLoading(false);
     }
   };
 
-  const handleRegister = async (userData: RegisterData) => { // Type userData
+  const handleRegister = async (userData: RegisterData) => {
     try {
-        setIsLoading(true);
-        // Adjust userData structure if needed based on your UserCreateSerializer
-        await api.register(userData);
-        // Decide if you want to automatically log in after registration
-        // If so, call handleLogin here or prompt the user to log in.
-        // For now, registration just creates the user.
-        setIsLoading(false);
-    } catch (error) {
-        setIsLoading(false);
-        console.error('Registration error in context:', error);
-        throw error; // Re-throw for component handling
+      setIsLoading(true);
+      setError(null);
+      await api.register(userData);
+      setIsLoading(false);
+    } catch (err: any) {
+      console.error('Registration error in context:', err);
+      setError(err.message || 'Registration failed');
+      setIsLoading(false);
+      throw err;
     }
   };
+   const updatePassword = async (newPassword: string): Promise<void> => {
+     if (!token) throw new Error('Not authenticated');
+     try {
+       setIsLoading(true);
+       setError(null);
+       await api.post('/auth/users/set_password/', {
+         current_password: '', // Optionally require current password
+         new_password: newPassword,
+       });
+     } catch (err: any) {
+       console.error('Error updating password:', err);
+       setError(err.message || 'Failed to update password');
+       throw err;
+     } finally {
+       setIsLoading(false);
+     }
+   };
+
+   const updateProfile = async (updates: Partial<Pick<User, 'name' | 'phone' | 'address'>>): Promise<void> => {
+     if (!token) throw new Error('Not authenticated');
+     try {
+       setIsLoading(true);
+       setError(null);
+       const updatedUser = await api.patch('/auth/users/me/', updates);
+       setUser((prev) => prev ? { ...prev, ...updatedUser } : updatedUser);
+     } catch (err: any) {
+       console.error('Error updating profile:', err);
+       setError(err.message || 'Failed to update profile');
+       throw err;
+     } finally {
+       setIsLoading(false);
+     }
+   };
 
 
-  const value = {
+  const value: AuthContextType = {
     token,
     user,
-    isAuthenticated: !!token, // Simple check based on token presence
+    isAuthenticated: !!token,
     isLoading,
+    error,
     login: handleLogin,
     logout: handleLogout,
     register: handleRegister,
+    fetchUserProfile,
+    updatePassword,
+    updateProfile,
   };
 
   return (

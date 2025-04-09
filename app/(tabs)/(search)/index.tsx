@@ -1,7 +1,7 @@
 import React, { useState, useRef, useMemo } from 'react';
 import { View, StyleSheet, TouchableOpacity, Text, ScrollView } from 'react-native'; // Add ScrollView
 import { Platform, useWindowDimensions } from 'react-native';
-import { MOCK_PERFUMES } from '../../../data/mockPerfumes';
+import { fetchPerfumes } from '../../../src/services/api';
 import { Perfume } from '../../../types/perfume';
 import SearchBar from '../../../components/search/SearchBar';
 import SearchResults from '../../../components/search/SearchResults';
@@ -38,6 +38,12 @@ interface ActiveSort {
 const initialSort: ActiveSort = { field: null, direction: null };
 
 export default function SearchScreen() {
+  const [perfumes, setPerfumes] = useState<Perfume[]>([]);
+  const [page, setPage] = useState(1);
+  const [hasNextPage, setHasNextPage] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Original state declarations - moved up
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedPerfume, setSelectedPerfume] = useState<Perfume | null>(null);
   const [activeFilters, setActiveFilters] = useState<ActiveFilters>(initialFilters);
@@ -46,6 +52,76 @@ export default function SearchScreen() {
   const modalRef = useRef<PerfumeModalRef>(null);
   const { width } = useWindowDimensions();
   const isDesktop = width >= DESKTOP_BREAKPOINT;
+
+  // Debounce state for triggering API calls - declared *after* dependencies
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState(searchQuery);
+  const [debouncedFilters, setDebouncedFilters] = useState(activeFilters);
+
+  // Debounce search query
+  React.useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 500); // 500ms delay
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [searchQuery]);
+
+  // Debounce filters (no delay needed if applied via modal "Apply" button)
+  React.useEffect(() => {
+    setDebouncedFilters(activeFilters);
+  }, [activeFilters]);
+
+
+  const loadPerfumes = async (pageToLoad = 1, query = debouncedSearchQuery, filters = debouncedFilters) => {
+    // Reset list only if it's a new search/filter (page 1)
+    const isNewQuery = pageToLoad === 1;
+    if (isNewQuery) {
+       setPerfumes([]); // Clear previous results immediately for new search/filter
+       setHasNextPage(true); // Assume there are results initially
+       setPage(1); // Reset page number
+    }
+
+    // Prevent fetching more if already loading or no more pages for the *current* query/filters
+    if (isLoading || (!isNewQuery && !hasNextPage)) return;
+
+    console.log(`Loading perfumes - Page: ${pageToLoad}, Query: '${query}', Filters:`, filters);
+    setIsLoading(true);
+
+    try {
+      // Pass search and filters to the API call
+      const data = await fetchPerfumes(pageToLoad, 20, query, filters);
+      console.log('Fetched perfumes page', pageToLoad, data);
+      const newResults = data.results ?? [];
+
+      setPerfumes(prev => isNewQuery ? newResults : [...prev, ...newResults]);
+      setHasNextPage(!!data.next);
+      setPage(pageToLoad); // Update page state
+
+    } catch (error) {
+      console.error('Error fetching perfumes:', error);
+      // Optionally reset state or show error message
+      // setPerfumes([]);
+      // setHasNextPage(false);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Load perfumes when debounced search/filters change
+  React.useEffect(() => {
+    // Load page 1 with the new debounced query and filters
+    loadPerfumes(1, debouncedSearchQuery, debouncedFilters);
+  }, [debouncedSearchQuery, debouncedFilters]); // Depend on debounced values
+
+  const loadMorePerfumes = () => {
+    // Pass current debounced query/filters when loading more
+    if (!isLoading && hasNextPage) {
+      loadPerfumes(page + 1, debouncedSearchQuery, debouncedFilters);
+    }
+  };
+  // Removed duplicate state declarations
 
   // --- Handlers ---
   const handleSortPress = (field: ActiveSort['field']) => {
@@ -85,89 +161,37 @@ export default function SearchScreen() {
   }
 
   const perfumesWithMatch = useMemo(() => {
-    return MOCK_PERFUMES.map(perfume => ({
-      ...perfume,
-      matchPercentage: getMockMatchPercentage(perfume)
-    }));
-  }, []);
+    return perfumes
+      .filter(perfume => (perfume as any).external_id != null) // Ensure external_id exists
+      .map(perfume => ({
+        ...perfume,
+        // Use external_id consistently and convert to string
+        id: String((perfume as any).external_id),
+        matchPercentage: (perfume as any).match_percentage ?? getMockMatchPercentage(perfume),
+        overallRating: (perfume as any).overall_rating,
+        priceValueRating: (perfume as any).price_value_rating,
+        bestFor: (perfume as any).best_for,
+        longevityRating: (perfume as any).longevity_rating,
+        sillageRating: (perfume as any).sillage_rating,
+        // Ensure similarPerfumeIds are strings too, if they exist
+        similarPerfumes: ((perfume as any).similar_perfume_ids ?? []).map(String), // Match type definition
+        season: (perfume as any).season,
+        gender: (perfume as any).gender,
+        topNotes: (perfume as any).top_notes,
+        middleNotes: (perfume as any).middle_notes,
+        baseNotes: (perfume as any).base_notes,
+      }));
+  }, [perfumes]);
 
-  // Filter perfumes based on search query and active filters
-  const filteredPerfumes = useMemo(() => {
-    return perfumesWithMatch.filter((perfume) => {
-      const query = searchQuery.toLowerCase();
-      if (
-        query &&
-        !perfume.name.toLowerCase().includes(query) &&
-        !perfume.brand.toLowerCase().includes(query)
-      ) {
-        return false;
-      }
-
-      if (
-        activeFilters.brands.length > 0 &&
-        !activeFilters.brands.includes(perfume.brand)
-      ) {
-        return false;
-      }
-
-      if (
-        activeFilters.occasions.length > 0 &&
-        (!perfume.occasions ||
-          !perfume.occasions.some((o) => activeFilters.occasions.includes(o)))
-      ) {
-        return false;
-      }
-
-      if (
-        activeFilters.priceRange &&
-        ((perfume.pricePerML ?? 0) < activeFilters.priceRange.min ||
-          (perfume.pricePerML ?? 0) > activeFilters.priceRange.max)
-      ) {
-        return false;
-      }
-
-      if (
-        activeFilters.genders.length > 0 &&
-        !activeFilters.genders.includes(perfume.gender)
-      ) {
-        return false;
-      }
-
-      // Day/Night filter
-      if (
-        activeFilters.dayNights.length > 0 &&
-        !activeFilters.dayNights.some((filterVal) => {
-          if (filterVal === 'Día') return (perfume.dayNightRating ?? 0.5) >= 0.66;
-          if (filterVal === 'Noche') return (perfume.dayNightRating ?? 0.5) <= 0.33;
-          if (filterVal === 'Ambos') return (perfume.dayNightRating ?? 0.5) > 0.33 && (perfume.dayNightRating ?? 0.5) < 0.66;
-          return false;
-        })
-      ) {
-        return false;
-      }
-
-      // Season filter
-      if (
-        activeFilters.seasons.length > 0 &&
-        !activeFilters.seasons.some((filterVal) => {
-          if (filterVal === 'Invierno') return (perfume.seasonRating ?? 0.5) <= 0.25;
-          if (filterVal === 'Otoño') return (perfume.seasonRating ?? 0.5) > 0.25 && (perfume.seasonRating ?? 0.5) <= 0.5;
-          if (filterVal === 'Primavera') return (perfume.seasonRating ?? 0.5) > 0.5 && (perfume.seasonRating ?? 0.5) <= 0.75;
-          if (filterVal === 'Verano') return (perfume.seasonRating ?? 0.5) > 0.75;
-          return false;
-        })
-      ) {
-        return false;
-      }
-
-      return true;
-    });
-  }, [searchQuery, perfumesWithMatch, activeFilters]);
+  // Client-side filtering removed - handled by backend
 
   // --- Sorted Perfumes ---
-  const sortedAndFilteredPerfumes = useMemo(() => {
-    if (!activeSort.field || !activeSort.direction) return filteredPerfumes;
-    const sorted = [...filteredPerfumes].sort((a, b) => {
+  // Sorting should ideally also be done server-side via query params (?ordering=...)
+  // For now, keep client-side sorting on the fetched results.
+  const sortedPerfumes = useMemo(() => {
+    // Sort the mapped perfumes (perfumesWithMatch)
+    if (!activeSort.field || !activeSort.direction) return perfumesWithMatch;
+    const sorted = [...perfumesWithMatch].sort((a, b) => {
       const aVal = activeSort.field === 'matchPercentage' ? (a as any).matchPercentage : (a as any)[activeSort.field as keyof Perfume];
       const bVal = activeSort.field === 'matchPercentage' ? (b as any).matchPercentage : (b as any)[activeSort.field as keyof Perfume];
 
@@ -184,7 +208,7 @@ export default function SearchScreen() {
       return 0;
     });
     return sorted;
-  }, [filteredPerfumes, activeSort]);
+  }, [perfumesWithMatch, activeSort]); // Depend on the mapped list
 
   const handlePerfumePress = (perfume: Perfume) => {
     setSelectedPerfume(perfume);
@@ -236,12 +260,15 @@ export default function SearchScreen() {
       </ScrollView>
 
       <SearchResults
-        perfumes={sortedAndFilteredPerfumes} // Use sorted list
+        perfumes={sortedPerfumes} // Use sorted list from backend results
         onPerfumePress={handlePerfumePress}
+        onEndReached={loadMorePerfumes}
+        onEndReachedThreshold={0.5}
       />
       <PerfumeModal
         ref={modalRef}
         perfume={selectedPerfume}
+        perfumeList={perfumesWithMatch}
         onClose={() => setSelectedPerfume(null)}
       />
 

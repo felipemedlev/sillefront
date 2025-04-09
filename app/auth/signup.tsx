@@ -14,10 +14,16 @@ import {
 import { Stack, router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useAuth } from '../../context/AuthContext'; // Import useAuth
+import { useAuth } from '../../src/context/AuthContext'; // Updated import after deleting duplicate
 import { COLORS, FONTS, SPACING, FONT_SIZES } from '../../types/constants'; // Import constants
 
 const { width } = Dimensions.get('window');
+
+type ValidationErrors = {
+  password?: string[];
+  email?: string[];
+  non_field_errors?: string[];
+};
 
 export default function SignUpScreen() {
   const [email, setEmail] = useState('');
@@ -29,21 +35,45 @@ export default function SignUpScreen() {
   const { register } = useAuth(); // Get register function from context
 
   const handleSignUp = async () => {
-    if (isLoading) return; // Prevent multiple submissions
+    if (isLoading) return;
     setIsLoading(true);
-    setError(null); // Clear previous errors
+    setError(null);
     try {
-      // Basic validation
       if (!email || !password) {
         throw new Error("Por favor, ingresa email y contraseña.");
       }
-      // Add more validation if needed (e.g., email format, password strength)
 
-      // Call register with email and password object
-      await register(email.trim(), password);
-      // Navigation is handled by the root layout (_layout.tsx) upon successful signup/login
-    } catch (err: any) {
-      setError(err.message || 'Ocurrió un error durante el registro.');
+      await register({ email: email.trim(), password });
+
+      // Navigation handled by root layout
+    } catch (apiError: any) {
+      console.log('Registration error:', apiError?.response?.data || apiError?.message || apiError);
+
+      const data = apiError?.response?.data;
+      if (data && typeof data === 'object') {
+        const errors: ValidationErrors = data;
+        const messages: string[] = [];
+
+        if (errors.password?.length) {
+          messages.push(...errors.password);
+        }
+        if (errors.email?.length) {
+          messages.push(...errors.email);
+        }
+        if (errors.non_field_errors?.length) {
+          messages.push(...errors.non_field_errors);
+        }
+
+        if (messages.length > 0) {
+          setError(messages.join('\n'));
+        } else {
+          setError('Error en el registro. Por favor, verifica tus datos.');
+        }
+      } else if (apiError?.message) {
+        setError(apiError.message);
+      } else {
+        setError('Ocurrió un error durante el registro.');
+      }
     } finally {
       setIsLoading(false);
     }

@@ -14,7 +14,7 @@ import {
 import { Stack, router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useAuth } from '../../context/AuthContext'; // Import useAuth
+import { useAuth } from '../../src/context/AuthContext'; // Updated import after deleting duplicate
 import { COLORS, FONTS, SPACING, FONT_SIZES } from '../../types/constants'; // Import constants
 
 const { width } = Dimensions.get('window');
@@ -37,7 +37,7 @@ export default function LoginScreen() {
       if (!email || !password) {
         throw new Error("Por favor, ingresa email y contraseña.");
       }
-      await login(email.trim(), password); // Trim email
+      await login({ email: email.trim(), password }); // Pass as object
       // Navigation is handled by the root layout (_layout.tsx) upon successful login
     } catch (err: any) {
       setError(err.message || 'Ocurrió un error al iniciar sesión.');

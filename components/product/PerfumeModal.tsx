@@ -1,8 +1,10 @@
-import { forwardRef, useImperativeHandle, useState, useRef } from 'react';
-import { View, Text, StyleSheet, Dimensions, Pressable, Image, Modal, ScrollView, FlatList, ViewStyle } from 'react-native'; // Import ViewStyle
+import { forwardRef, useImperativeHandle, useState, useRef, useEffect } from 'react'; // Import useEffect
+import { View, Text, StyleSheet, Dimensions, Pressable, Image, Modal, ScrollView, FlatList, ViewStyle, ActivityIndicator } from 'react-native'; // Import ViewStyle, ActivityIndicator
 import { Feather } from '@expo/vector-icons';
 import { MOCK_PERFUMES } from '@/data/mockPerfumes';
 import { Perfume, BasicPerfumeInfo } from '../../types/perfume';
+
+import { fetchPerfumesByExternalIds } from '../../src/services/api'; // Import the API function
 
 // --- Placeholder Components (Ideally, these would be separate files) ---
 
@@ -58,6 +60,7 @@ interface PerfumeModalProps {
   onClose?: () => void;
   isSwapping?: boolean;
   onSimilarPerfumeSelect?: (perfumeId: string) => void;
+  perfumeList?: Perfume[];
 }
 
 export interface PerfumeModalRef {
@@ -70,22 +73,61 @@ export interface PerfumeModalRef {
 const PerfumeModal = forwardRef<PerfumeModalRef, PerfumeModalProps>((props, ref) => {
   const [isVisible, setIsVisible] = useState(false);
   const [currentPerfume, setCurrentPerfume] = useState<Perfume | null>(props.perfume ?? null);
+  const [fetchedSimilarPerfumes, setFetchedSimilarPerfumes] = useState<Perfume[]>([]); // State for fetched similar perfumes
+  const [isLoadingSimilar, setIsLoadingSimilar] = useState(false); // Loading state for similar perfumes
   const { width } = Dimensions.get('window');
   const { isSwapping, onSimilarPerfumeSelect } = props;
   const scrollViewRef = useRef<ScrollView>(null);
   useImperativeHandle(ref, () => ({
+
     show: (perfumeData: Perfume) => {
+      console.log('PerfumeModal show called with:', perfumeData); // Log input data
       setCurrentPerfume(perfumeData);
       setIsVisible(true);
     },
     hide: () => {
       setIsVisible(false);
       // Optional: Delay clearing perfume data until animation finishes
-      setTimeout(() => setCurrentPerfume(null), 300);
+      setTimeout(() => {
+        setCurrentPerfume(null);
+        setFetchedSimilarPerfumes([]); // Clear fetched data on hide
+        setIsLoadingSimilar(false);
+      }, 300);
       props.onClose?.();
     }
   }));
 
+  // Effect to fetch similar perfumes when modal opens - MOVED HERE!
+  useEffect(() => {
+    console.log(`useEffect triggered: isVisible=${isVisible}, currentPerfume exists=${!!currentPerfume}`); // Log effect trigger
+
+    if (isVisible && currentPerfume?.similarPerfumes && currentPerfume.similarPerfumes.length > 0) {
+      console.log('Condition met: Fetching similar perfumes...'); // Log condition met
+      const fetchSimilar = async () => {
+        setIsLoadingSimilar(true);
+        setFetchedSimilarPerfumes([]); // Clear previous results
+        try {
+          // Ensure similarPerfumes is definitely an array before calling the API
+          if (!currentPerfume?.similarPerfumes) {
+            console.error("Similar perfumes array is undefined, cannot fetch.");
+            return; // Exit if undefined
+          }
+          console.log('Fetching similar perfumes for IDs:', currentPerfume.similarPerfumes);
+          const similarData = await fetchPerfumesByExternalIds(currentPerfume.similarPerfumes);
+          console.log('Fetched similar perfumes data:', similarData);
+          setFetchedSimilarPerfumes(similarData);
+        } catch (error) {
+          console.error('Error fetching similar perfumes:', error);
+          setFetchedSimilarPerfumes([]); // Clear on error
+        } finally {
+          setIsLoadingSimilar(false);
+        }
+      };
+      fetchSimilar();
+    } else {
+      console.log('Condition NOT met: Skipping fetch.', { isVisible, hasSimilar: !!currentPerfume?.similarPerfumes, length: currentPerfume?.similarPerfumes?.length }); // Log condition not met
+    }
+  }, [isVisible, currentPerfume]); // Rerun when modal visibility or perfume changes
   const handleClose = () => {
     setIsVisible(false);
     props.onClose?.();
@@ -95,8 +137,8 @@ const PerfumeModal = forwardRef<PerfumeModalRef, PerfumeModalProps>((props, ref)
     if (isSwapping && onSimilarPerfumeSelect) {
       onSimilarPerfumeSelect(perfumeId);
     } else {
-      // Find the full perfume data from the MOCK_PERFUMES array
-      const similarPerfume = MOCK_PERFUMES.find((p: Perfume) => p.id === perfumeId);
+      // Find the full perfume data from the fetchedSimilarPerfumes array using external_id
+      const similarPerfume = fetchedSimilarPerfumes.find((p: Perfume) => String(p.external_id) === String(perfumeId));
       if (similarPerfume) {
         setCurrentPerfume(similarPerfume);
         scrollViewRef.current?.scrollTo({ y: 0, animated: true });
@@ -104,9 +146,10 @@ const PerfumeModal = forwardRef<PerfumeModalRef, PerfumeModalProps>((props, ref)
     }
   };
 
-  // Helper function to get similar perfume data
+  // Helper function to get similar perfume data from the fetched list
   const getSimilarPerfumeData = (perfumeId: string): BasicPerfumeInfo | undefined => {
-    const perfume = MOCK_PERFUMES.find((p: Perfume) => p.id === perfumeId);
+    // Use the fetchedSimilarPerfumes state here!
+    const perfume = fetchedSimilarPerfumes.find((p: Perfume) => String(p.external_id) === String(perfumeId));
     if (!perfume) return undefined;
 
     return {
@@ -231,15 +274,6 @@ const PerfumeModal = forwardRef<PerfumeModalRef, PerfumeModalProps>((props, ref)
   // --- Rating Mappings ---
   const longevityLabels = ['Baja', 'Moderada', 'Duradera', 'Eterna'];
   const sillageLabels = ['Bajo', 'Moderado', 'Fuerte', 'Intenso'];
-  const dayNightLabels = ['Noche', 'Ambos', 'Día']; // Use 3 labels for 0, 0.5, 1
-  const seasonLabels = ['Invierno', 'Otoño', 'Primavera', 'Verano'];
-
-  // Helper to map discrete ratings (0, 1, 2, 3) to a 0-1 scale for the bar
-  const mapDiscreteRatingToScale = (rating: number | undefined, maxRating: number): number => {
-    if (rating === undefined || maxRating <= 0) return 0.5; // Default to middle if undefined
-    return rating / maxRating;
-  };
-
 
   if (!isVisible || !currentPerfume) {
     return null;
@@ -248,8 +282,9 @@ const PerfumeModal = forwardRef<PerfumeModalRef, PerfumeModalProps>((props, ref)
   const {
     name, brand, matchPercentage, pricePerML, description,
     accords, topNotes, middleNotes, baseNotes, overallRating,
-    dayNightRating, seasonRating, priceValueRating, sillageRating,
-    longevityRating, similarPerfumes
+    priceValueRating, sillageRating,
+    longevityRating, similarPerfumes, // Reverted to match type
+    season, bestFor, gender
   } = currentPerfume;
 
   return (
@@ -323,18 +358,18 @@ const PerfumeModal = forwardRef<PerfumeModalRef, PerfumeModalProps>((props, ref)
               <Text style={styles.sectionTitle}>Ratings</Text>
               <View style={styles.ratingItem}>
                 <Text style={styles.ratingLabel}>General:</Text>
-                <Text style={styles.ratingLabel}>{overallRating}/5</Text>
+                <Text style={styles.ratingLabel}>{overallRating !== undefined ? overallRating.toFixed(1) : 'N/A'}/5</Text>
               </View>
               <View style={styles.ratingItem}>
                 <Text style={styles.ratingLabel}>Valor/Precio:</Text>
-                <Text style={styles.ratingLabel}>{priceValueRating}/5</Text>
+                <Text style={styles.ratingLabel}>{priceValueRating !== undefined ? priceValueRating.toFixed(1) : 'N/A'}/5</Text>
               </View>
               {/* Longevity Rating Bar */}
               <View style={styles.ratingItem}>
                 <Text style={styles.ratingLabel}>Duración:</Text>
                 {longevityRating !== undefined ? (
                   <RatingBar
-                    rating={mapDiscreteRatingToScale(longevityRating, longevityLabels.length - 1)}
+                    rating={longevityRating ?? 0.5}
                     labels={longevityLabels}
                   />
                 ) : (
@@ -346,7 +381,7 @@ const PerfumeModal = forwardRef<PerfumeModalRef, PerfumeModalProps>((props, ref)
                 <Text style={styles.ratingLabel}>Sillage:</Text>
                 {sillageRating !== undefined ? (
                   <RatingBar
-                    rating={mapDiscreteRatingToScale(sillageRating, sillageLabels.length - 1)}
+                    rating={sillageRating ?? 0.5}
                     labels={sillageLabels}
                   />
                 ) : (
@@ -356,19 +391,22 @@ const PerfumeModal = forwardRef<PerfumeModalRef, PerfumeModalProps>((props, ref)
               {/* Day/Night Rating Bar */}
               <View style={styles.ratingItem}>
                 <Text style={styles.ratingLabel}>Mejor para:</Text>
-                {dayNightRating !== undefined ? (
-                  <RatingBar
-                    rating={dayNightRating} // Already 0-1 scale
-                    labels={dayNightLabels}
-                  />
-                ) : (
-                  <Text style={styles.ratingValue}>N/A</Text>
-                )}
+                <Text style={styles.ratingValue}>{bestFor ?? 'N/A'}</Text>
               </View>
               {/* Season Rating Bar */}
               <View style={styles.ratingItem}>
                  <Text style={styles.ratingLabel}>Temporada:</Text>
-                 {seasonRating !== undefined ? <RatingBar rating={seasonRating} labels={seasonLabels} /> : <Text style={styles.ratingValue}>N/A</Text>}
+                 <Text style={styles.ratingValue}>{season ?? 'N/A'}</Text>
+              </View>
+
+              <View style={styles.ratingItem}>
+                 <Text style={styles.ratingLabel}>Mejor para:</Text>
+                 <Text style={styles.ratingValue}>{bestFor ?? 'N/A'}</Text>
+              </View>
+
+              <View style={styles.ratingItem}>
+                 <Text style={styles.ratingLabel}>Género:</Text>
+                 <Text style={styles.ratingValue}>{gender ?? 'N/A'}</Text>
               </View>
             </View>
 
@@ -399,28 +437,48 @@ const PerfumeModal = forwardRef<PerfumeModalRef, PerfumeModalProps>((props, ref)
 
              {/* Similar Perfumes */}
              {similarPerfumes && similarPerfumes.length > 0 && (
-                <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>
-                      {isSwapping ? 'Perfumes Similares para Cambiar' : 'Perfumes Similares'}
-                    </Text>
-                    <FlatList
-                        data={similarPerfumes}
-                        renderItem={({ item }) => {
-                            const similarPerfumeData = getSimilarPerfumeData(item);
-                            if (!similarPerfumeData) return null;
-                            return (
-                                <PerfumeCardPlaceholder
-                                    perfume={similarPerfumeData}
-                                    onPress={() => handleSimilarPerfumePress(item)}
-                                />
-                            );
-                        }}
-                        keyExtractor={(item) => item}
-                        horizontal
-                        showsHorizontalScrollIndicator={false}
-                        contentContainerStyle={styles.similarPerfumesList}
-                    />
-                </View>
+                 <View style={styles.section}>
+                     <Text style={styles.sectionTitle}>
+                         {isSwapping ? 'Perfumes Similares para Cambiar' : 'Perfumes Similares'}
+                     </Text>
+                     {/* Conditionally render FlatList or loading indicator */}
+                     {isLoadingSimilar ? (
+                         <ActivityIndicator style={{ marginVertical: 20 }} size="large" color="#809CAC" />
+                     ) : (
+                         <FlatList
+                             data={similarPerfumes} // Iterate over the IDs from the current perfume
+                             renderItem={({ item }) => {
+                                 // 'item' here is the external_id
+                                 const similarPerfumeData = getSimilarPerfumeData(item); // Get full data from fetched state
+                                 if (!similarPerfumeData) {
+                                     // If loading is finished and data wasn't found for this ID, render nothing.
+                                     if (!isLoadingSimilar) {
+                                         return null;
+                                     }
+                                     // Otherwise (still loading), show the placeholder.
+                                     return (
+                                         <View style={styles.similarPerfumeCard}>
+                                             <View style={[styles.similarPerfumeImage, { backgroundColor: '#eee' }]} />
+                                             <Text style={styles.similarPerfumeName} numberOfLines={1}>Cargando...</Text>
+                                         </View>
+                                     );
+                                 }
+                                 return (
+                                     <PerfumeCardPlaceholder
+                                         perfume={similarPerfumeData}
+                                         onPress={() => handleSimilarPerfumePress(item)} // Pass the external_id
+                                     />
+                                 );
+                             }}
+                             keyExtractor={(item) => item}
+                             horizontal // Keep horizontal layout
+                             showsHorizontalScrollIndicator={false}
+                             contentContainerStyle={styles.similarPerfumesList}
+                             // Show empty text only if not loading and fetched list is empty *after* trying to fetch
+                             ListEmptyComponent={!isLoadingSimilar && fetchedSimilarPerfumes.length === 0 ? <Text style={styles.detailText}>No se encontraron perfumes similares.</Text> : null}
+                         />
+                     )}
+                 </View>
              )}
 
             {/* Spacer at the bottom */}

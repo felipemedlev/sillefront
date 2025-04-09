@@ -7,7 +7,7 @@ import { View, ActivityIndicator, Text, StyleSheet, Platform } from 'react-nativ
 import { RatingsProvider } from '../context/RatingsContext';
 import { ManualBoxProvider } from '../context/ManualBoxContext';
 import { CartProvider } from '../context/CartContext';
-import { AuthProvider, useAuth } from '../context/AuthContext';
+import { AuthProvider, useAuth } from '../src/context/AuthContext';
 import { SubscriptionProvider } from '../context/SubscriptionContext';
 import { FontLoadingState, LayoutStyles } from '../types/layout';
 import { FONTS, COLORS, FONT_SIZES, SPACING } from '../types/constants';

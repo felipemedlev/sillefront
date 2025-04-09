@@ -6,11 +6,13 @@ import PerfumeCard from './PerfumeCard';
 interface SearchResultsProps {
   perfumes: Perfume[]; // Use Perfume type directly
   onPerfumePress: (perfume: Perfume) => void; // Expect Perfume type
+  onEndReached?: () => void;
+  onEndReachedThreshold?: number;
 }
 
 const DESKTOP_BREAKPOINT = 768;
 
-export default function SearchResults({ perfumes, onPerfumePress }: SearchResultsProps) {
+export default function SearchResults({ perfumes, onPerfumePress, onEndReached, onEndReachedThreshold }: SearchResultsProps) {
   const { width } = useWindowDimensions();
   const isDesktop = width >= DESKTOP_BREAKPOINT;
   const numColumns = isDesktop ? 6 : 2;
@@ -34,6 +36,8 @@ export default function SearchResults({ perfumes, onPerfumePress }: SearchResult
       contentContainerStyle={styles.container}
       showsVerticalScrollIndicator={false}
       columnWrapperStyle={isDesktop ? { justifyContent: 'center' } : styles.row}
+      onEndReached={onEndReached}
+      onEndReachedThreshold={onEndReachedThreshold}
     />
   );
 }

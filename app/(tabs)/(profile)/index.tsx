@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, useWindowDimensions, Image, TouchableOpacity, Platform, ScrollView, ActivityIndicator } from 'react-native'; // Added ActivityIndicator
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuth } from '../../../context/AuthContext';
+import { useAuth } from '../../../src/context/AuthContext';
 import { useSubscription } from '../../../context/SubscriptionContext';
 import { useRatings } from '../../../context/RatingsContext'; // Import useRatings
 import { MOCK_PURCHASES } from '../../../data/mockPurchases'; // Import mock purchases

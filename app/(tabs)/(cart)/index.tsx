@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react'; // Import useCallback
 import { View, Text, StyleSheet, FlatList, ActivityIndicator, TouchableOpacity, TextInput, Platform, useWindowDimensions } from 'react-native'; // Import TextInput and useWindowDimensions
 import { useCart } from '../../../context/CartContext';
-import { useAuth } from '../../../context/AuthContext'; // Import useAuth
+import { useAuth } from '../../../src/context/AuthContext'; // Updated import after deleting duplicate
 import { CartItem } from '../../../types/cart';
 import { Coupon } from '../../../types/coupon'; // Import Coupon type
 import CartItemComponent from '../../../components/cart/CartItem';

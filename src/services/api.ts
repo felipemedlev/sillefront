@@ -13,6 +13,25 @@ interface RegisterData {
   // Add other fields if your UserCreateSerializer requires them
 }
 
+// --- API Type Definitions (Add new types here) ---
+export interface ApiPerfumeSummary {
+  id: number;
+  name: string;
+  brand: string; // Assuming brand is stringified in the serializer
+  thumbnailUrl: string | null;
+  pricePerML: number | null; // Assuming DecimalField maps to number or null
+}
+
+export interface ApiPredefinedBox {
+  id: number;
+  title: string;
+  description: string | null;
+  icon: string | null;
+  gender: 'masculino' | 'femenino' | null;
+  perfumes: ApiPerfumeSummary[];
+}
+
+
 const API_BASE_URL = Constants.expoConfig?.extra?.apiBaseUrl || 'http://127.0.0.1:8000/api';
 const AUTH_TOKEN_KEY = 'authToken';
 
@@ -84,12 +103,12 @@ const handleResponse = async (response: Response) => {
 // --- API Functions ---
 
 type PerfumeFilters = {
-  brands?: string[];
-  occasions?: string[];
+  brands?: number[]; // Expect brand IDs
+  occasions?: number[]; // Expect Occasion IDs
   priceRange?: { min: number; max: number } | null;
-  genders?: string[];
-  dayNights?: string[];
-  seasons?: string[];
+  genders?: string[]; // Expect keys: 'male', 'female', 'unisex'
+  dayNights?: string[]; // Expect keys: 'day', 'night'
+  seasons?: string[]; // Expect keys: 'winter', 'summer', etc.
 };
 
 export const fetchPerfumes = async (
@@ -105,10 +124,18 @@ export const fetchPerfumes = async (
   });
 
   if (searchQuery) params.append('search', searchQuery);
-  if (filters.brands?.length) params.append('brand', filters.brands.join(','));
-  if (filters.occasions?.length) params.append('occasions', filters.occasions.join(','));
+  // Send IDs as comma-separated strings
+  if (filters.brands?.length) params.append('brand', filters.brands.map(String).join(','));
+  if (filters.occasions?.length) params.append('occasions', filters.occasions.map(String).join(',')); // Send Occasion IDs
+
+  // Send keys as comma-separated strings
   if (filters.genders?.length) params.append('gender', filters.genders.join(','));
   if (filters.seasons?.length) params.append('season', filters.seasons.join(','));
+  if (filters.dayNights?.length) params.append('best_for', filters.dayNights.join(',')); // Use 'best_for' parameter
+
+  // Add price range filters (using explicit filter names from filters.py)
+  if (filters.priceRange?.min != null) params.append('price_min', String(filters.priceRange.min));
+  if (filters.priceRange?.max != null) params.append('price_max', String(filters.priceRange.max));
 
   const url = `${API_BASE_URL}/perfumes/?${params.toString()}`;
   console.log('Fetching perfumes with URL:', url);
@@ -118,6 +145,31 @@ export const fetchPerfumes = async (
     headers,
   });
   return handleResponse(response);
+};
+
+export const fetchBrands = async () => {
+  const headers = await createHeaders(false); // No auth needed usually for public list
+  const url = `${API_BASE_URL}/brands/`; // Assuming endpoint exists
+  console.log('Fetching brands with URL:', url);
+  const response = await fetch(url, {
+    method: 'GET',
+    headers,
+  });
+  // Assuming API returns { results: [{ id: number, name: string }] } or just [{ id: number, name: string }]
+  const data = await handleResponse(response);
+  return data.results ?? data; // Handle potential pagination wrapper
+};
+
+export const fetchOccasions = async () => {
+  const headers = await createHeaders(false); // No auth needed usually
+  const url = `${API_BASE_URL}/occasions/`; // Assuming endpoint exists
+  console.log('Fetching occasions with URL:', url);
+  const response = await fetch(url, {
+    method: 'GET',
+    headers,
+  });
+  const data = await handleResponse(response);
+  return data.results ?? data; // Handle potential pagination wrapper
 };
 
 export const login = async ({ email, password }: LoginCredentials) => {
@@ -168,6 +220,31 @@ export const fetchPerfumesByExternalIds = async (externalIds: string[]): Promise
     headers,
   });
   return handleResponse(response);
+};
+
+export const getPredefinedBoxes = async (gender?: 'masculino' | 'femenino'): Promise<ApiPredefinedBox[]> => {
+  const headers = await createHeaders(false); // Assuming public access
+  const params = new URLSearchParams();
+  if (gender) {
+    params.append('gender', gender);
+  }
+  // Corrected endpoint based on SilleBack/api/urls.py registration
+  const url = `${API_BASE_URL}/boxes/predefined/?${params.toString()}`;
+  console.log('Fetching predefined boxes with URL:', url);
+
+  const response = await fetch(url, {
+    method: 'GET',
+    headers,
+  });
+  // Handle potential pagination wrapper from DRF ViewSets
+  const data = await handleResponse(response);
+  if (Array.isArray(data)) {
+    return data as ApiPredefinedBox[]; // Return data if it's already an array
+  } else if (data && Array.isArray(data.results)) {
+    return data.results as ApiPredefinedBox[]; // Return the results array if paginated
+  }
+  console.warn("Unexpected response structure for predefined boxes:", data);
+  return []; // Return empty array as fallback
 };
 
 // --- Utility HTTP Methods ---

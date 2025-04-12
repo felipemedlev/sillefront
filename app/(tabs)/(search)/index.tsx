@@ -1,7 +1,7 @@
-import React, { useState, useRef, useMemo } from 'react';
+import React, { useState, useRef, useMemo, useEffect } from 'react'; // Add useEffect
 import { View, StyleSheet, TouchableOpacity, Text, ScrollView } from 'react-native'; // Add ScrollView
 import { Platform, useWindowDimensions } from 'react-native';
-import { fetchPerfumes } from '../../../src/services/api';
+import { fetchPerfumes, fetchBrands, fetchOccasions } from '../../../src/services/api'; // Import fetchOccasions
 import { Perfume } from '../../../types/perfume';
 import SearchBar from '../../../components/search/SearchBar';
 import SearchResults from '../../../components/search/SearchResults';
@@ -11,19 +11,28 @@ import FilterModal from '../../../components/search/FilterModal'; // Import Filt
 import { router } from 'expo-router';
 
 const DESKTOP_BREAKPOINT = 768;
+interface Brand {
+  id: number;
+  name: string;
+}
+
+interface Occasion {
+  id: number;
+  name: string;
+}
 
 // --- Filter & Sort State ---
 interface ActiveFilters {
-  brands: string[];
-  occasions: string[];
+  brands: number[]; // Store brand IDs instead of names
+  occasions: number[]; // Store Occasion IDs
   priceRange: { min: number; max: number } | null;
   genders: string[]; // 'masculino', 'femenino', 'unisex'
   dayNights: string[]; // 'Día', 'Noche', 'Ambos'
   seasons: string[]; // 'Invierno', 'Otoño', 'Primavera', 'Verano'
 }
 const initialFilters: ActiveFilters = {
-  brands: [],
-  occasions: [],
+  brands: [], // Initialize with empty array of numbers
+  occasions: [], // Initialize with empty array of numbers
   priceRange: null,
   genders: [],
   dayNights: [],
@@ -52,6 +61,8 @@ export default function SearchScreen() {
   const modalRef = useRef<PerfumeModalRef>(null);
   const { width } = useWindowDimensions();
   const isDesktop = width >= DESKTOP_BREAKPOINT;
+  const [allAvailableBrands, setAllAvailableBrands] = useState<Brand[]>([]); // State for all brands
+  const [allAvailableOccasions, setAllAvailableOccasions] = useState<Occasion[]>([]); // State for all occasions
 
   // Debounce state for triggering API calls - declared *after* dependencies
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState(searchQuery);
@@ -78,7 +89,7 @@ export default function SearchScreen() {
     // Reset list only if it's a new search/filter (page 1)
     const isNewQuery = pageToLoad === 1;
     if (isNewQuery) {
-       setPerfumes([]); // Clear previous results immediately for new search/filter
+       // setPerfumes([]); // Removed: Clearing is handled by the update logic below
        setHasNextPage(true); // Assume there are results initially
        setPage(1); // Reset page number
     }
@@ -112,8 +123,37 @@ export default function SearchScreen() {
   // Load perfumes when debounced search/filters change
   React.useEffect(() => {
     // Load page 1 with the new debounced query and filters
+    console.log("Effect triggered: Loading page 1 due to query/filter change.", { debouncedSearchQuery, debouncedFilters });
     loadPerfumes(1, debouncedSearchQuery, debouncedFilters);
   }, [debouncedSearchQuery, debouncedFilters]); // Depend on debounced values
+
+  // Fetch all brands on mount
+  useEffect(() => {
+    const loadAllBrands = async () => {
+      try {
+        console.log("Fetching all available brands...");
+        const brandsData = await fetchBrands();
+        console.log("Fetched brands:", brandsData);
+        setAllAvailableBrands(brandsData || []); // Ensure it's an array
+      } catch (error) {
+        console.error('Error fetching all brands:', error);
+        setAllAvailableBrands([]); // Set empty array on error
+      }
+    };
+    const loadAllOccasions = async () => {
+      try {
+        console.log("Fetching all available occasions...");
+        const occasionsData = await fetchOccasions(); // Assuming fetchOccasions exists
+        console.log("Fetched occasions:", occasionsData);
+        setAllAvailableOccasions(occasionsData || []); // Ensure it's an array
+      } catch (error) {
+        console.error('Error fetching all occasions:', error);
+        setAllAvailableOccasions([]); // Set empty array on error
+      }
+    };
+    loadAllBrands();
+    loadAllOccasions();
+  }, []); // Empty dependency array means run once on mount
 
   const loadMorePerfumes = () => {
     // Pass current debounced query/filters when loading more
@@ -139,14 +179,20 @@ export default function SearchScreen() {
     });
   };
 
+  // Wrapper function to log applied filters
+  const handleApplyFilters = (newFilters: ActiveFilters) => {
+    console.log("Applying filters from modal:", newFilters);
+    setActiveFilters(newFilters);
+  };
+
   // --- Sort Options ---
   const sortOptions: { label: string; field: ActiveSort['field'] }[] = [
     { label: 'Precio', field: 'pricePerML' },
     { label: 'Match AI', field: 'matchPercentage' },
-    { label: 'Valoración', field: 'overallRating' },
-    { label: 'Duración', field: 'longevityRating' },
-    { label: 'Estela', field: 'sillageRating' },
-    { label: 'Calidad/Precio', field: 'priceValueRating' },
+    { label: 'Valoración', field: 'overall_rating' },
+    { label: 'Duración', field: 'longevity_rating' },
+    { label: 'Estela', field: 'sillage_rating' },
+    { label: 'Calidad/Precio', field: 'price_value_rating' },
   ];
 
   // Generate deterministic mock match percentages for each perfume
@@ -163,24 +209,32 @@ export default function SearchScreen() {
   const perfumesWithMatch = useMemo(() => {
     return perfumes
       .filter(perfume => (perfume as any).external_id != null) // Ensure external_id exists
-      .map(perfume => ({
-        ...perfume,
-        // Use external_id consistently and convert to string
-        id: String((perfume as any).external_id),
-        matchPercentage: (perfume as any).match_percentage ?? getMockMatchPercentage(perfume),
-        overallRating: (perfume as any).overall_rating,
-        priceValueRating: (perfume as any).price_value_rating,
-        bestFor: (perfume as any).best_for,
-        longevityRating: (perfume as any).longevity_rating,
-        sillageRating: (perfume as any).sillage_rating,
-        // Ensure similarPerfumeIds are strings too, if they exist
-        similarPerfumes: ((perfume as any).similar_perfume_ids ?? []).map(String), // Match type definition
-        season: (perfume as any).season,
-        gender: (perfume as any).gender,
-        topNotes: (perfume as any).top_notes,
-        middleNotes: (perfume as any).middle_notes,
-        baseNotes: (perfume as any).base_notes,
-      }));
+      .map(perfume => {
+          // Ensure brand is treated as an object { id: number, name: string }
+          // If the API returns brand as just an ID or name, this needs adjustment
+          const brandData = (perfume as any).brand;
+          const brandObj = typeof brandData === 'object' && brandData !== null ? brandData : { id: null, name: String(brandData) };
+
+          return {
+              ...perfume,
+              brand: brandObj, // Ensure brand is an object
+              // Use external_id consistently and convert to string
+              id: String((perfume as any).external_id),
+              matchPercentage: (perfume as any).match_percentage ?? getMockMatchPercentage(perfume),
+              overall_rating: (perfume as any).overall_rating, // Use snake_case from API
+              price_value_rating: (perfume as any).price_value_rating, // Use snake_case
+              best_for: (perfume as any).best_for, // Use snake_case
+              longevity_rating: (perfume as any).longevity_rating, // Use snake_case
+              sillage_rating: (perfume as any).sillage_rating, // Use snake_case
+              // Ensure similarPerfumeIds are strings too, if they exist
+              similarPerfumes: ((perfume as any).similar_perfume_ids ?? []).map(String), // Match type definition
+              season: (perfume as any).season,
+              gender: (perfume as any).gender,
+              topNotes: (perfume as any).top_notes,
+              middleNotes: (perfume as any).middle_notes,
+              baseNotes: (perfume as any).base_notes,
+          };
+      });
   }, [perfumes]);
 
   // Client-side filtering removed - handled by backend
@@ -277,11 +331,12 @@ export default function SearchScreen() {
         isVisible={isFilterModalVisible}
         onClose={() => setIsFilterModalVisible(false)}
         initialFilters={activeFilters}
-        onApplyFilters={setActiveFilters}
-        allBrands={Array.from(new Set(perfumesWithMatch.flatMap(p => p.brand)))}
-        allOccasions={Array.from(new Set(perfumesWithMatch.flatMap(p => p.occasions ?? [])))}
-        minPrice={Math.min(...perfumesWithMatch.map(p => p.pricePerML ?? 0))}
-        maxPrice={Math.max(...perfumesWithMatch.map(p => p.pricePerML ?? 0))}
+        onApplyFilters={handleApplyFilters} // Use wrapper function
+        allBrands={allAvailableBrands} // Pass the fetched list of all brands
+        allOccasions={allAvailableOccasions} // Pass the fetched list of all occasions
+        // Ensure pricePerML is accessed correctly if it exists, otherwise default to 0
+        minPrice={Math.min(0, ...perfumesWithMatch.map(p => (p as any).pricePerML ?? 0))}
+        maxPrice={Math.max(0, ...perfumesWithMatch.map(p => (p as any).pricePerML ?? 0))}
       />
     </View>
   );

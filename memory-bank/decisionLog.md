@@ -1,4 +1,10 @@
-x# Decision Log
+# Decision Log
+
+[2025-04-11 20:08:00] - Fixed similar perfume modal display issue by:
+  - Correcting property name mismatch between API (snake_case) and frontend (camelCase)
+  - Updating PerfumeModal component and Perfume type to use consistent snake_case names
+  - Implementing renderKey strategy to force proper re-renders
+  - Solution ensures all perfume details display correctly when switching similar perfumes
 
 ## Significant Decisions
 [2025-04-07 15:25:35] - Completed implementation of Search Filtering and Sorting logic.

@@ -82,7 +82,8 @@ export default function PerfumeCard({ perfume, matchPercentage, onPress, isDeskt
     }
   }, [isSelected, removePerfume, addPerfume, perfume, canAddMorePerfumes, decantCount]);
 
-  const displayMatch = matchPercentage ?? (perfume as Perfume).matchPercentage;
+  // Use match_percentage (snake_case) consistent with potential API/type structure
+  const displayMatch = matchPercentage ?? (perfume as any).match_percentage;
 
   return (
     <View style={[styles.cardOuterContainer, { width: cardWidth }]}>
@@ -103,7 +104,11 @@ export default function PerfumeCard({ perfume, matchPercentage, onPress, isDeskt
           <Image source={{ uri: perfume.thumbnailUrl }} style={styles.image} />
         </View>
         <View style={styles.infoContainer}>
-          <Text style={styles.brand} numberOfLines={1}>{perfume.brand}</Text>
+          <Text style={styles.brand} numberOfLines={1}>
+            {/* More robust check: Ensure brand is an object with a name property */}
+            {/* Assert brand is an object with name and use optional chaining */}
+            {(perfume.brand as { name?: string })?.name ?? ''}
+          </Text>
           <Text style={styles.name} numberOfLines={2}>{perfume.name}</Text>
         </View>
       </TouchableOpacity>

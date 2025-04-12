@@ -75,3 +75,100 @@ export const SUBSCRIPTION_TIERS: SubscriptionTierDetails[] = [
     description: '4 decants de 5mL de perfumes sobre $2.000/mL.',
   },
 ];
+
+// Translations for perfume time of day
+export const BEST_FOR_TRANSLATIONS = {
+  'day': 'Día',
+  'night': 'Noche',
+  'both': 'Día y Noche',
+} as const;
+
+// Translations for seasons
+export const SEASON_TRANSLATIONS = {
+  'winter': 'Invierno',
+  'spring': 'Primavera',
+  'summer': 'Verano',
+  'fall': 'Otoño',
+  'autumn': 'Otoño',
+} as const;
+
+// Translations for gender
+export const GENDER_TRANSLATIONS = {
+  'male': 'Hombre',
+  'female': 'Mujer',
+  'unisex': 'Unisex',
+} as const;
+
+// Common perfume notes translations
+export const PERFUME_NOTE_TRANSLATIONS = {
+  // Top notes
+  'grapefruit': 'Pomelo',
+  'lemon': 'Limón',
+  'lime': 'Lima',
+  'orange': 'Naranja',
+  'bergamot': 'Bergamota',
+  'mandarin': 'Mandarina',
+  'mint': 'Menta',
+  'pink pepper': 'Pimienta Rosa',
+  'pepper': 'Pimienta',
+  'apple': 'Manzana',
+  'pear': 'Pera',
+  'melon': 'Melón',
+  'peach': 'Durazno',
+  'black currant': 'Grosella Negra',
+  'almond': 'Almendra',
+  'coffee': 'Café',
+
+  // Middle notes
+  'ginger': 'Jengibre',
+  'nutmeg': 'Nuez Moscada',
+  'jasmine': 'Jazmín',
+  'sea notes': 'Notas Marinas',
+  'calone': 'Calona',
+  'freesia': 'Fresia',
+  'bamboo': 'Bambú',
+  'white rose': 'Rosa Blanca',
+  'iris': 'Iris',
+  'orange blossom': 'Azahar',
+  'lily-of-the-valley': 'Lirio del Valle',
+  'tuberose': 'Tuberosa',
+  'lavender': 'Lavanda',
+  'vetiver': 'Vetiver',
+  'sichuan pepper': 'Pimienta de Sichuán',
+
+  // Base notes
+  'incense': 'Incienso',
+  'cedar': 'Cedro',
+  'sandalwood': 'Sándalo',
+  'patchouli': 'Pachulí',
+  'labdanum': 'Ládano',
+  'white musk': 'Almizcle Blanco',
+  'oakmoss': 'Musgo de Roble',
+  'amber': 'Ámbar',
+  'vanilla': 'Vainilla',
+  'blackberry': 'Mora',
+  'praline': 'Praliné',
+  'tonka bean': 'Haba Tonka',
+  'cacao': 'Cacao',
+  'cashmere wood': 'Madera de Cachemira',
+
+  // Accords
+  'citrus': 'Cítrico',
+  'woody': 'Amaderado',
+  'aromatic': 'Aromático',
+  'fresh spicy': 'Especiado Fresco',
+  'aquatic': 'Acuático',
+  'marine': 'Marino',
+  'fresh': 'Fresco',
+  'fruity': 'Frutal',
+  'sweet': 'Dulce',
+  'warm spicy': 'Especiado Cálido',
+  'white floral': 'Floral Blanco',
+  'floral': 'Floral',
+  'powdery': 'Polvoso',
+  'gourmand': 'Gourmand',
+  'musky': 'Musk',
+  'leather': 'Cuero',
+  'smoke': 'Humo',
+  'tobacco': 'Tabaco',
+} as const;

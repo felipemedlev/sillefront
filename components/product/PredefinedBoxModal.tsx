@@ -10,18 +10,20 @@ import {
   Dimensions,
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { PredefinedBox } from '../../data/predefinedBoxes'; // Adjust path if needed
-import { MOCK_PERFUMES } from '../../data/mockPerfumes';
+// Remove mock data imports
+// import { PredefinedBox } from '../../data/predefinedBoxes';
+// import { MOCK_PERFUMES } from '../../data/mockPerfumes';
+import { ApiPredefinedBox, ApiPerfumeSummary } from '../../src/services/api'; // Import API types
 import { DecantSize } from '../../types/cart'; // Import DecantSize type
 import { useCart } from '../../context/CartContext';
-import { Perfume, BasicPerfumeInfo } from '../../types/perfume';
+import { BasicPerfumeInfo } from '../../types/perfume'; // Keep BasicPerfumeInfo for cart item structure
 import { COLORS, FONT_SIZES, SPACING } from '../../types/constants'; // Assuming constants exist
 
 // Props definition for the modal
 interface PredefinedBoxModalProps {
   isVisible: boolean;
   onClose: () => void;
-  boxData: PredefinedBox;
+  boxData: ApiPredefinedBox; // Use API type
   decantCount: 4 | 8;
 }
 
@@ -37,14 +39,14 @@ const PredefinedBoxModal: React.FC<PredefinedBoxModalProps> = ({
   const { addItemToCart } = useCart();
 
   // Get the list of perfumes to display based on boxData and decantCount
-  const perfumesToShow = useMemo(() => {
-    const idsToShow = boxData.perfumeIds.slice(0, decantCount);
-    // Ensure we only return valid Perfume objects
-    return MOCK_PERFUMES.filter((p): p is Perfume => idsToShow.includes(p.id));
+  const perfumesToShow: ApiPerfumeSummary[] = useMemo(() => {
+    // Use the perfumes array directly from the fetched boxData
+    return boxData.perfumes.slice(0, decantCount);
   }, [boxData, decantCount]);
 
   // Calculate the total price for the displayed perfumes (fixed 5mL size)
   const totalPrice = useMemo(() => {
+    // Calculate price based on the perfumes actually shown (ApiPerfumeSummary)
     return perfumesToShow.reduce((sum, perfume) => {
       return sum + (perfume.pricePerML ?? 0) * 5; // Fixed 5mL size
     }, 0);
@@ -52,12 +54,14 @@ const PredefinedBoxModal: React.FC<PredefinedBoxModalProps> = ({
 
   // Handler for adding the predefined box to the cart
   const handleAddToCart = async () => {
+    // Map ApiPerfumeSummary to BasicPerfumeInfo for cart context
+    // Note: fullSizeUrl is not available in ApiPerfumeSummary, so it will be null/undefined
     const perfumesInBox: BasicPerfumeInfo[] = perfumesToShow.map(p => ({
-      id: p.id,
+      id: String(p.id), // Convert number to string for BasicPerfumeInfo
       name: p.name,
       brand: p.brand,
-      thumbnailUrl: p.thumbnailUrl,
-      fullSizeUrl: p.fullSizeUrl,
+      thumbnailUrl: p.thumbnailUrl ?? '', // Provide default empty string if null
+      fullSizeUrl: '', // Provide default empty string if null/not available
     }));
 
     const itemData = {
@@ -106,7 +110,8 @@ const PredefinedBoxModal: React.FC<PredefinedBoxModalProps> = ({
                 {/* Content will be styled similar to PerfumeList item */}
                 <View style={styles.imageContainer}>
                   <Image
-                    source={{ uri: perfume.thumbnailUrl }}
+                    // Comment removed to fix JSX syntax error
+                    source={{ uri: perfume.thumbnailUrl ?? undefined }}
                     style={styles.perfumeImage}
                   />
                   <Image

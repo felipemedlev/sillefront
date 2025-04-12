@@ -5,12 +5,12 @@ import { Perfume } from '../../types/perfume'; // Assuming Perfume type is neede
 
 // Define the structure for active filters, mirroring SearchScreen
 interface ActiveFilters {
-  brands: string[];
-  occasions: string[];
+  brands: number[]; // Use brand IDs
+  occasions: number[]; // Use Occasion IDs
   priceRange: { min: number; max: number } | null;
-  genders: string[];
-  dayNights: string[];
-  seasons: string[];
+  genders: string[]; // Store backend keys ('male', 'female', 'unisex')
+  dayNights: string[]; // Store backend keys ('day', 'night')
+  seasons: string[]; // Store backend keys ('winter', 'summer', etc.)
 }
 
 interface FilterModalProps {
@@ -18,8 +18,8 @@ interface FilterModalProps {
   onClose: () => void;
   initialFilters: ActiveFilters;
   onApplyFilters: (filters: ActiveFilters) => void;
-  allBrands: string[];
-  allOccasions: string[];
+  allBrands: { id: number; name: string }[]; // Expect objects with id and name
+  allOccasions: { id: number; name: string }[]; // Expect objects with id and name
   minPrice: number;
   maxPrice: number;
 }
@@ -67,12 +67,12 @@ const FilterModal: React.FC<FilterModalProps> = ({
 
   const handleClear = () => {
     const clearedFilters: ActiveFilters = {
-      brands: [],
-      occasions: [],
+      brands: [], // Reset to empty array of numbers
+      occasions: [], // Reset to empty array of numbers
       priceRange: null, // Reset price range
-      genders: [],
-      dayNights: [],
-      seasons: [],
+      genders: [], // Reset to empty array of strings (keys)
+      dayNights: [], // Reset to empty array of strings (keys)
+      seasons: [], // Reset to empty array of strings (keys)
     };
     setTempFilters(clearedFilters);
     // Apply cleared filters immediately or wait for explicit apply?
@@ -82,8 +82,13 @@ const FilterModal: React.FC<FilterModalProps> = ({
   // --- Placeholder Render Functions for Filter Sections ---
   // TODO: Implement actual UI components (Checkboxes, Slider)
 
-  const renderCheckboxGroup = (title: string, options: string[], selected: string[], onChange: (newSelection: string[]) => void) => {
-    // Placeholder - Replace with actual Checkbox implementation
+  // --- Mappings ---
+  const genderMap: { [key: string]: string } = { male: 'Masculino', female: 'Femenino', unisex: 'Unisex' };
+  const dayNightMap: { [key: string]: string } = { day: 'Día', night: 'Noche' }; // 'Ambos' not directly mapped to backend key
+  const seasonMap: { [key: string]: string } = { winter: 'Invierno', autumn: 'Otoño', spring: 'Primavera', summer: 'Verano' };
+
+  // Generic checkbox group for string options (like Occasions)
+  const renderStringCheckboxGroup = (title: string, options: string[], selected: string[], onChange: (newSelection: string[]) => void) => {
     return (
       <View style={styles.filterSection}>
         <Text style={styles.sectionTitle}>{title}</Text>
@@ -103,6 +108,61 @@ const FilterModal: React.FC<FilterModalProps> = ({
       </View>
     );
   };
+
+  // Checkbox group using a map { backendKey: displayName }
+  const renderMappedCheckboxGroup = (
+    title: string,
+    map: { [key: string]: string },
+    selectedKeys: string[],
+    onChange: (newSelection: string[]) => void
+  ) => {
+    const options = Object.entries(map); // [ [key, name], [key, name], ... ]
+    return (
+      <View style={styles.filterSection}>
+        <Text style={styles.sectionTitle}>{title}</Text>
+        {options.map(([key, name]) => (
+          <TouchableOpacity key={key} onPress={() => {
+            const newSelection = selectedKeys.includes(key)
+              ? selectedKeys.filter(item => item !== key)
+              : [...selectedKeys, key];
+            onChange(newSelection);
+          }}>
+            <View style={styles.checkboxRow}>
+              <Feather name={selectedKeys.includes(key) ? 'check-square' : 'square'} size={20} color="#333" />
+              <Text style={styles.checkboxLabel}>{name}</Text> {/* Display name */}
+            </View>
+          </TouchableOpacity>
+        ))}
+      </View>
+    );
+  };
+
+  // Specific checkbox group for options with ID (using ID for state, Name for display)
+  const renderIdCheckboxGroup = (
+    title: string,
+    options: { id: number; name: string }[], // Generic for Brand or Occasion
+    selectedIds: number[],
+    onChange: (newSelection: number[]) => void
+   ) => {
+     return (
+       <View style={styles.filterSection}>
+         <Text style={styles.sectionTitle}>{title}</Text>
+         {options.map(option => (
+           <TouchableOpacity key={option.id} onPress={() => {
+             const newSelection = selectedIds.includes(option.id)
+               ? selectedIds.filter(id => id !== option.id)
+               : [...selectedIds, option.id];
+             onChange(newSelection);
+           }}>
+             <View style={styles.checkboxRow}>
+               <Feather name={selectedIds.includes(option.id) ? 'check-square' : 'square'} size={20} color="#333" />
+               <Text style={styles.checkboxLabel}>{option.name}</Text> {/* Display name */}
+             </View>
+           </TouchableOpacity>
+         ))}
+       </View>
+     );
+   };
 
   const renderPriceInputs = () => {
     const currentMin = tempFilters.priceRange?.min?.toString() ?? '';
@@ -179,12 +239,13 @@ const FilterModal: React.FC<FilterModalProps> = ({
 
           {/* Filters Scroll Area */}
           <ScrollView style={styles.scrollContainer}>
-            {renderCheckboxGroup('Marca', allBrands, tempFilters.brands, (newSelection) => setTempFilters(f => ({ ...f, brands: newSelection })))}
-            {renderCheckboxGroup('Ocasión', allOccasions, tempFilters.occasions, (newSelection) => setTempFilters(f => ({ ...f, occasions: newSelection })))}
+            {renderIdCheckboxGroup('Marca', allBrands, tempFilters.brands, (newSelection) => setTempFilters(f => ({ ...f, brands: newSelection })))}
+            {renderIdCheckboxGroup('Ocasión', allOccasions, tempFilters.occasions, (newSelection) => setTempFilters(f => ({ ...f, occasions: newSelection })))}
             {renderPriceInputs()}
-            {renderCheckboxGroup('Género', ['masculino', 'femenino', 'unisex'], tempFilters.genders, (newSelection) => setTempFilters(f => ({ ...f, genders: newSelection })))}
-            {renderCheckboxGroup('Uso (Día/Noche)', ['Día', 'Noche', 'Ambos'], tempFilters.dayNights, (newSelection) => setTempFilters(f => ({ ...f, dayNights: newSelection })))}
-            {renderCheckboxGroup('Temporada', ['Invierno', 'Otoño', 'Primavera', 'Verano'], tempFilters.seasons, (newSelection) => setTempFilters(f => ({ ...f, seasons: newSelection })))}
+            {renderMappedCheckboxGroup('Género', genderMap, tempFilters.genders, (newSelection) => setTempFilters(f => ({ ...f, genders: newSelection })))}
+            {/* Note: 'Ambos' option is removed as it doesn't map directly */}
+            {renderMappedCheckboxGroup('Uso (Día/Noche)', dayNightMap, tempFilters.dayNights, (newSelection) => setTempFilters(f => ({ ...f, dayNights: newSelection })))}
+            {renderMappedCheckboxGroup('Temporada', seasonMap, tempFilters.seasons, (newSelection) => setTempFilters(f => ({ ...f, seasons: newSelection })))}
           </ScrollView>
 
           {/* Footer Buttons */}

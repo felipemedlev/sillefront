@@ -138,7 +138,7 @@ export const fetchPerfumes = async (
   if (filters.priceRange?.max != null) params.append('price_max', String(filters.priceRange.max));
 
   const url = `${API_BASE_URL}/perfumes/?${params.toString()}`;
-  console.log('Fetching perfumes with URL:', url);
+  // console.log('Fetching perfumes with URL:', url);
 
   const response = await fetch(url, {
     method: 'GET',
@@ -150,7 +150,7 @@ export const fetchPerfumes = async (
 export const fetchBrands = async () => {
   const headers = await createHeaders(false); // No auth needed usually for public list
   const url = `${API_BASE_URL}/brands/`; // Assuming endpoint exists
-  console.log('Fetching brands with URL:', url);
+  // console.log('Fetching brands with URL:', url);
   const response = await fetch(url, {
     method: 'GET',
     headers,
@@ -163,7 +163,7 @@ export const fetchBrands = async () => {
 export const fetchOccasions = async () => {
   const headers = await createHeaders(false); // No auth needed usually
   const url = `${API_BASE_URL}/occasions/`; // Assuming endpoint exists
-  console.log('Fetching occasions with URL:', url);
+  // console.log('Fetching occasions with URL:', url);
   const response = await fetch(url, {
     method: 'GET',
     headers,
@@ -193,7 +193,7 @@ export const logout = async () => {
     });
     await handleResponse(response);
   } catch (error) {
-    console.error('Logout failed:', error);
+    // console.error('Logout failed:', error);
   } finally {
     await removeToken();
   }
@@ -214,7 +214,7 @@ export const fetchPerfumesByExternalIds = async (externalIds: string[]): Promise
   const params = new URLSearchParams();
   params.append('external_ids', externalIds.join(','));
   const url = `${API_BASE_URL}/perfumes/by_external_ids/?${params.toString()}`;
-  console.log('Fetching similar perfumes with URL:', url);
+  // console.log('Fetching similar perfumes with URL:', url);
   const response = await fetch(url, {
     method: 'GET',
     headers,
@@ -230,7 +230,7 @@ export const getPredefinedBoxes = async (gender?: 'masculino' | 'femenino'): Pro
   }
   // Corrected endpoint based on SilleBack/api/urls.py registration
   const url = `${API_BASE_URL}/boxes/predefined/?${params.toString()}`;
-  console.log('Fetching predefined boxes with URL:', url);
+  // console.log('Fetching predefined boxes with URL:', url);
 
   const response = await fetch(url, {
     method: 'GET',

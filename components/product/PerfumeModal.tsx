@@ -46,7 +46,7 @@ const PerfumeModal = forwardRef<PerfumeModalRef, PerfumeModalProps>((props, ref)
   useImperativeHandle(ref, () => ({
 
     show: (perfumeData: Perfume) => {
-      console.log('PerfumeModal show called with:', perfumeData); // Log input data
+      // console.log('PerfumeModal show called with:', perfumeData); // Log input data
       setCurrentPerfume(perfumeData);
       setIsVisible(true);
     },
@@ -64,10 +64,10 @@ const PerfumeModal = forwardRef<PerfumeModalRef, PerfumeModalProps>((props, ref)
 
   // Effect to fetch similar perfumes when modal opens - MOVED HERE!
   useEffect(() => {
-    console.log(`useEffect triggered: isVisible=${isVisible}, currentPerfume exists=${!!currentPerfume}`); // Log effect trigger
+    // console.log(`useEffect triggered: isVisible=${isVisible}, currentPerfume exists=${!!currentPerfume}`); // Log effect trigger
 
     if (isVisible && currentPerfume?.similar_perfume_ids && currentPerfume.similar_perfume_ids.length > 0) { // Use correct field name
-      console.log('Condition met: Fetching similar perfumes...'); // Log condition met
+      // console.log('Condition met: Fetching similar perfumes...'); // Log condition met
       const fetchSimilar = async () => {
         setIsLoadingSimilar(true);
         setFetchedSimilarPerfumes([]); // Clear previous results
@@ -77,12 +77,12 @@ const PerfumeModal = forwardRef<PerfumeModalRef, PerfumeModalProps>((props, ref)
             console.error("Similar perfume IDs array is undefined, cannot fetch.");
             return; // Exit if undefined
           }
-          console.log('Fetching similar perfumes for IDs:', currentPerfume.similar_perfume_ids); // Use correct field name
+          // console.log('Fetching similar perfumes for IDs:', currentPerfume.similar_perfume_ids); // Use correct field name
           const similarData = await fetchPerfumesByExternalIds(currentPerfume.similar_perfume_ids); // Use correct field name
-          console.log('Fetched similar perfumes data:', similarData);
+          // console.log('Fetched similar perfumes data:', similarData);
           setFetchedSimilarPerfumes(similarData);
         } catch (error) {
-          console.error('Error fetching similar perfumes:', error);
+          // console.error('Error fetching similar perfumes:', error);
           setFetchedSimilarPerfumes([]); // Clear on error
         } finally {
           setIsLoadingSimilar(false);
@@ -90,7 +90,7 @@ const PerfumeModal = forwardRef<PerfumeModalRef, PerfumeModalProps>((props, ref)
       };
       fetchSimilar();
     } else {
-      console.log('Condition NOT met: Skipping fetch.', { isVisible, hasSimilar: !!currentPerfume?.similar_perfume_ids, length: currentPerfume?.similar_perfume_ids?.length }); // Use correct field name
+      // console.log('Condition NOT met: Skipping fetch.', { isVisible, hasSimilar: !!currentPerfume?.similar_perfume_ids, length: currentPerfume?.similar_perfume_ids?.length }); // Use correct field name
     }
   }, [isVisible, currentPerfume]); // Rerun when modal visibility or perfume changes
   const handleClose = () => {
@@ -105,7 +105,7 @@ const PerfumeModal = forwardRef<PerfumeModalRef, PerfumeModalProps>((props, ref)
       // Find the full perfume data from the fetchedSimilarPerfumes array using external_id
       const similarPerfume = fetchedSimilarPerfumes.find((p: Perfume) => String(p.external_id) === String(perfumeId));
       if (similarPerfume) {
-        console.log("Found similar perfume data:", JSON.stringify(similarPerfume, null, 2)); // Log the found object
+        // console.log("Found similar perfume data:", JSON.stringify(similarPerfume, null, 2)); // Log the found object
         setCurrentPerfume(similarPerfume);
         setRenderKey(prevKey => prevKey + 1); // Increment key to force re-render
         scrollViewRef.current?.scrollTo({ y: 0, animated: true });

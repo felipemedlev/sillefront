@@ -1,163 +1,83 @@
 import React from 'react';
-import { View, Text, Pressable, StyleSheet } from 'react-native';
-
-type DecantCount = 4 | 8;
-type DecantSize = 3 | 5 | 10;
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+} from 'react-native';
+import { SPACING, FONT_SIZES, COLORS } from '../../types/constants';
 
 interface DecantSelectorProps {
-  decantCount: DecantCount;
-  setDecantCount: (count: DecantCount) => void;
-  decantSize?: DecantSize;
-  setDecantSize?: (size: DecantSize) => void;
-  showSizeSelection?: boolean;
+  decantCount: 4 | 8;
+  onSelectDecant: (count: 4 | 8) => void;
+  genderColors: typeof COLORS.GIFTBOX.MALE | typeof COLORS.GIFTBOX.FEMALE;
 }
 
 const DecantSelector: React.FC<DecantSelectorProps> = ({
   decantCount,
-  setDecantCount,
-  decantSize = 5,
-  setDecantSize = () => {},
-  showSizeSelection = true,
-}) => {
-  return (
-    <>
-      {/* Decant Selection */}
-      <View style={[styles.section, styles.filterSection]}>
-        <Text style={[styles.sectionTitle, styles.filterTitle]}>Cantidad de Decants</Text>
-        <View style={styles.decantCountContainer}>
-          <Pressable
-            style={[
-              styles.decantCountButton,
-              decantCount === 4 && styles.decantCountButtonActive,
-            ]}
-            onPress={() => setDecantCount(4)}
-          >
-            <Text style={[
-              styles.decantCountText,
-              decantCount === 4 && styles.decantCountTextActive,
-            ]}>4 Decants</Text>
-          </Pressable>
-          <Pressable
-            style={[
-              styles.decantCountButton,
-              decantCount === 8 && styles.decantCountButtonActive,
-            ]}
-            onPress={() => setDecantCount(8)}
-          >
-            <Text style={[
-              styles.decantCountText,
-              decantCount === 8 && styles.decantCountTextActive,
-            ]}>8 Decants</Text>
-          </Pressable>
-        </View>
-      </View>
-
-      {/* Size Selection - Only shown if showSizeSelection is true */}
-      {showSizeSelection && (
-        <View style={[styles.section, styles.filterSection]}>
-          <Text style={[styles.sectionTitle, styles.filterTitle]}>Tamaño de Decants</Text>
-          <View style={styles.sizeContainer}>
-            {[3, 5, 10].map((size) => (
-              <Pressable
-                key={size}
-                style={[
-                  styles.sizeButton,
-                  decantSize === size && styles.sizeButtonActive,
-                ]}
-                onPress={() => setDecantSize(size as DecantSize)}
-              >
-                <Text style={[
-                  styles.sizeText,
-                  decantSize === size && styles.sizeTextActive,
-                ]}>{size}ml</Text>
-              </Pressable>
-            ))}
-          </View>
-        </View>
-      )}
-    </>
-  );
-};
+  onSelectDecant,
+  genderColors
+}) => (
+  <View style={styles.decantCountContainer}>
+    {[4, 8].map((count) => (
+      <TouchableOpacity
+        key={count}
+        style={[
+          styles.decantCountButton,
+          decantCount === count && [
+            styles.decantCountButtonActive,
+            { backgroundColor: genderColors.PRIMARY }
+          ],
+        ]}
+        onPress={() => onSelectDecant(count as 4 | 8)}
+        activeOpacity={0.7}
+      >
+        <Text style={[
+          styles.decantCountText,
+          decantCount === count && styles.decantCountTextActive,
+        ]}>
+          {`${count} Decants`}
+        </Text>
+      </TouchableOpacity>
+    ))}
+  </View>
+);
 
 const styles = StyleSheet.create({
-  section: {
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E6E6E6',
-  },
-  filterSection: {
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 16,
-  },
-  filterTitle: {
-    fontSize: 16,
-    marginBottom: 8,
-  },
   decantCountContainer: {
     flexDirection: 'row',
-    gap: 8,
-    paddingHorizontal: 4,
-    maxWidth: '100%', // Add maxWidth constraint
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: SPACING.XSMALL,
+    width: '100%',
   },
   decantCountButton: {
-    flex: 1,
-    padding: 8,
-    borderRadius: 6,
+    paddingVertical: SPACING.XSMALL,
+    paddingHorizontal: SPACING.MEDIUM,
+    borderRadius: 16,
+    backgroundColor: COLORS.GIFTBOX.BACKGROUND_ALT,
     borderWidth: 1,
-    borderColor: '#E6E6E6',
+    borderColor: COLORS.GIFTBOX.BORDER,
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    maxWidth: 150, // Add maxWidth constraint
-    flexShrink: 1, // Allow button to shrink
+    elevation: 1,
+    shadowColor: COLORS.GIFTBOX.CARD_SHADOW,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
   },
   decantCountButtonActive: {
-    backgroundColor: '#809CAC',
-    borderColor: '#809CAC',
-    elevation: 3,
+    borderColor: 'transparent',
+    elevation: 2,
+    shadowOpacity: 0.2,
   },
   decantCountText: {
-    fontSize: 14,
-    color: '#333',
-    fontWeight: '500',
+    fontSize: FONT_SIZES.XSMALL,
+    color: COLORS.GIFTBOX.TEXT_PRIMARY,
+    fontWeight: '600',
   },
   decantCountTextActive: {
-    color: '#FFFFFF',
-  },
-  sizeContainer: {
-    flexDirection: 'row',
-    gap: 8,
-    paddingHorizontal: 4,
-    maxWidth: '100%', // Add maxWidth constraint
-  },
-  sizeButton: {
-    flex: 1,
-    padding: 8,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: '#E6E6E6',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    maxWidth: 150, // Add maxWidth constraint
-    flexShrink: 1, // Allow button to shrink
-  },
-  sizeButtonActive: {
-    backgroundColor: '#809CAC',
-    borderColor: '#809CAC',
-    elevation: 3,
-  },
-  sizeText: {
-    fontSize: 14,
-    color: '#333',
-    fontWeight: '500',
-  },
-  sizeTextActive: {
-    color: '#FFFFFF',
+    color: COLORS.GIFTBOX.BACKGROUND_ALT,
+    fontWeight: '700',
   },
 });
 

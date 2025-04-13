@@ -129,7 +129,7 @@ const FilterModal: React.FC<FilterModalProps> = ({
           }}>
             <View style={styles.checkboxRow}>
               <Feather name={selectedKeys.includes(key) ? 'check-square' : 'square'} size={20} color="#333" />
-              <Text style={styles.checkboxLabel}>{name}</Text> {/* Display name */}
+              <Text style={styles.checkboxLabel}>{name}</Text>
             </View>
           </TouchableOpacity>
         ))}
@@ -156,7 +156,7 @@ const FilterModal: React.FC<FilterModalProps> = ({
            }}>
              <View style={styles.checkboxRow}>
                <Feather name={selectedIds.includes(option.id) ? 'check-square' : 'square'} size={20} color="#333" />
-               <Text style={styles.checkboxLabel}>{option.name}</Text> {/* Display name */}
+               <Text style={styles.checkboxLabel}>{option.name}</Text>
              </View>
            </TouchableOpacity>
          ))}
@@ -227,9 +227,7 @@ const FilterModal: React.FC<FilterModalProps> = ({
       onRequestClose={onClose}
     >
       <View style={styles.modalOverlay}>
-        {/* TODO: Implement slide-in from right animation/positioning */}
         <Animated.View style={[styles.modalContainer, { transform: [{ translateX: slideAnim }] }]}>
-          {/* Header */}
           <View style={styles.header}>
             <Text style={styles.headerTitle}>Filtros</Text>
             <TouchableOpacity onPress={onClose} style={styles.closeButton}>
@@ -237,18 +235,15 @@ const FilterModal: React.FC<FilterModalProps> = ({
             </TouchableOpacity>
           </View>
 
-          {/* Filters Scroll Area */}
           <ScrollView style={styles.scrollContainer}>
             {renderIdCheckboxGroup('Marca', allBrands, tempFilters.brands, (newSelection) => setTempFilters(f => ({ ...f, brands: newSelection })))}
             {renderIdCheckboxGroup('Ocasión', allOccasions, tempFilters.occasions, (newSelection) => setTempFilters(f => ({ ...f, occasions: newSelection })))}
             {renderPriceInputs()}
             {renderMappedCheckboxGroup('Género', genderMap, tempFilters.genders, (newSelection) => setTempFilters(f => ({ ...f, genders: newSelection })))}
-            {/* Note: 'Ambos' option is removed as it doesn't map directly */}
             {renderMappedCheckboxGroup('Uso (Día/Noche)', dayNightMap, tempFilters.dayNights, (newSelection) => setTempFilters(f => ({ ...f, dayNights: newSelection })))}
             {renderMappedCheckboxGroup('Temporada', seasonMap, tempFilters.seasons, (newSelection) => setTempFilters(f => ({ ...f, seasons: newSelection })))}
           </ScrollView>
 
-          {/* Footer Buttons */}
           <View style={styles.footer}>
             <TouchableOpacity style={[styles.footerButton, styles.clearButton]} onPress={handleClear}>
               <Text style={[styles.footerButtonText, styles.clearButtonText]}>Limpiar</Text>

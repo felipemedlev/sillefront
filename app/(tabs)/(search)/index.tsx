@@ -1,6 +1,6 @@
 import React, { useState, useRef, useMemo, useEffect } from 'react'; // Add useEffect
 import { View, StyleSheet, TouchableOpacity, Text, ScrollView } from 'react-native'; // Add ScrollView
-import { Platform, useWindowDimensions } from 'react-native';
+import { useWindowDimensions } from 'react-native';
 import { fetchPerfumes, fetchBrands, fetchOccasions } from '../../../src/services/api'; // Import fetchOccasions
 import { Perfume } from '../../../types/perfume';
 import SearchBar from '../../../components/search/SearchBar';
@@ -97,13 +97,13 @@ export default function SearchScreen() {
     // Prevent fetching more if already loading or no more pages for the *current* query/filters
     if (isLoading || (!isNewQuery && !hasNextPage)) return;
 
-    console.log(`Loading perfumes - Page: ${pageToLoad}, Query: '${query}', Filters:`, filters);
+    // console.log(`Loading perfumes - Page: ${pageToLoad}, Query: '${query}', Filters:`, filters);
     setIsLoading(true);
 
     try {
       // Pass search and filters to the API call
       const data = await fetchPerfumes(pageToLoad, 20, query, filters);
-      console.log('Fetched perfumes page', pageToLoad, data);
+      // console.log('Fetched perfumes page', pageToLoad, data);
       const newResults = data.results ?? [];
 
       setPerfumes(prev => isNewQuery ? newResults : [...prev, ...newResults]);
@@ -123,7 +123,7 @@ export default function SearchScreen() {
   // Load perfumes when debounced search/filters change
   React.useEffect(() => {
     // Load page 1 with the new debounced query and filters
-    console.log("Effect triggered: Loading page 1 due to query/filter change.", { debouncedSearchQuery, debouncedFilters });
+    // console.log("Effect triggered: Loading page 1 due to query/filter change.", { debouncedSearchQuery, debouncedFilters });
     loadPerfumes(1, debouncedSearchQuery, debouncedFilters);
   }, [debouncedSearchQuery, debouncedFilters]); // Depend on debounced values
 
@@ -131,9 +131,9 @@ export default function SearchScreen() {
   useEffect(() => {
     const loadAllBrands = async () => {
       try {
-        console.log("Fetching all available brands...");
+        // console.log("Fetching all available brands...");
         const brandsData = await fetchBrands();
-        console.log("Fetched brands:", brandsData);
+        // console.log("Fetched brands:", brandsData);
         setAllAvailableBrands(brandsData || []); // Ensure it's an array
       } catch (error) {
         console.error('Error fetching all brands:', error);
@@ -142,9 +142,9 @@ export default function SearchScreen() {
     };
     const loadAllOccasions = async () => {
       try {
-        console.log("Fetching all available occasions...");
+        // console.log("Fetching all available occasions...");
         const occasionsData = await fetchOccasions(); // Assuming fetchOccasions exists
-        console.log("Fetched occasions:", occasionsData);
+        // console.log("Fetched occasions:", occasionsData);
         setAllAvailableOccasions(occasionsData || []); // Ensure it's an array
       } catch (error) {
         console.error('Error fetching all occasions:', error);
@@ -181,7 +181,7 @@ export default function SearchScreen() {
 
   // Wrapper function to log applied filters
   const handleApplyFilters = (newFilters: ActiveFilters) => {
-    console.log("Applying filters from modal:", newFilters);
+    // console.log("Applying filters from modal:", newFilters);
     setActiveFilters(newFilters);
   };
 

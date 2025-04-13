@@ -13,8 +13,6 @@ interface PerfumeCardProps {
   isDesktop: boolean;
 }
 
-
-import { Platform } from 'react-native';
 const { width } = Dimensions.get('window');
 const CARD_MARGIN_HORIZONTAL = SPACING.MEDIUM;
 const NUM_COLUMNS = 2;

@@ -99,17 +99,19 @@ function RootLayoutNav() {
 
 export default function RootLayout() {
   return (
-    <AuthProvider>
-      <CartProvider>
-        <SubscriptionProvider>
-          <ManualBoxProvider>
-            <RatingsProvider>
-              <RootLayoutNav />
-            </RatingsProvider>
-          </ManualBoxProvider>
-        </SubscriptionProvider>
-      </CartProvider>
-    </AuthProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <AuthProvider>
+        <CartProvider>
+          <SubscriptionProvider>
+            <ManualBoxProvider>
+              <RatingsProvider>
+                <RootLayoutNav />
+              </RatingsProvider>
+            </ManualBoxProvider>
+          </SubscriptionProvider>
+        </CartProvider>
+      </AuthProvider>
+    </GestureHandlerRootView>
   );
 }
 

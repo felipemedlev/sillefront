@@ -27,6 +27,30 @@ export const COLORS = {
   BORDER: '#E0E0E0', // Border color (Light Grey) - Added
   ERROR: '#a31818', // Error messages (Red)
   SUCCESS: '#34C759', // Success indicators (Green) - Added
+
+  // Giftbox colors
+  GIFTBOX: {
+    BACKGROUND: '#f8f9fa',
+    BACKGROUND_ALT: '#ffffff',
+    TEXT_PRIMARY: '#2d3436',
+    TEXT_SECONDARY: '#636e72',
+    ACCENT: '#6c5ce7',
+    ACCENT_LIGHT: '#a29bfe',
+    BORDER: '#dfe6e9',
+    ERROR: '#d63031',
+    CARD_SHADOW: 'rgba(0,0,0,0.08)',
+    MALE: {
+      PRIMARY: '#607D8B',
+      LIGHT: '#90A4AE',
+      BG: '#ECF0F1',
+    },
+    FEMALE: {
+      PRIMARY: '#edafb8',
+      LIGHT: '#edafb8',
+      BG: '#f5f0f0',
+    },
+    SUCCESS: '#00b894',
+  },
 } as const;
 
 export const FONT_SIZES = {

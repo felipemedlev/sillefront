@@ -1,6 +1,6 @@
 import React from 'react';
-import { FlatList, StyleSheet, useWindowDimensions, Platform, View } from 'react-native';
-import { Perfume } from '../../types/perfume'; // Import Perfume instead of BasicPerfumeInfo
+import { FlatList, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { Perfume } from '../../types/perfume';
 import PerfumeCard from './PerfumeCard';
 
 interface SearchResultsProps {
@@ -20,7 +20,7 @@ export default function SearchResults({ perfumes, onPerfumePress, onEndReached, 
     <View style={isDesktop ? styles.cardWrapper : undefined}>
       <PerfumeCard
         perfume={item}
-        matchPercentage={item.matchPercentage}
+        matchPercentage={item.match_percentage ?? undefined}
         onPress={() => onPerfumePress(item)}
         isDesktop={isDesktop}
       />

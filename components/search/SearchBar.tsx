@@ -14,7 +14,7 @@ interface SearchBarProps {
 export default function SearchBar({ value, onChangeText, placeholder = 'Buscar perfumes...', onManualBoxPress, onFilterPress }: SearchBarProps) {
   return (
     <View style={styles.container}>
-      <View style={styles.searchRow}> {/* Wrap search input and filter icon */}
+      <View style={styles.searchRow}>
         <View style={styles.searchContainer}>
           <Feather name="search" size={20} color="#666" style={styles.searchIcon} />
           <TextInput

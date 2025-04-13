@@ -184,9 +184,8 @@ export default function ManualBoxScreen() {
 
         <DecantSelector
           decantCount={decantCount}
-          setDecantCount={setDecantCount}
-          decantSize={decantSize}
-          setDecantSize={setDecantSize}
+          onSelectDecant={setDecantCount}
+          genderColors={COLORS.GIFTBOX.MALE}
         />
 
         <View style={styles.perfumeListContainer}>

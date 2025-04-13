@@ -10,13 +10,13 @@ import { SPACING, FONT_SIZES, COLORS } from '../../types/constants';
 interface DecantSelectorProps {
   decantCount: 4 | 8;
   onSelectDecant: (count: 4 | 8) => void;
-  genderColors: typeof COLORS.GIFTBOX.MALE | typeof COLORS.GIFTBOX.FEMALE;
+  genderColors?: typeof COLORS.GIFTBOX.MALE | typeof COLORS.GIFTBOX.FEMALE;
 }
 
 const DecantSelector: React.FC<DecantSelectorProps> = ({
   decantCount,
   onSelectDecant,
-  genderColors
+  genderColors = COLORS.GIFTBOX.MALE
 }) => (
   <View style={styles.decantCountContainer}>
     {[4, 8].map((count) => (
@@ -26,7 +26,7 @@ const DecantSelector: React.FC<DecantSelectorProps> = ({
           styles.decantCountButton,
           decantCount === count && [
             styles.decantCountButtonActive,
-            { backgroundColor: genderColors.PRIMARY }
+            { backgroundColor: genderColors?.PRIMARY || COLORS.GIFTBOX.MALE.PRIMARY }
           ],
         ]}
         onPress={() => onSelectDecant(count as 4 | 8)}

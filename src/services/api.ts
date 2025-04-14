@@ -23,13 +23,59 @@ export interface ApiPerfumeSummary {
 }
 
 export interface ApiPredefinedBox {
-  id: number;
-  title: string;
-  description: string | null;
-  icon: string | null;
-  gender: 'masculino' | 'femenino' | null;
-  perfumes: ApiPerfumeSummary[];
+    id: number;
+    title: string;
+    description: string | null;
+    icon: string | null;
+    gender: 'masculino' | 'femenino' | null;
+    perfumes: ApiPerfumeSummary[];
 }
+
+// --- Survey API Types ---
+export type ApiSurveyQuestion = {
+    id: string;
+    type?: 'gender';
+    question?: string;
+    options?: {
+        id: string;
+        label: string;
+        emoji: string;
+    }[];
+    accord?: string;
+    description?: string;
+};
+
+export type ApiSurveyAnswer = { [key: string]: number | string };
+
+// --- Survey API Functions ---
+
+/**
+ * Fetch the list of survey questions (gender + selected accords).
+ */
+export const fetchSurveyQuestions = async (): Promise<ApiSurveyQuestion[]> => {
+    const headers = await createHeaders(false); // Public endpoint
+    const url = `${API_BASE_URL}/survey/questions/`;
+    const response = await fetch(url, {
+        method: 'GET',
+        headers,
+    });
+    return handleResponse(response);
+};
+
+/**
+ * Submit or update the user's survey response.
+ * @param answers The full answers object (keyed by accord or 'gender')
+ */
+export const submitSurveyResponse = async (answers: ApiSurveyAnswer): Promise<any> => {
+    const headers = await createHeaders(true); // Requires auth
+    const url = `${API_BASE_URL}/survey/`;
+    const response = await fetch(url, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ response_data: answers }),
+    });
+    return handleResponse(response);
+};
 
 
 const API_BASE_URL = Constants.expoConfig?.extra?.apiBaseUrl || 'http://127.0.0.1:8000/api';

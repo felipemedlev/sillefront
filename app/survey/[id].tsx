@@ -1,59 +1,63 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useMemo } from 'react'; // Added useMemo
 import { View, Dimensions, Text, StyleSheet, TouchableOpacity, Image, Animated, useWindowDimensions } from 'react-native';
-import { useLocalSearchParams, useRouter, Redirect } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSurveyContext } from '../../context/SurveyContext';
 import Logo from '../../assets/images/Logo.svg';
 import { Ionicons } from '@expo/vector-icons';
 
-type QuestionType = {
-  id: string;
-  type?: 'gender';
-  accord?: string;
-  description?: string;
-  question?: string;
-  options?: {
-    id: string;
-    label: string;
-    emoji: string;
-  }[];
+// Type for question (matches backend)
+// QuestionType is now implicitly handled by the context
+
+// Add this somewhere near the top of app/survey/[id].tsx,
+// perhaps after the imports or before the component definition.
+// You need to replace the keys ('Accord1FromApi', 'Accord2FromApi', etc.)
+// with the actual string values your API sends for `question.accord`,
+// and provide the correct Spanish translation for each.
+const accordTranslations: { [key: string]: string } = {
+  'floral': 'florales',
+  'woody': 'amaderados',
+  'citrus': 'cítricos',
+  'fruity': 'frutales',
+  'spicy': 'especiados',
+  'leather': 'acuerados',
+  'sweet': 'dulces',
+  'vanilla': 'avainillados',
+  'smoky': 'ahumados',
+  'lavender': 'de lavanda',
+  'honey': 'de miel',
+  'coffee': 'de café',
+  'earthy': 'terrosos',
+  'powdery': 'atalcados',
+  'cinnamon': 'acanelados',
 };
 
-const surveyQuestions: QuestionType[] = [
-  {
-    id: '1',
-    type: 'gender',
-    question: '¿Qué tipo de fragancias buscas?',
-    options: [
-      { id: 'male', label: 'Masculinas', emoji: '👨' },
-      { id: 'unisex', label: 'Unisex', emoji: '👥' },
-      { id: 'female', label: 'Femeninas', emoji: '👩' },
-    ]
-  },
-  { id: '2', accord: 'Dulces', description: 'Aromas comestibles como chocolate o caramelo' },
-  { id: '3', accord: 'Cítricos', description: 'Notas frescas como limón o naranja' },
-  { id: '4', accord: 'Amaderados', description: 'Aromas cálidos como cedro o sándalo' },
-  { id: '5', accord: 'Florales', description: 'Esencias de flores como rosa o jazmín' },
-  { id: '6', accord: 'Avainillados', description: 'Toques dulces y cálidos de vainilla' },
-  { id: '7', accord: 'Tabaco', description: 'Aromas intensos y cálidos como el tabaco' },
-  { id: '8', accord: 'Lavanda', description: 'Aroma herbal y relajante' },
-  { id: '9', accord: 'Frutales', description: 'Aromas jugosos como manzana o berries' },
-  { id: '10', accord: 'Acanelados', description: 'Notas especiadas dulces como canela' },
-  { id: '11', accord: 'Especiados', description: 'Toques cálidos como clavo de olor o pimienta' },
-  { id: '12', accord: 'Acuerados', description: 'Aromas intensos tipo cuero' },
-];
+// Function to get the translation, with a fallback
+const getAccordTranslation = (accord?: string): string => {
+  if (!accord) return '';
+  // Convert API accord to lowercase for case-insensitive matching,
+  // assuming your keys in accordTranslations are lowercase.
+  // Adjust if your API sends varying cases and you want to handle that.
+  const lowerAccord = accord.toLowerCase();
+  return accordTranslations[lowerAccord] || accord; // Fallback to original if no translation found
+};
 
-const imageMap = {
-  2: require('../../assets/images/survey1.png'),
-  3: require('../../assets/images/survey2.png'),
-  4: require('../../assets/images/survey3.png'),
-  5: require('../../assets/images/survey4.png'),
-  6: require('../../assets/images/survey5.png'),
-  7: require('../../assets/images/survey6.png'),
-  8: require('../../assets/images/survey7.png'),
-  9: require('../../assets/images/survey8.png'),
-  10: require('../../assets/images/survey9.png'),
-  11: require('../../assets/images/survey10.png'),
-  12: require('../../assets/images/survey11.png'),
+// Map images using lowercase accord names as keys
+const imageMap: { [key: string]: any } = { // Added type annotation
+  'sweet': require('../../assets/images/survey1.png'),    // Was 2
+  'citrus': require('../../assets/images/survey2.png'),   // Was 3
+  'woody': require('../../assets/images/survey3.png'),    // Was 4
+  'floral': require('../../assets/images/survey4.png'),   // Was 5
+  'vanilla': require('../../assets/images/survey5.png'),  // Was 6
+  // 'smoky': require('...'), // No image for 7?
+  'lavender': require('../../assets/images/survey7.png'), // Was 8
+  'fruity': require('../../assets/images/survey8.png'),   // Was 9
+  'cinnamon': require('../../assets/images/survey9.png'), // Was 10
+  'spicy': require('../../assets/images/survey11.png'),  // Was 11
+  'leather': require('../../assets/images/survey10.png'), // Was 12
+  // 'honey': require('...'), // No image for 13?
+  // 'coffee': require('...'), // No image for 14?
+  // 'earthy': require('...'), // No image for 15?
+  'powdery': require('../../assets/images/survey6.png'),  // Was 16
 };
 
 const emojiRatings = ['😖', '😒', '😐', '🙂', '😍'];
@@ -63,10 +67,33 @@ const DESKTOP_BREAKPOINT = 768;
 export default function SurveyQuestion() {
   const { id } = useLocalSearchParams();
   const questionId = typeof id === 'string' ? id : '1';
-  const questionIndex = parseInt(questionId) - 1;
   const router = useRouter();
-  const { setAnswer, answers, saveAllAnswers } = useSurveyContext();
-  const question = surveyQuestions[questionIndex];
+  const {
+    setAnswer,
+    answers,
+    questions,
+    isLoadingQuestions: isLoading,
+    questionError: error,
+  } = useSurveyContext();
+
+  // Removed local useEffect for fetching questions - now handled by context
+
+  // Find current question by ID from route params (more robust than index)
+  const question = useMemo(() => {
+    if (!isLoading && questions && questionId) {
+      // Find the question whose 'id' (which is the DB primary key as a string) matches the route param
+      return questions.find(q => q.id === questionId);
+    }
+    return null;
+  }, [isLoading, questions, questionId]); // Depend on questionId directly
+
+  // Calculate the current index based on the found question for styling purposes
+  const currentIndex = useMemo(() => {
+    if (question && questions) {
+      return questions.findIndex(q => q.id === question.id);
+    }
+    return -1; // Return -1 or some default if not found
+  }, [question, questions]);
   const animatedScales = useRef(emojiRatings.map(() => new Animated.Value(1))).current;
   const { width } = useWindowDimensions();
   const isDesktop = width >= DESKTOP_BREAKPOINT;
@@ -91,58 +118,37 @@ export default function SurveyQuestion() {
     ]).start();
   }, [fadeAnim, slideAnim]);
 
-  if (!question && questionId !== 'complete') {
-    return <Redirect href="/survey/1" />;
-  }
+  // No Redirect needed here anymore. Loading/Error states below handle it.
 
-  if (!question) return null;
-
-  const handleRate = (rating: number | string) => {
-    if (question.type === 'gender') {
-      // Handle gender selection
-      setAnswer('gender', rating as string);
-      const nextQuestionId = parseInt(questionId) + 1;
-      if (nextQuestionId <= surveyQuestions.length) {
-        router.push({
-          pathname: '/survey/[id]',
-          params: { id: String(nextQuestionId) },
-        });
-      } else {
-        saveAllAnswers();
-        router.push('/survey/complete');
-      }
-    } else {
-      // Handle regular rating
-      if (question.accord) {
-        setAnswer(question.accord, rating as number);
-      }
-      const nextQuestionId = parseInt(questionId) + 1;
-      if (nextQuestionId <= surveyQuestions.length) {
-        router.push({
-          pathname: '/survey/[id]',
-          params: { id: String(nextQuestionId) },
-        });
-      } else {
-        saveAllAnswers();
-        router.push('/survey/complete');
-      }
-    }
-  };
-
-  const handleNoAnswer = () => {
-    if (question.accord) {
-      setAnswer(question.accord, -1);
-    }
-    const nextQuestionId = parseInt(questionId) + 1;
-    if (nextQuestionId <= surveyQuestions.length) {
+  // Helper: submit answer to backend after updating local state
+  const submitAndNavigate = async (key: string, value: number | string, nextQuestionId: number) => {
+    const updatedAnswers = { ...answers, [key]: value };
+    // Removed the immediate API call. Submission will happen post-login/signup.
+    setAnswer(key, value);
+    if (nextQuestionId <= questions.length) {
       router.push({
         pathname: '/survey/[id]',
         params: { id: String(nextQuestionId) },
       });
     } else {
-      saveAllAnswers();
       router.push('/survey/complete');
     }
+  };
+
+  const handleRate = (rating: number | string) => {
+    if (!question) return;
+    const nextQuestionId = parseInt(questionId) + 1;
+    if (question.type === 'gender') {
+      submitAndNavigate('gender', rating as string, nextQuestionId);
+    } else if (question.accord) {
+      submitAndNavigate(question.accord, rating as number, nextQuestionId);
+    }
+  };
+
+  const handleNoAnswer = () => {
+    if (!question || !question.accord) return;
+    const nextQuestionId = parseInt(questionId) + 1;
+    submitAndNavigate(question.accord, -1, nextQuestionId);
   };
 
   const handlePressIn = (index: number) => {
@@ -153,17 +159,46 @@ export default function SurveyQuestion() {
     // Implement the logic for pressing out
   };
 
+  if (isLoading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <Text>Cargando preguntas...</Text>
+      </View>
+    );
+  }
+  if (error) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <Text style={{ color: 'red' }}>{error}</Text>
+      </View>
+    );
+  }
+
+  if (!isLoading && !error && !question) {
+    console.warn(`Survey question with ID ${questionId} not found after loading.`);
+    return null;
+  }
+
+  if (!question) {
+      return null;
+  }
+
+
   return (
-    <View style={[styles.container, { backgroundColor: `#F${questionIndex}EECF` }]}>
-      {/* Header with Logo and Back Button */}
+    // Main container View with dynamic background
+    <View style={[styles.container, currentIndex >= 0 ? { backgroundColor: `#F${currentIndex}EECF` } : { backgroundColor: '#FFFFFF' }]}>
+
+      {/* Header Section */}
       <View style={styles.header}>
         <TouchableOpacity
           onPress={() => {
-            const currentId = typeof questionId === 'string' ? parseInt(questionId) : 1;
-            if (currentId > 1) {
-              router.push(`/survey/${currentId - 1}`);
+            // Navigation logic for back button
+            const currentIdx = questions.findIndex(q => q.id === questionId);
+            if (currentIdx > 0) {
+              const prevQuestionId = questions[currentIdx - 1].id;
+              router.push(`/survey/${prevQuestionId}`);
             } else {
-              router.back();
+              router.back(); // Go back from the first question
             }
           }}
           style={styles.backButton}
@@ -175,93 +210,108 @@ export default function SurveyQuestion() {
         </View>
       </View>
 
-      {/* Accord Image */}
-      {question.type !== 'gender' && (
-        <View style={styles.imageContainer}>
-          <View style={styles.imageWrapper}>
-            <Image
-              source={imageMap[parseInt(questionId, 10) as keyof typeof imageMap]}
-              style={styles.image}
-              resizeMode="contain"
-            />
-          </View>
-        </View>
+      {/* Conditional Rendering: Only render content if 'question' is loaded */}
+      {question ? (
+        <>
+          {/* Image Section (Only for non-gender questions) */}
+          {question.type !== 'gender' && (
+            <View style={styles.imageContainer}>
+              <View style={styles.imageWrapper}>
+                {question.accord && imageMap[question.accord.toLowerCase()] ? (
+                  <Image
+                    source={imageMap[question.accord.toLowerCase()]}
+                    style={styles.image}
+                    resizeMode="contain"
+                  />
+                ) : null /* Render nothing if no image found */}
+              </View>
+            </View>
+          )}
+
+          {/* Animated Content Section (Text, Options/Ratings) */}
+          <Animated.View style={[styles.content, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
+
+            {/* Question Text */}
+            {question.type === 'gender' ? (
+              <Text style={[styles.questionGender, isDesktop && styles.desktopQuestionGender]}>
+                {question.question || '¿Qué tipo de fragancias buscas?'}
+              </Text>
+            ) : (
+              <Text style={[styles.question, isDesktop && styles.desktopQuestion]}>
+                {`Te gustan los aromas ${getAccordTranslation(question.accord)}?`}
+              </Text>
+            )}
+
+            {/* Description (Only for non-gender questions) */}
+            {question.type !== 'gender' && question.description && (
+              <Text style={styles.description}>{question.description}</Text>
+            )}
+
+            {/* Options Area */}
+            {question.type === 'gender' ? (
+              // Gender Options
+              <View style={[styles.genderContainer, isDesktop && styles.desktopGenderContainer]}>
+                {question.options?.map((option) => (
+                  <View key={option.id} style={[styles.optionContainer, isDesktop && styles.desktopOptionContainer]}>
+                    <TouchableOpacity
+                      style={[
+                        styles.genderButton,
+                        isDesktop && styles.desktopGenderButton,
+                        answers['gender'] === option.id ? styles.selectedGender : null,
+                      ].filter(Boolean)} // Filter nulls
+                      onPress={() => handleRate(option.id)}
+                    >
+                      <Text style={[styles.genderEmoji, isDesktop && styles.desktopGenderEmoji]}>{option.emoji}</Text>
+                    </TouchableOpacity>
+                    <Text style={[styles.genderLabel, isDesktop && styles.desktopGenderLabel]}>{option.label}</Text>
+                  </View>
+                ))}
+              </View>
+            ) : (
+              // Accord Rating Options
+              <View style={[styles.ratingContainer, isDesktop && styles.desktopRatingContainer]}>
+                {emojiRatings.map((emoji, index) => (
+                  <Animated.View
+                    key={index}
+                    style={{ transform: [{ scale: animatedScales[index] }] }}
+                  >
+                    <TouchableOpacity
+                      style={[
+                        styles.ratingButton,
+                        isDesktop && styles.desktopRatingButton,
+                        question.accord && answers[question.accord] === index + 1 ? styles.selectedRating : null,
+                      ].filter(Boolean)} // Filter nulls
+                      onPress={() => handleRate(index + 1)}
+                      onPressIn={() => handlePressIn(index)}
+                      onPressOut={() => handlePressOut(index)}
+                    >
+                      <Text style={[styles.ratingText, isDesktop && styles.desktopRatingText]}>{emoji}</Text>
+                    </TouchableOpacity>
+                  </Animated.View>
+                ))}
+              </View>
+            )}
+
+            {/* "No sé" Button (Only for non-gender questions) */}
+            {question.type !== 'gender' && (
+              <TouchableOpacity
+                style={[styles.noAnswerButton, isDesktop && styles.desktopNoAnswerButton]}
+                onPress={handleNoAnswer}
+              >
+                <Text style={[styles.noAnswerText, isDesktop && styles.desktopNoAnswerText]}>🙄 No sé</Text>
+              </TouchableOpacity>
+            )}
+
+          </Animated.View>
+        </>
+      ) : (
+        // Optional: Render a loading indicator or null while question is being determined
+        // Or rely on the loading/error checks at the top
+        null
       )}
 
-      {/* Question */}
-      <Animated.View style={[styles.content, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
-        {question.type === 'gender' ? (
-          <Text style={[styles.questionGender, isDesktop && styles.desktopQuestionGender]}>
-            {question.question || '¿Qué tipo de fragancias buscas?'}
-          </Text>
-        ) : (
-          <Text style={[styles.question, isDesktop && styles.desktopQuestion]}>
-            {`Te gustan los aromas ${question.accord?.toLowerCase() || ''}?`}
-          </Text>
-        )}
-
-        {/* Description (only for non-gender questions) */}
-        {question.type !== 'gender' && question.description && (
-          <Text style={styles.description}>{question.description}</Text>
-        )}
-
-        {/* Gender Selection or Emoji Ratings */}
-        {question.type === 'gender' ? (
-          <View style={[styles.genderContainer, isDesktop && styles.desktopGenderContainer]}>
-            {question.options?.map((option) => (
-              <View key={option.id} style={[styles.optionContainer, isDesktop && styles.desktopOptionContainer]}>
-                <TouchableOpacity
-                  style={[
-                    styles.genderButton,
-                    answers['gender'] === option.id && styles.selectedGender,
-                    isDesktop && styles.desktopGenderButton
-                  ]}
-                  onPress={() => handleRate(option.id)}
-                >
-                  <Text style={[styles.genderEmoji, isDesktop && styles.desktopGenderEmoji]}>{option.emoji}</Text>
-                </TouchableOpacity>
-                <Text style={[styles.genderLabel, isDesktop && styles.desktopGenderLabel]}>{option.label}</Text>
-              </View>
-            ))}
-          </View>
-        ) : (
-          <View style={[styles.ratingContainer, isDesktop && styles.desktopRatingContainer]}>
-            {emojiRatings.map((emoji, index) => (
-              <Animated.View
-                key={index}
-                style={{
-                  transform: [{ scale: animatedScales[index] }],
-                }}
-              >
-                <TouchableOpacity
-                  style={[
-                    styles.ratingButton,
-                    question.accord && answers[question.accord] === index + 1 && styles.selectedRating,
-                    isDesktop && styles.desktopRatingButton
-                  ]}
-                  onPress={() => handleRate(index + 1)}
-                  onPressIn={() => handlePressIn(index)}
-                  onPressOut={() => handlePressOut(index)}
-                >
-                  <Text style={[styles.ratingText, isDesktop && styles.desktopRatingText]}>{emoji}</Text>
-                </TouchableOpacity>
-              </Animated.View>
-            ))}
-          </View>
-        )}
-
-        {/* "No sé" option */}
-        {question.type !== 'gender' && (
-          <TouchableOpacity
-            style={[styles.noAnswerButton, isDesktop && styles.desktopNoAnswerButton]}
-            onPress={handleNoAnswer}
-          >
-            <Text style={[styles.noAnswerText, isDesktop && styles.desktopNoAnswerText]}>🙄 No sé</Text>
-          </TouchableOpacity>
-        )}
-      </Animated.View>
-    </View>
-  );
+    </View> // Closing tag for the main container View
+  ); // Closing parenthesis for the component return
 }
 
 const styles = StyleSheet.create({

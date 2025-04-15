@@ -165,7 +165,7 @@ const isDesktop = width >= DESKTOP_BREAKPOINT;
         params: { finalPrice: finalPrice }, // Pass final price
       });
     } else {
-      router.push('/auth/signup'); // Navigate to signup if not logged in
+      router.push('/signup'); // Navigate to signup if not logged in
     }
   }, [user, finalPrice, router]); // Add dependencies
 

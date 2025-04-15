@@ -1,7 +1,6 @@
-import { useRouter } from 'expo-router';
+import { Redirect } from 'expo-router';
 
-export default function AuthIndex() {
-  const router = useRouter();
-  router.replace('/auth/signup');
-  return null;
+export default function AuthRoute() {
+  // Redirect from /auth to /login
+  return <Redirect href="/login" />;
 }

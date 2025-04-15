@@ -1,12 +1,29 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS, FONT_SIZES, SPACING, FONTS } from '../../../types/constants';
 import { SafeAreaView } from 'react-native-safe-area-context'; // Use SafeAreaView
+import { useAuth } from '../../../src/context/AuthContext';
 
 export default function AuthPromptScreen() {
   const router = useRouter();
+  const { user, isLoading } = useAuth();
+
+  // Redirect to profile index if user is logged in
+  useEffect(() => {
+    if (!isLoading && user) {
+      router.replace('/(tabs)/(profile)');
+    }
+  }, [user, isLoading, router]);
+
+  if (isLoading) {
+    return (
+      <SafeAreaView style={[styles.safeArea, { justifyContent: 'center', alignItems: 'center' }]}>
+        <Text>Cargando...</Text>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -19,7 +36,7 @@ export default function AuthPromptScreen() {
 
         <TouchableOpacity
           style={[styles.button, styles.loginButton]}
-          onPress={() => router.push('/auth/login')}
+          onPress={() => router.push('/login')}
           activeOpacity={0.8}
         >
           <Text style={styles.buttonText}>Iniciar Sesión</Text>
@@ -27,7 +44,7 @@ export default function AuthPromptScreen() {
 
         <TouchableOpacity
           style={[styles.button, styles.signupButton]}
-          onPress={() => router.push('/auth/signup')}
+          onPress={() => router.push('/signup')}
           activeOpacity={0.8}
         >
           <Text style={[styles.buttonText, styles.signupButtonText]}>Registrarse</Text>

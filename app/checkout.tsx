@@ -4,15 +4,34 @@ import { useRouter, useLocalSearchParams } from 'expo-router'; // Import useLoca
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { COLORS, FONT_SIZES, SPACING, FONTS } from '../types/constants'; // Added FONTS
+import { useAuth } from '../src/context/AuthContext';
+import { ActivityIndicator } from 'react-native';
 
 export default function CheckoutScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   // Retrieve the finalPrice parameter passed from the cart screen
   const { finalPrice } = useLocalSearchParams<{ finalPrice?: string }>();
+  const { user, isLoading: isAuthLoading } = useAuth();
 
   // Convert finalPrice string to number, default to 0 if undefined or invalid
   const finalPriceValue = finalPrice ? parseFloat(finalPrice) : 0;
+
+  // If still loading auth state, show a loading indicator
+  if (isAuthLoading) {
+    return (
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <ActivityIndicator size="large" color={COLORS.PRIMARY} />
+        <Text style={styles.loadingText}>Cargando...</Text>
+      </View>
+    );
+  }
+
+  // If not authenticated, redirect to login (you could also use the useEffect approach)
+  if (!user) {
+    router.replace('/login');
+    return null;
+  }
 
   // TODO: Add checkout logic (address, payment, order summary using finalPriceValue)
 
@@ -266,5 +285,10 @@ const styles = StyleSheet.create({
     fontSize: FONT_SIZES.REGULAR,
     color: COLORS.TEXT_SECONDARY,
     textAlign: 'center',
+  },
+  loadingText: {
+    fontSize: FONT_SIZES.REGULAR,
+    color: COLORS.TEXT_PRIMARY,
+    marginTop: SPACING.MEDIUM,
   },
 });

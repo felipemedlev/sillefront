@@ -19,3 +19,4 @@ export const handleError: ErrorHandler = (error: unknown): AppError => {
     details: error,
   };
 };
+

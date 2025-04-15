@@ -1,26 +1,60 @@
 import React, { useEffect, useState } from 'react';
-import { GestureHandlerRootView } from 'react-native-gesture-handler'; // <-- Import GestureHandlerRootView
-import { Stack, useRouter, useSegments } from 'expo-router';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { Slot, useRouter, useSegments, useRootNavigationState } from 'expo-router';
 import * as Font from 'expo-font';
 import { StatusBar } from 'expo-status-bar';
-import { View, ActivityIndicator, Text, StyleSheet, Platform } from 'react-native';
+import { View, ActivityIndicator, Text, StyleSheet } from 'react-native';
 import { RatingsProvider } from '../context/RatingsContext';
 import { ManualBoxProvider } from '../context/ManualBoxContext';
 import { CartProvider } from '../context/CartContext';
 import { AuthProvider, useAuth } from '../src/context/AuthContext';
 import { SubscriptionProvider } from '../context/SubscriptionContext';
+import { SurveyProvider } from '../context/SurveyContext';
 import { FontLoadingState, LayoutStyles } from '../types/layout';
 import { FONTS, COLORS, FONT_SIZES, SPACING } from '../types/constants';
 import { handleError } from '../types/error';
 
-function RootLayoutNav() {
+// Create a new component that handles the protected routes logic
+function ProtectedRoutes() {
+  const { user, isLoading: isAuthLoading } = useAuth();
+  const router = useRouter();
+  const segments = useSegments();
+  const navigationState = useRootNavigationState();
+
+  useEffect(() => {
+    // Don't do anything until navigation is ready and auth state is loaded
+    if (isAuthLoading || !navigationState?.key) {
+      return;
+    }
+
+    // Get first segment of the route
+    const firstSegment = segments[0];
+
+    // Only protect checkout route
+    const isCheckoutRoute = firstSegment === 'checkout';
+
+    // If not logged in and trying to access checkout, redirect to login
+    if (!user && isCheckoutRoute) {
+      router.replace('/login');
+    }
+
+    // If user is logged in and trying to access auth screens, redirect to home
+    const isAuthRoute = ['login', 'signup'].includes(firstSegment as string);
+    if (user && isAuthRoute) {
+      router.replace('/(tabs)');
+    }
+  }, [user, isAuthLoading, segments, router, navigationState]);
+
+  // Return a slot that will be filled with the matched route
+  return <Slot />;
+}
+
+// Component to load fonts
+function FontLoader({ children }: { children: React.ReactNode }) {
   const [fontState, setFontState] = useState<FontLoadingState>({
     isLoading: true,
     error: null,
   });
-  const { user, isLoading: isAuthLoading } = useAuth();
-  const router = useRouter();
-  const segments = useSegments();
 
   useEffect(() => {
     const loadFonts = async () => {
@@ -42,23 +76,7 @@ function RootLayoutNav() {
     loadFonts();
   }, []);
 
-  useEffect(() => {
-    if (fontState.isLoading || isAuthLoading) {
-      return;
-    }
-
-    const currentSegment = segments[0] ?? null;
-    const inAuthGroup = currentSegment === 'auth';
-    const isLanding = currentSegment === 'landing';
-
-    if (user && (inAuthGroup || isLanding)) {
-      router.replace('/(tabs)');
-    } else if (currentSegment === 'home') {
-      router.replace('/(tabs)');
-    }
-  }, [user, isAuthLoading, fontState.isLoading, segments, router]);
-
-  if (fontState.isLoading || isAuthLoading) {
+  if (fontState.isLoading) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={COLORS.PRIMARY} />
@@ -71,46 +89,30 @@ function RootLayoutNav() {
     console.error('Error loading fonts:', fontState.error);
   }
 
-  return (
-    <View style={styles.container}>
-      <StatusBar style="dark" translucent={true} />
-      <Stack
-        screenOptions={{
-          headerShown: false,
-          contentStyle: styles.stackContent,
-          animation: 'fade',
-        }}
-      >
-        <Stack.Screen name="landing/index" options={{ headerShown: false }} />
-        <Stack.Screen name="auth" options={{ headerShown: false }} />
-        <Stack.Screen
-          name="(tabs)"
-          options={{
-            headerShown: false,
-            contentStyle: styles.stackContent,
-          }}
-        />
-        <Stack.Screen name="manual-box" options={{ headerShown: false }} />
-        <Stack.Screen name="survey" options={{ headerShown: false }} />
-      </Stack>
-    </View>
-  );
+  return <>{children}</>;
 }
 
 export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <AuthProvider>
-        <CartProvider>
-          <SubscriptionProvider>
-            <ManualBoxProvider>
-              <RatingsProvider>
-                <RootLayoutNav />
-              </RatingsProvider>
-            </ManualBoxProvider>
-          </SubscriptionProvider>
-        </CartProvider>
-      </AuthProvider>
+      <FontLoader>
+        <AuthProvider>
+          <SurveyProvider>
+            <CartProvider>
+              <SubscriptionProvider>
+                <ManualBoxProvider>
+                  <RatingsProvider>
+                    <View style={styles.container}>
+                      <StatusBar style="dark" translucent={true} />
+                      <ProtectedRoutes />
+                    </View>
+                  </RatingsProvider>
+                </ManualBoxProvider>
+              </SubscriptionProvider>
+            </CartProvider>
+          </SurveyProvider>
+        </AuthProvider>
+      </FontLoader>
     </GestureHandlerRootView>
   );
 }

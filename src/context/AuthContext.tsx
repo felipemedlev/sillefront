@@ -1,6 +1,7 @@
 import React, { createContext, useState, useEffect, useContext, ReactNode } from 'react';
 import * as api from '../services/api'; // Import your API service
-import { authUtils } from '../services/api'; // Import token utilities
+import { authUtils, submitSurveyResponse } from '../services/api'; // Import token utilities and submitSurveyResponse
+import { useSurveyContext } from '../../context/SurveyContext'; // Import survey context hook
 
 // Define interfaces for credentials and user data
 
@@ -34,7 +35,7 @@ interface AuthContextType {
   error: string | null;
   login: (credentials: LoginCredentials) => Promise<void>;
   logout: () => Promise<void>;
-  register: (userData: RegisterData) => Promise<void>;
+  register: (userData: RegisterData) => Promise<{ success: boolean; error?: string; }>; // Updated return type
   fetchUserProfile: () => Promise<void>;
   updatePassword: (newPassword: string) => Promise<void>;
   updateProfile: (updates: Partial<Pick<User, 'first_name' | 'last_name' | 'phone' | 'address'>>) => Promise<void>;
@@ -93,7 +94,24 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const response = await api.login({ email, password });
       if (response?.auth_token) {
         setToken(response.auth_token);
-        await fetchUserProfile();
+        await authUtils.setToken(response.auth_token); // Set token first
+        await fetchUserProfile(); // Fetch profile
+
+        // --- Submit survey answers after login ---
+        const surveyContext = useSurveyContext(); // Get survey context here
+        if (surveyContext && Object.keys(surveyContext.answers).length > 0) {
+          try {
+            console.log('AuthContext: Submitting survey answers after login...');
+            await submitSurveyResponse(surveyContext.answers);
+            await surveyContext.resetSurvey(); // Clear local survey data after successful submission
+            console.log('AuthContext: Survey answers submitted and cleared.');
+          } catch (surveyError: any) {
+            console.error('AuthContext: Failed to submit survey answers after login:', surveyError);
+            // Decide how to handle this error. Maybe notify the user?
+            // For now, just log it. The answers remain locally.
+          }
+        }
+        // --- End survey submission ---
         await authUtils.setToken(response.auth_token);
       } else {
         throw new Error('Login failed: No auth token received');
@@ -123,17 +141,38 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const handleRegister = async (userData: RegisterData) => {
+  const handleRegister = async (userData: RegisterData): Promise<{ success: boolean; error?: string; }> => { // Add return type to implementation
     try {
       setIsLoading(true);
       setError(null);
-      await api.register(userData);
-      setIsLoading(false);
+      await api.register(userData); // Call register
+
+      // Auto-login after successful registration
+      try {
+        const loginResponse = await api.login({
+          email: userData.email,
+          password: userData.password
+        });
+
+        if (loginResponse?.auth_token) {
+          setToken(loginResponse.auth_token);
+          await authUtils.setToken(loginResponse.auth_token);
+          await fetchUserProfile();
+        }
+      } catch (loginErr) {
+        console.error('Auto-login after registration failed:', loginErr);
+        // Don't throw error here - registration was still successful
+      }
+
+      // SUCCESS: Registration successful.
+      return { success: true }; // Return success object
     } catch (err: any) {
-      console.error('Registration error in context:', err);
-      setError(err.message || 'Registration failed');
-      setIsLoading(false);
-      throw err;
+      console.error('Registration error in context:', err); // Log the error
+      const errorMessage = err?.data?.email?.[0] || err?.data?.password?.[0] || err?.data?.non_field_errors?.[0] || err.message || 'Registration failed'; // Extract specific error if possible
+      setError(errorMessage); // Set context error state (optional)
+      return { success: false, error: errorMessage }; // Return failure object with message
+    } finally {
+      setIsLoading(false); // Ensure loading is always set to false
     }
   };
    const updatePassword = async (newPassword: string): Promise<void> => {

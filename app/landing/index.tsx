@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -6,9 +6,11 @@ import {
   Dimensions,
   ScrollView,
   TouchableOpacity,
-  Platform
+  Platform,
+  Animated
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import { Button } from '@mui/material';
 
 // import Logo from '../../components/Logo';
 import Logo from '../../assets/images/Logo.svg';
@@ -17,7 +19,6 @@ import Landing1 from '../../assets/images/landing1.svg';
 import Landing2 from '../../assets/images/landing2.svg';
 import Landing3 from '../../assets/images/landing3.svg';
 import PaginationIndicator from '../../components/landing/PaginationIndicator';
-import Button from '../../components/landing/Button';
 import DecantPopup from '../../components/landing/DecantPopup';
 
 const { width, height } = Dimensions.get('window');
@@ -32,13 +33,47 @@ export default function LandingScreen() {
   const logoWidth = isDesktop ? width * 0.15 : width * 0.25;
   const svgHeight = isDesktop ? '25%' : '18%';
 
+  // Animation values
+  const fadeAnim = useRef(new Animated.Value(1)).current;
+  const [isTransitioning, setIsTransitioning] = useState(false);
+
+  // Reset fade animation when page changes
+  useEffect(() => {
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 300,
+      useNativeDriver: true,
+    }).start();
+  }, [currentPage]);
+
   const handlePrimaryButtonPress = () => {
     if (currentPage < 2) {
-      const nextPage = currentPage + 1;
-      // Update state immediately
-      setCurrentPage(nextPage);
-      // Scroll to the next page
-      scrollViewRef.current?.scrollTo({ x: width * nextPage, animated: true });
+      // Start fade out animation
+      setIsTransitioning(true);
+      Animated.timing(fadeAnim, {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: true,
+      }).start(() => {
+        const nextPage = currentPage + 1;
+        // Update state immediately
+        setCurrentPage(nextPage);
+        // Scroll to the next page with smooth animation
+        scrollViewRef.current?.scrollTo({
+          x: width * nextPage,
+          animated: true
+        });
+
+        // Fade back in after a short delay
+        setTimeout(() => {
+          setIsTransitioning(false);
+          Animated.timing(fadeAnim, {
+            toValue: 1,
+            duration: 300,
+            useNativeDriver: true,
+          }).start();
+        }, 100);
+      });
     } else {
       // On last page, navigate to survey
       router.push('/survey/1');
@@ -52,7 +87,29 @@ export default function LandingScreen() {
   const handleScroll = (event: any) => {
     const offsetX = event.nativeEvent.contentOffset.x;
     const page = Math.round(offsetX / width);
-    setCurrentPage(page);
+
+    // Only update if page actually changed
+    if (page !== currentPage) {
+      // Start fade out animation
+      setIsTransitioning(true);
+      Animated.timing(fadeAnim, {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: true,
+      }).start(() => {
+        setCurrentPage(page);
+
+        // Fade back in after a short delay
+        setTimeout(() => {
+          setIsTransitioning(false);
+          Animated.timing(fadeAnim, {
+            toValue: 1,
+            duration: 300,
+            useNativeDriver: true,
+          }).start();
+        }, 100);
+      });
+    }
   };
 
   const renderDecantText = (text: string) => {
@@ -119,34 +176,43 @@ export default function LandingScreen() {
         showsHorizontalScrollIndicator={false}
         onScroll={handleScroll}
         scrollEventThrottle={16}
+        decelerationRate="fast"
+        snapToInterval={width}
+        snapToAlignment="center"
       >
         {landingData.map((page, index) => (
           <View key={index} style={styles.pageContainer}>
-            <View style={styles.logoContainer}>
-              <Logo width={logoWidth} height="auto" preserveAspectRatio="xMidYMid meet" />
-              <Text style={styles.slogan}>Descubre perfumes con AI</Text>
-            </View>
-            {page.image && (
-              <page.image
-                width={width * 0.9}
-                height={height * 0.37}
-                style={styles.mainImage}
-                preserveAspectRatio="xMidYMid meet"
-              />
-            )}
-            <PaginationIndicator totalPages={3} currentPage={currentPage} />
-            <View style={styles.contentContainer}>
-              <Text style={styles.title}>{page.title}</Text>
-              {index === 1 ? (
-                <View style={styles.descriptionWrapper}>
-                  {renderDecantText(page.description)}
-                </View>
-              ) : (
-                <View style={styles.descriptionWrapper}>
-                  <Text style={styles.description}>{page.description}</Text>
-                </View>
+            <Animated.View style={{
+              opacity: fadeAnim,
+              width: '100%',
+              alignItems: 'center'
+            }}>
+              <View style={styles.logoContainer}>
+                <Logo width={logoWidth} height="auto" preserveAspectRatio="xMidYMid meet" />
+                <Text style={styles.slogan}>Descubre perfumes con AI</Text>
+              </View>
+              {page.image && (
+                <page.image
+                  width={width * 0.9}
+                  height={height * 0.37}
+                  style={styles.mainImage}
+                  preserveAspectRatio="xMidYMid meet"
+                />
               )}
-            </View>
+              <PaginationIndicator totalPages={3} currentPage={currentPage} />
+              <View style={styles.contentContainer}>
+                <Text style={styles.title}>{page.title}</Text>
+                {index === 1 ? (
+                  <View style={styles.descriptionWrapper}>
+                    {renderDecantText(page.description)}
+                  </View>
+                ) : (
+                  <View style={styles.descriptionWrapper}>
+                    <Text style={styles.description}>{page.description}</Text>
+                  </View>
+                )}
+              </View>
+            </Animated.View>
           </View>
         ))}
       </ScrollView>
@@ -155,16 +221,29 @@ export default function LandingScreen() {
         currentPage < 2 && styles.bottomContainerFirstTwo
       ]}>
         <Button
-          title={getPrimaryButtonTitle()}
-          onPress={handlePrimaryButtonPress}
-          primary
-        />
+          variant="contained"
+          color="primary"
+          onClick={handlePrimaryButtonPress}
+          disabled={isTransitioning}
+          sx={{
+            width: 200,
+            marginBottom: '10px'
+          }}
+        >
+          {getPrimaryButtonTitle()}
+        </Button>
         {currentPage === 2 && (
           <Button
-            title="Elegir mis decants"
-            onPress={handleSkipPress}
-            primary={false}
-          />
+            variant="outlined"
+            color="secondary"
+            onClick={handleSkipPress}
+            disabled={isTransitioning}
+            sx={{
+              width: 200,
+            }}
+          >
+            Elegir mis decants
+          </Button>
         )}
       </View>
       <DecantPopup

@@ -15,6 +15,7 @@ interface ButtonProps {
   primary?: boolean;
   style?: ViewStyle;
   textStyle?: TextStyle;
+  disabled?: boolean;
 }
 
 const Button = ({
@@ -22,7 +23,8 @@ const Button = ({
   onPress,
   primary = true,
   style,
-  textStyle
+  textStyle,
+  disabled = false
 }: ButtonProps) => {
   const screenWidth = Dimensions.get('window').width;
   const screenHeight = Dimensions.get('window').height;
@@ -39,14 +41,17 @@ const Button = ({
               : { minHeight: screenHeight * 0.045 } // allow secondary to grow with content
           ),
         },
+        disabled && styles.disabledButton,
         style
       ]}
       onPress={onPress}
+      disabled={disabled}
     >
       <Text
         style={[
           styles.text,
           primary ? styles.primaryText : styles.secondaryText,
+          disabled && styles.disabledText,
           textStyle
         ]}
       >
@@ -71,6 +76,10 @@ const styles = StyleSheet.create({
   secondaryButton: {
     backgroundColor: COLORS.ACCENT,
   },
+  disabledButton: {
+    backgroundColor: '#CCCCCC',
+    opacity: 0.7,
+  },
   text: {
     fontSize: 18,
     fontFamily: 'InstrumentSans',
@@ -83,6 +92,9 @@ const styles = StyleSheet.create({
   secondaryText: {
     color: '#FFFFFF',
     fontWeight: 'bold'
+  },
+  disabledText: {
+    color: '#888888',
   },
 });
 

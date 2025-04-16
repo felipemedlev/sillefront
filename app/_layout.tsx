@@ -4,6 +4,8 @@ import { Slot, useRouter, useSegments, useRootNavigationState } from 'expo-route
 import * as Font from 'expo-font';
 import { StatusBar } from 'expo-status-bar';
 import { View, ActivityIndicator, Text, StyleSheet } from 'react-native';
+import { ThemeProvider, createTheme } from '@mui/material/styles';
+import CssBaseline from '@mui/material/CssBaseline';
 import { RatingsProvider } from '../context/RatingsContext';
 import { ManualBoxProvider } from '../context/ManualBoxContext';
 import { CartProvider } from '../context/CartContext';
@@ -13,6 +15,81 @@ import { SurveyProvider } from '../context/SurveyContext';
 import { FontLoadingState, LayoutStyles } from '../types/layout';
 import { FONTS, COLORS, FONT_SIZES, SPACING } from '../types/constants';
 import { handleError } from '../types/error';
+
+// Create a theme instance
+const theme = createTheme({
+  palette: {
+    primary: {
+      main: '#222222',
+    },
+    secondary: {
+      main: COLORS.ACCENT,
+    },
+    background: {
+      default: '#FFFEFC',
+      paper: '#FFFFFF',
+    },
+  },
+  typography: {
+    fontFamily: 'InstrumentSans',
+    button: {
+      fontFamily: 'InstrumentSans',
+      textTransform: 'none',
+    },
+    h1: {
+      fontFamily: 'InstrumentSans',
+    },
+    h2: {
+      fontFamily: 'InstrumentSans',
+    },
+    h3: {
+      fontFamily: 'InstrumentSans',
+    },
+    h4: {
+      fontFamily: 'InstrumentSans',
+    },
+    h5: {
+      fontFamily: 'InstrumentSans',
+    },
+    h6: {
+      fontFamily: 'InstrumentSans',
+    },
+    body1: {
+      fontFamily: 'InstrumentSans',
+    },
+    body2: {
+      fontFamily: 'InstrumentSans',
+    },
+  },
+  components: {
+    MuiCssBaseline: {
+      styleOverrides: {
+        '@font-face': {
+          fontFamily: 'InstrumentSans',
+          src: `url(${require('../assets/fonts/InstrumentSans-Regular.ttf')}) format('truetype')`,
+          fontWeight: 'normal',
+          fontStyle: 'normal',
+        },
+      },
+    },
+    MuiButton: {
+      styleOverrides: {
+        root: {
+          borderRadius: '12px',
+          fontSize: '18px',
+          textTransform: 'none',
+          padding: '10px 20px',
+        },
+        contained: {
+          boxShadow: 'none',
+          '&:hover': {
+            boxShadow: 'none',
+          },
+        },
+      },
+    },
+  },
+});
 
 // Create a new component that handles the protected routes logic
 function ProtectedRoutes() {
@@ -95,24 +172,24 @@ function FontLoader({ children }: { children: React.ReactNode }) {
 export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <FontLoader>
-        <AuthProvider>
-          <SurveyProvider>
-            <CartProvider>
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <FontLoader>
+          <AuthProvider>
+            <SurveyProvider>
               <SubscriptionProvider>
-                <ManualBoxProvider>
-                  <RatingsProvider>
-                    <View style={styles.container}>
-                      <StatusBar style="dark" translucent={true} />
+                <CartProvider>
+                  <ManualBoxProvider>
+                    <RatingsProvider>
                       <ProtectedRoutes />
-                    </View>
-                  </RatingsProvider>
-                </ManualBoxProvider>
+                    </RatingsProvider>
+                  </ManualBoxProvider>
+                </CartProvider>
               </SubscriptionProvider>
-            </CartProvider>
-          </SurveyProvider>
-        </AuthProvider>
-      </FontLoader>
+            </SurveyProvider>
+          </AuthProvider>
+        </FontLoader>
+      </ThemeProvider>
     </GestureHandlerRootView>
   );
 }

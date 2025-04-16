@@ -7,7 +7,7 @@ import SearchBar from '../../../components/search/SearchBar';
 import SearchResults from '../../../components/search/SearchResults';
 import PerfumeModal from '../../../components/product/PerfumeModal';
 import { PerfumeModalRef } from '../../../components/product/PerfumeModal';
-import FilterModal from '../../../components/search/FilterModal'; // Import FilterModal
+import FilterDrawer from '../../../components/search/FilterDrawer'; // Import FilterDrawer instead of FilterModal
 import { router } from 'expo-router';
 
 const DESKTOP_BREAKPOINT = 768;
@@ -57,7 +57,7 @@ export default function SearchScreen() {
   const [selectedPerfume, setSelectedPerfume] = useState<Perfume | null>(null);
   const [activeFilters, setActiveFilters] = useState<ActiveFilters>(initialFilters);
   const [activeSort, setActiveSort] = useState<ActiveSort>(initialSort);
-  const [isFilterModalVisible, setIsFilterModalVisible] = useState(false);
+  const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false); // Renamed from isFilterModalVisible
   const modalRef = useRef<PerfumeModalRef>(null);
   const { width } = useWindowDimensions();
   const isDesktop = width >= DESKTOP_BREAKPOINT;
@@ -280,7 +280,7 @@ export default function SearchScreen() {
         value={searchQuery}
         onChangeText={setSearchQuery}
         onManualBoxPress={handleManualBoxPress}
-        onFilterPress={() => setIsFilterModalVisible(true)} // Pass filter press handler
+        onFilterPress={() => setIsFilterDrawerOpen(true)} // Updated to use new state
       />
 
       {/* Sort Buttons */}
@@ -326,15 +326,14 @@ export default function SearchScreen() {
         onClose={() => setSelectedPerfume(null)}
       />
 
-      {/* Filter Modal */}
-      <FilterModal
-        isVisible={isFilterModalVisible}
-        onClose={() => setIsFilterModalVisible(false)}
+      {/* Filter Drawer */}
+      <FilterDrawer
+        open={isFilterDrawerOpen}
+        onClose={() => setIsFilterDrawerOpen(false)}
         initialFilters={activeFilters}
-        onApplyFilters={handleApplyFilters} // Use wrapper function
-        allBrands={allAvailableBrands} // Pass the fetched list of all brands
-        allOccasions={allAvailableOccasions} // Pass the fetched list of all occasions
-        // Ensure pricePerML is accessed correctly if it exists, otherwise default to 0
+        onApplyFilters={handleApplyFilters}
+        allBrands={allAvailableBrands}
+        allOccasions={allAvailableOccasions}
         minPrice={Math.min(0, ...perfumesWithMatch.map(p => (p as any).pricePerML ?? 0))}
         maxPrice={Math.max(0, ...perfumesWithMatch.map(p => (p as any).pricePerML ?? 0))}
       />

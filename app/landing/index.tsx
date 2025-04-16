@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -24,10 +24,12 @@ import DecantPopup from '../../components/landing/DecantPopup';
 const { width, height } = Dimensions.get('window');
 const DESKTOP_BREAKPOINT = 768;
 
-export default function LandingScreen() {
+const LandingScreen = React.memo(() => {
   const router = useRouter();
   const isDesktop = Platform.OS === 'web' && width >= DESKTOP_BREAKPOINT;
   const [currentPage, setCurrentPage] = useState(0);
+  // Separate state for displaying the current page (stable during transitions)
+  const [displayPage, setDisplayPage] = useState(0);
   const [showDecantPopup, setShowDecantPopup] = useState(false);
   const scrollViewRef = useRef<ScrollView>(null);
   const logoWidth = isDesktop ? width * 0.15 : width * 0.25;
@@ -36,6 +38,13 @@ export default function LandingScreen() {
   // Animation values
   const fadeAnim = useRef(new Animated.Value(1)).current;
   const [isTransitioning, setIsTransitioning] = useState(false);
+
+  // Update display page when transition is complete
+  useEffect(() => {
+    if (!isTransitioning) {
+      setDisplayPage(currentPage);
+    }
+  }, [currentPage, isTransitioning]);
 
   // Reset fade animation when page changes
   useEffect(() => {
@@ -46,7 +55,7 @@ export default function LandingScreen() {
     }).start();
   }, [currentPage]);
 
-  const handlePrimaryButtonPress = () => {
+  const handlePrimaryButtonPress = useCallback(() => {
     if (currentPage < 2) {
       // Start fade out animation
       setIsTransitioning(true);
@@ -72,19 +81,19 @@ export default function LandingScreen() {
             duration: 300,
             useNativeDriver: true,
           }).start();
-        }, 100);
+        }, 300);
       });
     } else {
       // On last page, navigate to survey
       router.push('/survey/1');
     }
-  };
+  }, [currentPage, fadeAnim, router, width]);
 
-  const handleSkipPress = () => {
+  const handleSkipPress = useCallback(() => {
     router.push('/manual-box');
-  };
+  }, [router]);
 
-  const handleScroll = (event: any) => {
+  const handleScroll = useCallback((event: any) => {
     const offsetX = event.nativeEvent.contentOffset.x;
     const page = Math.round(offsetX / width);
 
@@ -107,12 +116,12 @@ export default function LandingScreen() {
             duration: 300,
             useNativeDriver: true,
           }).start();
-        }, 100);
+        }, 300);
       });
     }
-  };
+  }, [currentPage, fadeAnim, width]);
 
-  const renderDecantText = (text: string) => {
+  const renderDecantText = useCallback((text: string) => {
     const parts = text.split(/(decants)/g);
 
     return (
@@ -128,10 +137,11 @@ export default function LandingScreen() {
         )}
       </Text>
     );
-  };
+  }, []);
 
-  const getPrimaryButtonTitle = () => {
-    switch (currentPage) {
+  const getPrimaryButtonTitle = useCallback(() => {
+    // Use displayPage instead of currentPage for button title
+    switch (displayPage) {
       case 0:
         return "Comenzar";
       case 1:
@@ -141,7 +151,7 @@ export default function LandingScreen() {
       default:
         return "Siguiente";
     }
-  };
+  }, [displayPage]);
 
   const landingData = [
     {
@@ -216,43 +226,51 @@ export default function LandingScreen() {
           </View>
         ))}
       </ScrollView>
-      <View style={[
-        styles.bottomContainer,
-        currentPage < 2 && styles.bottomContainerFirstTwo
-      ]}>
-        <Button
-          variant="contained"
-          color="primary"
-          onClick={handlePrimaryButtonPress}
-          disabled={isTransitioning}
-          sx={{
-            width: 200,
-            marginBottom: '10px'
-          }}
-        >
-          {getPrimaryButtonTitle()}
-        </Button>
-        {currentPage === 2 && (
+      <Animated.View style={{
+        width: '100%',
+        alignItems: 'center',
+        opacity: fadeAnim,
+      }}>
+        <View style={[
+          styles.bottomContainer,
+          currentPage < 2 && styles.bottomContainerFirstTwo
+        ]}>
           <Button
-            variant="outlined"
-            color="secondary"
-            onClick={handleSkipPress}
+            variant="contained"
+            color="primary"
+            onClick={handlePrimaryButtonPress}
             disabled={isTransitioning}
             sx={{
               width: 200,
+              marginBottom: '10px'
             }}
           >
-            Elegir mis decants
+            {getPrimaryButtonTitle()}
           </Button>
-        )}
-      </View>
+          {displayPage === 2 && (
+            <Button
+              variant="outlined"
+              color="secondary"
+              onClick={handleSkipPress}
+              disabled={isTransitioning}
+              sx={{
+                width: 200,
+              }}
+            >
+              Elegir mis decants
+            </Button>
+          )}
+        </View>
+      </Animated.View>
       <DecantPopup
         visible={showDecantPopup}
         onClose={() => setShowDecantPopup(false)}
       />
     </View>
   );
-}
+});
+
+export default LandingScreen;
 
 const styles = StyleSheet.create({
   container: {

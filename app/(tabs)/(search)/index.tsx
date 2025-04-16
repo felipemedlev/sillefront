@@ -81,7 +81,13 @@ export default function SearchScreen() {
 
   // Debounce filters (no delay needed if applied via modal "Apply" button)
   React.useEffect(() => {
-    setDebouncedFilters(activeFilters);
+    // console.log("Setting debounced filters from active filters:", JSON.stringify(activeFilters, null, 2));
+    // Use setTimeout to ensure this happens asynchronously
+    const timeout = setTimeout(() => {
+      setDebouncedFilters(activeFilters);
+    }, 50); // Small delay to ensure any other state updates have settled
+
+    return () => clearTimeout(timeout);
   }, [activeFilters]);
 
 
@@ -97,13 +103,14 @@ export default function SearchScreen() {
     // Prevent fetching more if already loading or no more pages for the *current* query/filters
     if (isLoading || (!isNewQuery && !hasNextPage)) return;
 
-    // console.log(`Loading perfumes - Page: ${pageToLoad}, Query: '${query}', Filters:`, filters);
+    // console.log(`Loading perfumes - Page: ${pageToLoad}, Query: '${query}'`);
+    // console.log('Filters being sent to API:', JSON.stringify(filters, null, 2));
     setIsLoading(true);
 
     try {
       // Pass search and filters to the API call
       const data = await fetchPerfumes(pageToLoad, 20, query, filters);
-      // console.log('Fetched perfumes page', pageToLoad, data);
+      // console.log(`Fetched perfumes page ${pageToLoad}, results count:`, data.results?.length || 0);
       const newResults = data.results ?? [];
 
       setPerfumes(prev => isNewQuery ? newResults : [...prev, ...newResults]);
@@ -181,7 +188,7 @@ export default function SearchScreen() {
 
   // Wrapper function to log applied filters
   const handleApplyFilters = (newFilters: ActiveFilters) => {
-    // console.log("Applying filters from modal:", newFilters);
+    console.log("Applying filters from drawer:", newFilters);
     setActiveFilters(newFilters);
   };
 
@@ -334,8 +341,11 @@ export default function SearchScreen() {
         onApplyFilters={handleApplyFilters}
         allBrands={allAvailableBrands}
         allOccasions={allAvailableOccasions}
-        minPrice={Math.min(0, ...perfumesWithMatch.map(p => (p as any).pricePerML ?? 0))}
-        maxPrice={Math.max(0, ...perfumesWithMatch.map(p => (p as any).pricePerML ?? 0))}
+        minPrice={0} // Simple default
+        maxPrice={Math.max(100, ...perfumesWithMatch.map(p => {
+          const price = parseFloat(String((p as any).pricePerML ?? 0));
+          return isNaN(price) ? 0 : price;
+        }))}
       />
     </View>
   );

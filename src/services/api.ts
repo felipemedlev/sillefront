@@ -172,7 +172,7 @@ export const fetchPerfumes = async (
   if (searchQuery) params.append('search', searchQuery);
   // Send IDs as comma-separated strings
   if (filters.brands?.length) params.append('brand', filters.brands.map(String).join(','));
-  if (filters.occasions?.length) params.append('occasions', filters.occasions.map(String).join(',')); // Send Occasion IDs
+  if (filters.occasions?.length) params.append('occasions', filters.occasions.map(String).join(',')); // Using 'occasions' (plural) as required by backend
 
   // Send keys as comma-separated strings
   if (filters.genders?.length) params.append('gender', filters.genders.join(','));

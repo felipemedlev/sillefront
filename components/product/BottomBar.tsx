@@ -1,37 +1,13 @@
 import React from 'react';
-import { View, Text, Pressable, StyleSheet, Animated } from 'react-native';
+import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { COLORS, FONT_SIZES, SPACING } from '../../types/constants'; // Assuming constants are here
 
 interface BottomBarProps {
   totalPrice: number;
   onAddToCart: () => void;
-  feedbackMessage?: string | null; // Optional feedback message
 }
 
-const BottomBar: React.FC<BottomBarProps> = ({ totalPrice, onAddToCart, feedbackMessage }) => {
-  const fadeAnim = React.useRef(new Animated.Value(0)).current;
-
-  React.useEffect(() => {
-    if (feedbackMessage) {
-      Animated.sequence([
-        Animated.timing(fadeAnim, {
-          toValue: 1,
-          duration: 300,
-          useNativeDriver: true,
-        }),
-        Animated.delay(1500), // Keep message visible for 1.5 seconds
-        Animated.timing(fadeAnim, {
-          toValue: 0,
-          duration: 300,
-          useNativeDriver: true,
-        }),
-      ]).start();
-    } else {
-      // Reset animation if message is cleared
-      fadeAnim.setValue(0);
-    }
-  }, [feedbackMessage, fadeAnim]);
-
+const BottomBar: React.FC<BottomBarProps> = ({ totalPrice, onAddToCart }) => {
   return (
     <View style={styles.bottomBar}>
       <View style={styles.leftContainer}>
@@ -39,16 +15,10 @@ const BottomBar: React.FC<BottomBarProps> = ({ totalPrice, onAddToCart, feedback
           <Text style={styles.totalPriceLabel}>Total:</Text>
           <Text style={styles.totalPriceValue}>${totalPrice.toLocaleString('de-DE')}</Text>
         </View>
-        {feedbackMessage && (
-          <Animated.View style={[styles.feedbackContainer, { opacity: fadeAnim }]}>
-            <Text style={styles.feedbackText}>{feedbackMessage}</Text>
-          </Animated.View>
-        )}
       </View>
       <Pressable
         style={styles.addToCartButton}
         onPress={onAddToCart}
-        disabled={!!feedbackMessage} // Optionally disable button during feedback
       >
         <Text style={styles.addToCartButtonText}>Añadir al carro</Text>
       </Pressable>
@@ -84,18 +54,6 @@ const styles = StyleSheet.create({
     fontSize: FONT_SIZES.LARGE, // Use constants
     fontWeight: '600',
     color: COLORS.TEXT_PRIMARY, // Use constants
-  },
-  feedbackContainer: {
-    marginTop: SPACING.XSMALL,
-    padding: SPACING.XSMALL,
-    backgroundColor: COLORS.SUCCESS + '20', // Light success background
-    borderRadius: 4,
-  },
-  feedbackText: {
-    fontSize: FONT_SIZES.XSMALL,
-    color: COLORS.SUCCESS, // Use constants
-    fontWeight: '500',
-    textAlign: 'left',
   },
   addToCartButton: {
     backgroundColor: COLORS.PRIMARY, // Use constants

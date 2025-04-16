@@ -1,9 +1,10 @@
 import React, { useCallback, useState, useEffect, useMemo } from 'react';
-import { View, Text, Image, StyleSheet, TouchableOpacity, Dimensions, Animated } from 'react-native';
+import { View, Text, Image, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
 import { Feather, Ionicons } from '@expo/vector-icons'; // Import Ionicons
 import { BasicPerfumeInfo, Perfume } from '../../types/perfume';
 import { useRatings } from '../../context/RatingsContext';
-import { useManualBox } from '../../context/ManualBoxContext'; // <-- Add this
+import { useManualBox } from '../../context/ManualBoxContext';
+import { useSnackbar } from '../../context/SnackbarContext'; // Import useSnackbar
 import { COLORS, FONT_SIZES, SPACING } from '../../types/constants';
 
 interface PerfumeCardProps {
@@ -28,30 +29,10 @@ export default function PerfumeCard({ perfume, matchPercentage, onPress, isDeskt
     cardWidth = (AVAILABLE_WIDTH / NUM_COLUMNS) - 8; // Slightly reduce width to create gap on mobile
   }
   const { addFavorite, removeFavorite, isFavorite } = useRatings();
-  const { addPerfume, removePerfume, isPerfumeSelected, canAddMorePerfumes, decantCount } = useManualBox(); // Add decantCount
+  const { addPerfume, removePerfume, isPerfumeSelected, canAddMorePerfumes, decantCount } = useManualBox();
+  const { showSnackbar } = useSnackbar(); // Use the SnackbarContext
   const favorite = isFavorite(perfume.id);
   const isSelected = isPerfumeSelected(perfume.id);
-  const [showToast, setShowToast] = useState(false);
-  const [toastMessage, setToastMessage] = useState('');
-  const fadeAnim = useMemo(() => new Animated.Value(0), []);
-
-  useEffect(() => {
-    if (showToast) {
-      Animated.sequence([
-        Animated.timing(fadeAnim, {
-          toValue: 1,
-          duration: 300,
-          useNativeDriver: true,
-        }),
-        Animated.delay(2000),
-        Animated.timing(fadeAnim, {
-          toValue: 0,
-          duration: 300,
-          useNativeDriver: true,
-        }),
-      ]).start(() => setShowToast(false));
-    }
-  }, [showToast, fadeAnim]);
 
   const handleFavoriteToggle = useCallback(() => {
     if (favorite) {
@@ -64,32 +45,34 @@ export default function PerfumeCard({ perfume, matchPercentage, onPress, isDeskt
   const handleManualBoxToggle = useCallback(() => {
     if (isSelected) {
       removePerfume(perfume.id);
-      setToastMessage('Perfume removido del Box Manual');
-      setShowToast(true);
+      showSnackbar('Perfume removido del Box Personalizado', 'info'); // Normal notification
     } else if (canAddMorePerfumes()) {
       if ('brand' in perfume && 'name' in perfume && 'thumbnailUrl' in perfume) {
         addPerfume(perfume as Perfume);
-        setToastMessage('Perfume añadido al Box Manual');
-        setShowToast(true);
+        showSnackbar('Perfume añadido al Box Personalizado', 'info'); // Normal notification
       } else {
-        console.warn("Cannot add basic perfume info to manual box yet.");
+        console.warn("Cannot add basic perfume info to box personalizado yet.");
       }
     } else {
-      setToastMessage(`No puedes añadir más perfumes. El box manual tiene un límite de ${decantCount} perfumes.`);
-      setShowToast(true);
+      // Custom error message based on decantCount
+      let errorMessage = `El Box Personalizado tiene un límite de ${decantCount} perfumes.`;
+
+      // Add specific guidance based on decantCount
+      if (decantCount === 4) {
+        errorMessage += "\nDebes cambiar la cantidad de decant a 8 en el Box Personalizado.";
+      } else if (decantCount === 8) {
+        errorMessage += "\nPuedes agregar tu Box en el carro y hacer un nuevo Box Personalizado.";
+      }
+
+      showSnackbar(errorMessage, 'error'); // Red error message
     }
-  }, [isSelected, removePerfume, addPerfume, perfume, canAddMorePerfumes, decantCount]);
+  }, [isSelected, removePerfume, addPerfume, perfume, canAddMorePerfumes, decantCount, showSnackbar]);
 
   // Use match_percentage (snake_case) consistent with potential API/type structure
   const displayMatch = matchPercentage ?? (perfume as any).match_percentage;
 
   return (
     <View style={[styles.cardOuterContainer, { width: cardWidth }]}>
-      {showToast && (
-        <Animated.View style={[styles.toast, { opacity: fadeAnim }]}>
-          <Text style={styles.toastText}>{toastMessage}</Text>
-        </Animated.View>
-      )}
       {displayMatch !== undefined && (
         <View style={styles.matchContainer}>
           <Text style={styles.matchPercentage}>{displayMatch}%</Text>
@@ -224,8 +207,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  // Remove original addButton, replace with base and conditional styles
-  // addButton: { ... }, // <-- Remove or comment out this block
   addButtonBase: { // Base styles for the add button circle
     borderRadius: 15, // Perfect circle
     width: 30,
@@ -241,22 +222,5 @@ const styles = StyleSheet.create({
   addButtonSelected: { // Style when selected (filled)
     backgroundColor: COLORS.PRIMARY, // Primary background
     borderColor: COLORS.PRIMARY, // Ensure border is also primary when filled
-  },
-  toast: {
-    position: 'absolute',
-    top: 10,
-    left: 10,
-    right: 10,
-    backgroundColor: 'rgba(0, 0, 0, 0.8)',
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    zIndex: 1000,
-    alignItems: 'center',
-  },
-  toastText: {
-    color: COLORS.BACKGROUND,
-    fontSize: FONT_SIZES.SMALL,
-    fontWeight: '500',
   },
 });

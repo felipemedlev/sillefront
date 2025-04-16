@@ -1,258 +1,317 @@
-import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  Dimensions,
-  ScrollView,
-  TouchableOpacity,
-  Platform,
-  Animated
-} from 'react-native';
+import React, { useState } from 'react';
+import { View, StyleSheet, Dimensions, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Button } from '@mui/material';
+import {
+  Button,
+  Stepper,
+  Step,
+  StepLabel,
+  Paper,
+  Box,
+  MobileStepper,
+  useTheme,
+  Typography
+} from '@mui/material';
 
-// import Logo from '../../components/Logo';
+// Import SVG Assets
 import Logo from '../../assets/images/Logo.svg';
 import FondoFinal from '../../assets/images/FondoFinal.svg';
 import Landing1 from '../../assets/images/landing1.svg';
 import Landing2 from '../../assets/images/landing2.svg';
 import Landing3 from '../../assets/images/landing3.svg';
-import PaginationIndicator from '../../components/landing/PaginationIndicator';
 import DecantPopup from '../../components/landing/DecantPopup';
 
 const { width, height } = Dimensions.get('window');
 const DESKTOP_BREAKPOINT = 768;
 
-const LandingScreen = React.memo(() => {
+// Define landing page content data type
+interface LandingItem {
+  title: string;
+  description: string;
+  image: React.FC<any>;
+  buttonText: string;
+}
+
+// Landing page content data
+const landingData: LandingItem[] = [
+  {
+    title: "Descubre perfumes según tus gustos",
+    description: "Utilizamos inteligencia artificial para encontrar perfumes de acuerdo a tu perfil en base a un test inicial",
+    image: Landing1,
+    buttonText: "Comenzar",
+  },
+  {
+    title: "Ordena un Box de muestras personalizadas",
+    description: "Te enviaremos un box con decants según tus gustos. Elige formatos de 3, 5 o 10 ml y 4 u 8 decants. ¡Puedes cambiarlos si quieres!",
+    image: Landing2,
+    buttonText: "Siguiente",
+  },
+  {
+    title: "Califica y mejora tus recomendaciones",
+    description: "Evalúa tus fragancias y nuestro algoritmo ajustará tus sugerencias para que descubras nuevos aromas.",
+    image: Landing3,
+    buttonText: "Realizar test inicial",
+  },
+];
+
+const LandingScreen: React.FC = () => {
   const router = useRouter();
+  const theme = useTheme();
   const isDesktop = Platform.OS === 'web' && width >= DESKTOP_BREAKPOINT;
-  const [currentPage, setCurrentPage] = useState(0);
-  // Separate state for displaying the current page (stable during transitions)
-  const [displayPage, setDisplayPage] = useState(0);
+  const [activeStep, setActiveStep] = useState(0);
   const [showDecantPopup, setShowDecantPopup] = useState(false);
-  const scrollViewRef = useRef<ScrollView>(null);
   const logoWidth = isDesktop ? width * 0.15 : width * 0.25;
   const svgHeight = isDesktop ? '25%' : '18%';
 
-  // Animation values
-  const fadeAnim = useRef(new Animated.Value(1)).current;
-  const [isTransitioning, setIsTransitioning] = useState(false);
-
-  // Update display page when transition is complete
-  useEffect(() => {
-    if (!isTransitioning) {
-      setDisplayPage(currentPage);
-    }
-  }, [currentPage, isTransitioning]);
-
-  // Reset fade animation when page changes
-  useEffect(() => {
-    Animated.timing(fadeAnim, {
-      toValue: 1,
-      duration: 300,
-      useNativeDriver: true,
-    }).start();
-  }, [currentPage]);
-
-  const handlePrimaryButtonPress = useCallback(() => {
-    if (currentPage < 2) {
-      // Start fade out animation
-      setIsTransitioning(true);
-      Animated.timing(fadeAnim, {
-        toValue: 0,
-        duration: 200,
-        useNativeDriver: true,
-      }).start(() => {
-        const nextPage = currentPage + 1;
-        // Update state immediately
-        setCurrentPage(nextPage);
-        // Scroll to the next page with smooth animation
-        scrollViewRef.current?.scrollTo({
-          x: width * nextPage,
-          animated: true
-        });
-
-        // Fade back in after a short delay
-        setTimeout(() => {
-          setIsTransitioning(false);
-          Animated.timing(fadeAnim, {
-            toValue: 1,
-            duration: 300,
-            useNativeDriver: true,
-          }).start();
-        }, 300);
-      });
-    } else {
-      // On last page, navigate to survey
+  // Handle next step button click
+  const handleNext = () => {
+    if (activeStep === landingData.length - 1) {
+      // On last step, navigate to survey
       router.push('/survey/1');
+    } else {
+      setActiveStep((prevStep) => prevStep + 1);
     }
-  }, [currentPage, fadeAnim, router, width]);
+  };
 
-  const handleSkipPress = useCallback(() => {
+  // Handle skip button click (on last step)
+  const handleSkip = () => {
     router.push('/manual-box');
-  }, [router]);
+  };
 
-  const handleScroll = useCallback((event: any) => {
-    const offsetX = event.nativeEvent.contentOffset.x;
-    const page = Math.round(offsetX / width);
-
-    // Only update if page actually changed
-    if (page !== currentPage) {
-      // Start fade out animation
-      setIsTransitioning(true);
-      Animated.timing(fadeAnim, {
-        toValue: 0,
-        duration: 200,
-        useNativeDriver: true,
-      }).start(() => {
-        setCurrentPage(page);
-
-        // Fade back in after a short delay
-        setTimeout(() => {
-          setIsTransitioning(false);
-          Animated.timing(fadeAnim, {
-            toValue: 1,
-            duration: 300,
-            useNativeDriver: true,
-          }).start();
-        }, 300);
-      });
-    }
-  }, [currentPage, fadeAnim, width]);
-
-  const renderDecantText = useCallback((text: string) => {
+  // Render decant text with clickable link
+  const renderDecantText = (text: string) => {
     const parts = text.split(/(decants)/g);
 
     return (
-      <Text style={styles.description}>
+      <Typography variant="body1" sx={{
+        fontSize: 18,
+        textAlign: 'center',
+        color: '#717171',
+        minHeight: 60,
+        lineHeight: 1.4,
+      }}>
         {parts.map((part, index) =>
           part === "decants" ? (
-            <TouchableOpacity key={index} onPress={() => setShowDecantPopup(true)}>
-              <Text style={styles.linkText}>{part}</Text>
-            </TouchableOpacity>
+            <Typography
+              key={index}
+              component="span"
+              onClick={() => setShowDecantPopup(true)}
+              sx={{
+                color: '#0000EE',
+                textDecoration: 'underline',
+                fontSize: 18,
+                fontWeight: 500,
+                cursor: 'pointer',
+              }}
+            >
+              {part}
+            </Typography>
           ) : (
-            <Text key={index}>{part}</Text> // Ensure all parts are wrapped in <Text>
+            <Typography key={index} component="span">
+              {part}
+            </Typography>
           )
         )}
-      </Text>
+      </Typography>
     );
-  }, []);
+  };
 
-  const getPrimaryButtonTitle = useCallback(() => {
-    // Use displayPage instead of currentPage for button title
-    switch (displayPage) {
-      case 0:
-        return "Comenzar";
-      case 1:
-        return "Siguiente";
-      case 2:
-        return "Realizar test inicial";
-      default:
-        return "Siguiente";
-    }
-  }, [displayPage]);
-
-  const landingData = [
-    {
-      title: "Descubre perfumes según tus gustos",
-      description: "Utilizamos inteligencia artificial para encontrar perfumes de acuerdo a tu perfil en base a un test inicial",
-      image: Landing1,
-    },
-    {
-      title: "Ordena un Box de muestras personalizadas",
-      description: "Te enviaremos un box con decants según tus gustos. Elige formatos de 3, 5 o 10 ml y 4 u 8 decants. ¡Puedes cambiarlos si quieres!",
-      image: Landing2,
-    },
-    {
-      title: "Califica y mejora tus recomendaciones",
-      description: "Evalúa tus fragancias y nuestro algoritmo ajustará tus sugerencias para que descubras nuevos aromas.",
-      image: Landing3,
-    },
-  ];
+  // Current step data
+  const currentLandingItem = landingData[activeStep];
+  const ImageComponent = currentLandingItem.image;
 
   return (
-    <View style={styles.container}>
-      <FondoFinal
-        width={width}
-        style={[styles.backgroundSvg, { height: svgHeight }]} // Apply dynamic height
-        preserveAspectRatio="none"
-      />
-
-      <ScrollView
-        ref={scrollViewRef}
-        horizontal
-        pagingEnabled
-        showsHorizontalScrollIndicator={false}
-        onScroll={handleScroll}
-        scrollEventThrottle={16}
-        decelerationRate="fast"
-        snapToInterval={width}
-        snapToAlignment="center"
-      >
-        {landingData.map((page, index) => (
-          <View key={index} style={styles.pageContainer}>
-            <Animated.View style={{
-              opacity: fadeAnim,
-              width: '100%',
-              alignItems: 'center'
-            }}>
-              <View style={styles.logoContainer}>
-                <Logo width={logoWidth} height="auto" preserveAspectRatio="xMidYMid meet" />
-                <Text style={styles.slogan}>Descubre perfumes con AI</Text>
-              </View>
-              {page.image && (
-                <page.image
-                  width={width * 0.9}
-                  height={height * 0.37}
-                  style={styles.mainImage}
-                  preserveAspectRatio="xMidYMid meet"
-                />
-              )}
-              <PaginationIndicator totalPages={3} currentPage={currentPage} />
-              <View style={styles.contentContainer}>
-                <Text style={styles.title}>{page.title}</Text>
-                {index === 1 ? (
-                  <View style={styles.descriptionWrapper}>
-                    {renderDecantText(page.description)}
-                  </View>
-                ) : (
-                  <View style={styles.descriptionWrapper}>
-                    <Text style={styles.description}>{page.description}</Text>
-                  </View>
-                )}
-              </View>
-            </Animated.View>
-          </View>
-        ))}
-      </ScrollView>
-      <Animated.View style={{
+    <Box sx={{
+      height: '100vh',
+      width: '100%',
+      overflow: 'hidden',
+      position: 'relative',
+      bgcolor: '#FFFEFC',
+    }}>
+      {/* Background SVG */}
+      <Box sx={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
         width: '100%',
-        alignItems: 'center',
-        opacity: fadeAnim,
+        height: svgHeight,
+        zIndex: 0,
       }}>
-        <View style={[
-          styles.bottomContainer,
-          currentPage < 2 && styles.bottomContainerFirstTwo
-        ]}>
+        <FondoFinal
+          width={width}
+          style={{ width: '100%', height: '100%' }}
+          preserveAspectRatio="none"
+        />
+      </Box>
+
+      {/* Logo Section */}
+      <Box sx={{
+        width: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        pt: 3,
+        zIndex: 1,
+        position: 'relative',
+      }}>
+        <Logo
+          width={logoWidth}
+          height="auto"
+          preserveAspectRatio="xMidYMid meet"
+        />
+        <Typography
+          sx={{
+            fontFamily: 'InstrumentSerifItalic',
+            fontSize: 22,
+            mt: 0.5,
+          }}
+        >
+          Descubre perfumes con AI
+        </Typography>
+      </Box>
+
+      {/* Mobile Stepper for small screens */}
+      {!isDesktop && (
+        <MobileStepper
+          variant="dots"
+          steps={landingData.length}
+          position="static"
+          activeStep={activeStep}
+          sx={{
+            bgcolor: 'transparent',
+            mt: 2,
+            '& .MuiMobileStepper-dot': {
+              mx: 0.5,
+            },
+            '& .MuiMobileStepper-dotActive': {
+              bgcolor: theme.palette.primary.main,
+            },
+          }}
+          nextButton={<Box />}
+          backButton={<Box />}
+        />
+      )}
+
+      {/* Content Section with Transition */}
+      <Box sx={{
+        width: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        px: 2,
+        mt: 0,
+        transition: 'opacity 0.3s ease, transform 0.3s ease',
+      }}>
+        {/* Desktop stepper (horizontal) */}
+        {isDesktop && (
+          <Stepper
+            activeStep={activeStep}
+            alternativeLabel
+            sx={{
+              width: '80%',
+              mb: 0,
+            }}
+          >
+            {landingData.map((_, index) => (
+              <Step key={index}>
+                <StepLabel></StepLabel>
+              </Step>
+            ))}
+          </Stepper>
+        )}
+
+        {/* Main content with image */}
+        <Box sx={{
+          width: '100%',
+          display: 'flex',
+          justifyContent: 'center',
+          mb: 0,
+        }}>
+          <ImageComponent
+            width={width * 0.9}
+            height={height * 0.3}
+            preserveAspectRatio="xMidYMid meet"
+          />
+        </Box>
+
+        {/* Content text */}
+        <Paper
+          elevation={0}
+          sx={{
+            width: isDesktop ? '80%' : '90%',
+            bgcolor: 'transparent',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            mb: 4,
+          }}
+        >
+          <Typography
+            variant="h5"
+            component="h1"
+            sx={{
+              fontFamily: 'InstrumentSans',
+              fontWeight: 'bold',
+              fontSize: 22,
+              color: '#222222',
+              textAlign: 'center',
+              mb: 2,
+              lineHeight: 1.2,
+            }}
+          >
+            {currentLandingItem.title}
+          </Typography>
+
+          {activeStep === 1 ? (
+            renderDecantText(currentLandingItem.description)
+          ) : (
+            <Typography
+              variant="body1"
+              sx={{
+                fontFamily: 'InstrumentSans',
+                fontSize: 18,
+                textAlign: 'center',
+                color: '#717171',
+                minHeight: 60,
+                lineHeight: 1.4,
+              }}
+            >
+              {currentLandingItem.description}
+            </Typography>
+          )}
+        </Paper>
+
+        {/* Action buttons */}
+        <Box sx={{
+          width: '100%',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          mt: 'auto',
+          mb: isDesktop ? 5 : 3,
+        }}>
           <Button
             variant="contained"
             color="primary"
-            onClick={handlePrimaryButtonPress}
-            disabled={isTransitioning}
+            onClick={handleNext}
             sx={{
               width: 200,
-              marginBottom: '10px'
+              marginBottom: '10px',
+              bgcolor: '#222222',
+              '&:hover': {
+                bgcolor: '#333333',
+              },
             }}
           >
-            {getPrimaryButtonTitle()}
+            {currentLandingItem.buttonText}
           </Button>
-          {displayPage === 2 && (
+
+          {activeStep === landingData.length - 1 && (
             <Button
               variant="outlined"
               color="secondary"
-              onClick={handleSkipPress}
-              disabled={isTransitioning}
+              onClick={handleSkip}
               sx={{
                 width: 200,
               }}
@@ -260,95 +319,16 @@ const LandingScreen = React.memo(() => {
               Elegir mis decants
             </Button>
           )}
-        </View>
-      </Animated.View>
+        </Box>
+      </Box>
+
+      {/* Decant Popup */}
       <DecantPopup
         visible={showDecantPopup}
         onClose={() => setShowDecantPopup(false)}
       />
-    </View>
+    </Box>
   );
-});
+};
 
 export default LandingScreen;
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    position: 'relative',
-    backgroundColor: '#FFFEFC',
-  },
-  pageContainer: {
-    width,
-    flex: 1,
-    alignItems: 'center',
-  },
-  backgroundSvg: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    width: '100%', // Ensure full width
-    zIndex: -1,    // Send to background
-  },
-  logoContainer: {
-    marginTop: (height * 0.02), // Positioned inside the top shape
-    alignItems: 'center',
-    zIndex: 1,
-  },
-  slogan: {
-    fontFamily: 'InstrumentSerifItalic',
-    fontSize: 22,
-    marginTop: 2,
-    textAlign: 'center',
-  },
-  mainImage: {
-    marginTop: 0,
-  },
-  contentContainer: {
-    width: width * 0.9,
-    alignItems: 'center',
-    marginTop: 0,
-    flexGrow: 1, // Ensure it can expand
-    flexShrink: 1, // Prevent excessive shrinking
-  },
-  title: {
-    fontFamily: 'InstrumentSans',
-    fontWeight: 'bold',
-    fontSize: 22,
-    color: '#222222',
-    lineHeight: 22*1.2,
-    textAlign: 'center',
-    marginBottom: 15,
-  },
-  descriptionWrapper: {
-    width: '100%', // Allow full width
-    minHeight: 10, // Ensures text area has enough space
-    justifyContent: 'center', // Ensures text is aligned properly
-  },
-  description: {
-    fontFamily: 'InstrumentSans',
-    fontWeight: 'regular',
-    fontSize: 18,
-    lineHeight: 16 * 1.4, // Increase for better readability
-    textAlign: 'center',
-    color: '#717171',
-    flexWrap: 'wrap', // Allow text wrapping
-    minHeight: 60, // Ensures enough space for multiple lines
-  },
-  linkText: {
-    fontFamily: 'InstrumentSans',
-    fontSize: 18,
-    fontWeight: 500,
-    color: '#0000EE',
-    textDecorationLine: 'underline',
-  },
-  bottomContainer: {
-    width: '100%',
-    alignItems: 'center',
-    marginBottom: 20,
-    paddingHorizontal: 20,
-  },
-  bottomContainerFirstTwo: {
-    marginBottom: 30, // This will move the button up on first two screens
-  },
-});

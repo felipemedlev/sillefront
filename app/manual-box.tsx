@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, Pressable, ScrollView, TouchableOpacity, Animat
 import { Feather } from '@expo/vector-icons';
 import { useManualBox } from '../context/ManualBoxContext';
 import { useCart } from '../context/CartContext'; // Import useCart
+import { useSnackbar } from '../context/SnackbarContext'; // Import useSnackbar
 import DecantSelector from '../components/product/DecantSelector';
 import BottomBar from '../components/product/BottomBar';
 import { COLORS, FONT_SIZES, SPACING } from '../types/constants';
@@ -22,17 +23,7 @@ export default function ManualBoxScreen() {
     removePerfume,
   } = useManualBox();
   const { addItemToCart } = useCart(); // Get cart function
-  const [feedbackMessage, setFeedbackMessage] = React.useState<string | null>(null); // State for feedback
-  const feedbackTimeoutRef = React.useRef<NodeJS.Timeout | null>(null); // Ref for timeout
-
-  // Clear timeout on unmount
-  React.useEffect(() => {
-    return () => {
-      if (feedbackTimeoutRef.current) {
-        clearTimeout(feedbackTimeoutRef.current);
-      }
-    };
-  }, []);
+  const { showSnackbar } = useSnackbar(); // Get showSnackbar function
 
   const calculateTotalPrice = useCallback(() => {
     // Add explicit types for reduce parameters
@@ -46,18 +37,11 @@ export default function ManualBoxScreen() {
     // Ensure the number of selected perfumes matches the decant count
     if (selectedPerfumes.length !== decantCount) {
       const errorMsg = `Debes seleccionar ${decantCount} perfumes (tienes ${selectedPerfumes.length}).`;
-      setFeedbackMessage(errorMsg); // Use existing feedback mechanism
-      console.log(`Cannot add manual box to cart. Expected ${decantCount} perfumes, got ${selectedPerfumes.length}.`);
 
-      // Clear previous timeout if exists
-      if (feedbackTimeoutRef.current) {
-        clearTimeout(feedbackTimeoutRef.current);
-      }
-      // Set new timeout to clear the error message
-      feedbackTimeoutRef.current = setTimeout(() => {
-        setFeedbackMessage(null);
-      }, 3000); // Clear after 3 seconds
-      // DO NOT NAVIGATE ON MISMATCH ERROR
+      // Use snackbar for error message at the bottom
+      showSnackbar(errorMsg, 'error', undefined, undefined, 'bottom');
+
+      console.log(`Cannot add manual box to cart. Expected ${decantCount} perfumes, got ${selectedPerfumes.length}.`);
       return; // Stop execution
     }
 
@@ -86,30 +70,21 @@ export default function ManualBoxScreen() {
     try {
       await addItemToCart(itemData);
       console.log('Manual Box added to cart:', itemData);
-      setFeedbackMessage("¡Añadido al carrito!"); // Set feedback message
 
-      // Clear previous timeout if exists
-      if (feedbackTimeoutRef.current) {
-        clearTimeout(feedbackTimeoutRef.current);
-      }
-
-      // Set new timeout to clear the message AND navigate
-      feedbackTimeoutRef.current = setTimeout(() => {
-        setFeedbackMessage(null);
-        router.push('/(tabs)/(cart)'); // Optional navigation
-      }, 2000); // Clear and navigate after 2 seconds
+      // Show success snackbar at the top with redirect
+      showSnackbar(
+        'Se ha agregado el producto al carro.\nRedirigiendo al carro...',
+        'success',
+        2000,
+        '/(tabs)/(cart)',
+        'top'
+      );
 
     } catch (error) {
       console.error("Error adding Manual Box to cart:", error);
-      setFeedbackMessage("Error al añadir."); // Show error feedback
-      // Clear previous timeout if exists
-      if (feedbackTimeoutRef.current) {
-        clearTimeout(feedbackTimeoutRef.current);
-      }
-      // Set new timeout to clear the error message, DO NOT NAVIGATE
-      feedbackTimeoutRef.current = setTimeout(() => {
-        setFeedbackMessage(null);
-      }, 2000); // Clear error message after 2 seconds
+
+      // Use snackbar for error message at the bottom
+      showSnackbar("Error al añadir al carrito.", 'error', undefined, undefined, 'bottom');
     }
   }, [
     decantCount,
@@ -117,6 +92,7 @@ export default function ManualBoxScreen() {
     selectedPerfumes,
     calculateTotalPrice,
     addItemToCart,
+    showSnackbar,
   ]);
 
   const SelectedPerfumeItem = ({ perfume, index }: { perfume: Perfume; index: number }) => {
@@ -138,6 +114,11 @@ export default function ManualBoxScreen() {
       ]).start();
     }, [fadeAnim, translateY]);
 
+    // Handle case where brand might be an object instead of a string
+    const brandDisplay = typeof perfume.brand === 'object' && perfume.brand !== null
+      ? (perfume.brand as { name: string }).name || 'Unknown Brand'
+      : perfume.brand;
+
     return (
       <Animated.View
         style={[
@@ -149,7 +130,7 @@ export default function ManualBoxScreen() {
         ]}
       >
         <View style={styles.perfumeInfo}>
-          <Text style={styles.perfumeBrand}>{perfume.brand}</Text>
+          <Text style={styles.perfumeBrand}>{brandDisplay}</Text>
           <Text style={styles.perfumeName}>{perfume.name}</Text>
           <Text style={styles.perfumePrice}>
             {((perfume.pricePerML ?? 0) * decantSize).toLocaleString('de-DE')} por {decantSize}ml
@@ -227,7 +208,6 @@ export default function ManualBoxScreen() {
       <BottomBar
         totalPrice={calculateTotalPrice()}
         onAddToCart={handleAddToCart}
-        feedbackMessage={feedbackMessage} // Pass feedback state
       />
     </View>
   );

@@ -12,6 +12,7 @@ import { CartProvider } from '../context/CartContext';
 import { AuthProvider, useAuth } from '../src/context/AuthContext';
 import { SubscriptionProvider } from '../context/SubscriptionContext';
 import { SurveyProvider } from '../context/SurveyContext';
+import { SnackbarProvider } from '../context/SnackbarContext';
 import { FontLoadingState, LayoutStyles } from '../types/layout';
 import { FONTS, COLORS, FONT_SIZES, SPACING } from '../types/constants';
 import { handleError } from '../types/error';
@@ -181,7 +182,9 @@ export default function RootLayout() {
                 <CartProvider>
                   <ManualBoxProvider>
                     <RatingsProvider>
-                      <ProtectedRoutes />
+                      <SnackbarProvider>
+                        <ProtectedRoutes />
+                      </SnackbarProvider>
                     </RatingsProvider>
                   </ManualBoxProvider>
                 </CartProvider>

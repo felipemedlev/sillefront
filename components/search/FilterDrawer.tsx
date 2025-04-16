@@ -56,20 +56,22 @@ const FilterDrawer: React.FC<FilterDrawerProps> = ({
   useEffect(() => {
     setTempFilters(initialFilters);
     setPriceRange([
-      initialFilters.priceRange?.min || minPrice,
-      initialFilters.priceRange?.max || maxPrice
+      initialFilters.priceRange?.min ?? minPrice,
+      initialFilters.priceRange?.max ?? maxPrice
     ]);
+    // console.log("FilterDrawer initialized with filters:", JSON.stringify(initialFilters, null, 2));
   }, [open, initialFilters, minPrice, maxPrice]);
 
   const handleApply = () => {
     // Update price range in temp filters before applying
     const updatedFilters = {
       ...tempFilters,
-      priceRange: {
+      priceRange: priceRange[0] === 0 && priceRange[1] === 0 ? null : {
         min: priceRange[0],
         max: priceRange[1]
       }
     };
+    // console.log("FilterDrawer applying filters:", JSON.stringify(updatedFilters, null, 2));
     onApplyFilters(updatedFilters);
     onClose();
   };

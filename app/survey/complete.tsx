@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { Dimensions, StyleSheet, Animated } from 'react-native';
 import { useRouter } from 'expo-router';
 import Logo from '../../assets/images/Logo.svg';
+import { useSurveyContext } from '../../context/SurveyContext';
 
 export default function CompleteScreen() {
   const router = useRouter();
@@ -9,8 +10,15 @@ export default function CompleteScreen() {
   const scaleAnim = useRef(new Animated.Value(0.8)).current;
   const { width } = Dimensions.get('window');
   const isDesktop = width >= 768;
+  const { submitSurveyIfAuthenticated } = useSurveyContext();
 
   useEffect(() => {
+    // Try to submit survey responses if user is authenticated
+    const attemptSubmission = async () => {
+      await submitSurveyIfAuthenticated();
+    };
+    attemptSubmission();
+
     // Entrance animation
     Animated.parallel([
       Animated.timing(fadeAnim, {
@@ -37,7 +45,7 @@ export default function CompleteScreen() {
               router.replace('/home');
             });
     }, 2000);
-  }, [fadeAnim, scaleAnim, router]);
+  }, [fadeAnim, scaleAnim, router, submitSurveyIfAuthenticated]);
 
   return (
     <Animated.View style={[styles.container, { opacity: fadeAnim }]}>

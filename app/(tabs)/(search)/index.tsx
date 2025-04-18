@@ -222,18 +222,21 @@ export default function SearchScreen() {
           const brandData = (perfume as any).brand;
           const brandObj = typeof brandData === 'object' && brandData !== null ? brandData : { id: null, name: String(brandData) };
 
+          const priceStr = (perfume as any).pricePerML;
+          // Attempt to parse the price string to a number, handle null explicitly
+          const priceNum = priceStr === null ? null : parseFloat(String(priceStr));
+
           return {
-              ...perfume,
+              ...perfume, // Spread original properties first
               brand: brandObj, // Ensure brand is an object
-              // Use external_id consistently and convert to string
-              id: String((perfume as any).external_id),
+              id: String((perfume as any).external_id), // Use external_id consistently and convert to string
+              pricePerML: isNaN(priceNum as number) ? null : priceNum, // Assign parsed number or null if NaN
               matchPercentage: (perfume as any).match_percentage ?? getMockMatchPercentage(perfume),
               overall_rating: (perfume as any).overall_rating, // Use snake_case from API
               price_value_rating: (perfume as any).price_value_rating, // Use snake_case
               best_for: (perfume as any).best_for, // Use snake_case
               longevity_rating: (perfume as any).longevity_rating, // Use snake_case
               sillage_rating: (perfume as any).sillage_rating, // Use snake_case
-              // Ensure similarPerfumeIds are strings too, if they exist
               similarPerfumes: ((perfume as any).similar_perfume_ids ?? []).map(String), // Match type definition
               season: (perfume as any).season,
               gender: (perfume as any).gender,

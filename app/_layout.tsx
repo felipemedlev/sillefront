@@ -108,18 +108,32 @@ function ProtectedRoutes() {
     // Get first segment of the route
     const firstSegment = segments[0];
 
-    // Only protect checkout route
+    // Protection logic based on segments
+    const inAuthGroup = firstSegment === '(auth)';
+    const inTabsGroup = firstSegment === '(tabs)';
+    const inProfileSection = segments.length > 1 && segments[1] === '(profile)';
     const isCheckoutRoute = firstSegment === 'checkout';
 
-    // If not logged in and trying to access checkout, redirect to login
-    if (!user && isCheckoutRoute) {
-      router.replace('/login');
-    }
+    console.log("Root layout auth check:", {
+      isLoggedIn: !!user,
+      segments,
+      inAuthGroup,
+      inProfileSection
+    });
 
-    // If user is logged in and trying to access auth screens, redirect to home
-    const isAuthRoute = ['login', 'signup'].includes(firstSegment as string);
-    if (user && isAuthRoute) {
-      router.replace('/(tabs)');
+    // Redirection logic
+    if (!user) {
+      // Not logged in
+      if (isCheckoutRoute) {
+        // Redirect checkout to login
+        router.replace('/(auth)/login');
+      }
+    } else {
+      // Logged in
+      if (inAuthGroup) {
+        // Redirect auth screens to home
+        router.replace('/(tabs)');
+      }
     }
   }, [user, isAuthLoading, segments, router, navigationState]);
 

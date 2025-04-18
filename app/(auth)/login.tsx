@@ -15,6 +15,7 @@ import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '../../src/context/AuthContext';
+import { useSurveyContext } from '../../context/SurveyContext';
 import { COLORS, FONTS, SPACING, FONT_SIZES } from '../../types/constants';
 
 const { width } = Dimensions.get('window');
@@ -27,6 +28,7 @@ export default function LoginScreen() {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const { login } = useAuth();
+  const { submitSurveyIfAuthenticated } = useSurveyContext();
 
   const handleLogin = async () => {
     if (isLoading) return;
@@ -38,7 +40,17 @@ export default function LoginScreen() {
         throw new Error("Por favor, ingresa email y contraseña.");
       }
       await login({ email: email.trim(), password });
-      // Navigation is handled by the root layout (_layout.tsx) upon successful login
+
+      // After successful login, attempt to submit any pending survey responses
+      try {
+        await submitSurveyIfAuthenticated();
+      } catch (surveyError) {
+        console.error('Error submitting survey after login:', surveyError);
+        // Don't fail the login process if survey submission fails
+      }
+
+      // Navigate immediately - the root layout will handle redirection properly
+      router.replace('/(tabs)');
     } catch (err: any) {
       setError(err.message || 'Ocurrió un error al iniciar sesión.');
     } finally {

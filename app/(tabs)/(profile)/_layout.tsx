@@ -15,7 +15,7 @@ export default function ProfileLayout() {
   const segments = useSegments(); // Keep default type inference
 
   useEffect(() => {
-    // Don't do anything until auth state is loaded
+    // Don't do anything until auth state is completely loaded
     if (isAuthLoading) {
       return;
     }
@@ -27,7 +27,7 @@ export default function ProfileLayout() {
     // Get current screen
     const currentScreen = segments[segments.length - 1];
 
-    // console.log("Auth state:", { user, currentScreen, isAuthLoading });
+    console.log("Auth state:", { user, currentScreen, isAuthLoading, token: !!user });
 
     // Handle redirect logic
     if (!user) {

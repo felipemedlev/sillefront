@@ -63,6 +63,20 @@ export const fetchSurveyQuestions = async (): Promise<ApiSurveyQuestion[]> => {
 };
 
 /**
+ * Fetch a specific survey question by ID.
+ * @param questionId The ID of the question to fetch
+ */
+export const fetchSurveyQuestion = async (questionId: string): Promise<ApiSurveyQuestion> => {
+    const headers = await createHeaders(false); // Public endpoint
+    const url = `${API_BASE_URL}/survey/questions/${questionId}/`;
+    const response = await fetch(url, {
+        method: 'GET',
+        headers,
+    });
+    return handleResponse(response);
+};
+
+/**
  * Submit or update the user's survey response.
  * @param answers The full answers object (keyed by accord or 'gender')
  */

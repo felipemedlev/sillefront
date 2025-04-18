@@ -1,7 +1,6 @@
 import React, { createContext, useState, useEffect, useContext, ReactNode } from 'react';
 import * as api from '../services/api'; // Import your API service
-import { authUtils, submitSurveyResponse } from '../services/api'; // Import token utilities and submitSurveyResponse
-import { useSurveyContext } from '../../context/SurveyContext'; // Import survey context hook
+import { authUtils } from '../services/api'; // Import token utilities
 
 // Define interfaces for credentials and user data
 
@@ -97,22 +96,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         await authUtils.setToken(response.auth_token); // Set token first
         await fetchUserProfile(); // Fetch profile
 
-        // --- Submit survey answers after login ---
-        const surveyContext = useSurveyContext(); // Get survey context here
-        if (surveyContext && Object.keys(surveyContext.answers).length > 0) {
-          try {
-            console.log('AuthContext: Submitting survey answers after login...');
-            await submitSurveyResponse(surveyContext.answers);
-            await surveyContext.resetSurvey(); // Clear local survey data after successful submission
-            console.log('AuthContext: Survey answers submitted and cleared.');
-          } catch (surveyError: any) {
-            console.error('AuthContext: Failed to submit survey answers after login:', surveyError);
-            // Decide how to handle this error. Maybe notify the user?
-            // For now, just log it. The answers remain locally.
-          }
-        }
-        // --- End survey submission ---
-        await authUtils.setToken(response.auth_token);
+        // We can't use useSurveyContext directly in this file,
+        // so we'll handle survey submission at the component level
+        // after login completes successfully.
       } else {
         throw new Error('Login failed: No auth token received');
       }
@@ -155,9 +141,25 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         });
 
         if (loginResponse?.auth_token) {
+          // Store the token properly
           setToken(loginResponse.auth_token);
           await authUtils.setToken(loginResponse.auth_token);
-          await fetchUserProfile();
+
+          // Create a minimal user object immediately to ensure authenticated state
+          // This is critical for proper redirection after signup
+          setUser({
+            id: 0, // Placeholder ID, will be updated by fetchUserProfile
+            email: userData.email,
+            username: '' // Will be updated by fetchUserProfile
+          });
+
+          // Fetch the user profile in the background
+          fetchUserProfile().catch(err => {
+            console.error('Error fetching user profile after registration:', err);
+            // Don't fail registration if profile fetch fails
+          });
+
+          return { success: true }; // Return success early after setting token
         }
       } catch (loginErr) {
         console.error('Auto-login after registration failed:', loginErr);
@@ -175,40 +177,40 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setIsLoading(false); // Ensure loading is always set to false
     }
   };
-   const updatePassword = async (newPassword: string): Promise<void> => {
-     if (!token) throw new Error('Not authenticated');
-     try {
-       setIsLoading(true);
-       setError(null);
-       await api.post('/auth/users/set_password/', {
-         current_password: '', // Optionally require current password
-         new_password: newPassword,
-       });
-     } catch (err: any) {
-       console.error('Error updating password:', err);
-       setError(err.message || 'Failed to update password');
-       throw err;
-     } finally {
-       setIsLoading(false);
-     }
-   };
 
-   const updateProfile = async (updates: Partial<Pick<User, 'name' | 'phone' | 'address'>>): Promise<void> => {
-     if (!token) throw new Error('Not authenticated');
-     try {
-       setIsLoading(true);
-       setError(null);
-       const updatedUser = await api.patch('/auth/users/me/', updates);
-       setUser((prev) => prev ? { ...prev, ...updatedUser } : updatedUser);
-     } catch (err: any) {
-       console.error('Error updating profile:', err);
-       setError(err.message || 'Failed to update profile');
-       throw err;
-     } finally {
-       setIsLoading(false);
-     }
-   };
+  const updatePassword = async (newPassword: string): Promise<void> => {
+    if (!token) throw new Error('Not authenticated');
+    try {
+      setIsLoading(true);
+      setError(null);
+      await api.post('/auth/users/set_password/', {
+        current_password: '', // Optionally require current password
+        new_password: newPassword,
+      });
+    } catch (err: any) {
+      console.error('Error updating password:', err);
+      setError(err.message || 'Failed to update password');
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
+  const updateProfile = async (updates: Partial<Pick<User, 'name' | 'phone' | 'address'>>): Promise<void> => {
+    if (!token) throw new Error('Not authenticated');
+    try {
+      setIsLoading(true);
+      setError(null);
+      const updatedUser = await api.patch('/auth/users/me/', updates);
+      setUser((prev) => prev ? { ...prev, ...updatedUser } : updatedUser);
+    } catch (err: any) {
+      console.error('Error updating profile:', err);
+      setError(err.message || 'Failed to update profile');
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const value: AuthContextType = {
     token,

@@ -15,6 +15,7 @@ import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '../../src/context/AuthContext';
+import { useSurveyContext } from '../../context/SurveyContext';
 import { COLORS, FONTS, SPACING, FONT_SIZES } from '../../types/constants';
 
 const { width } = Dimensions.get('window');
@@ -27,6 +28,7 @@ export default function SignUpScreen() {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const { register, user } = useAuth();
+  const { submitSurveyIfAuthenticated } = useSurveyContext();
 
   const handleSignUp = async () => {
     if (isLoading) return;
@@ -44,6 +46,17 @@ export default function SignUpScreen() {
       if (result.success) {
         // Log authentication state for debugging using context value already obtained
         console.log("Registration successful, user state:", { authenticated: !!user });
+
+        // After successful registration, attempt to submit any pending survey responses
+        try {
+          await submitSurveyIfAuthenticated();
+        } catch (surveyError) {
+          console.error('Error submitting survey after registration:', surveyError);
+          // Don't fail the registration process if survey submission fails
+        }
+
+        // Navigate immediately - the root layout will handle redirection properly
+        // if auth state isn't ready yet
         router.replace('/(tabs)');
       } else {
         setError(result.error || 'Ocurrió un error durante el registro.');

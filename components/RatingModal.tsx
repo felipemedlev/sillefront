@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Modal,
   View,
@@ -7,9 +7,12 @@ import {
   TouchableOpacity,
   Image,
   Animated,
+  ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRatings } from '../context/RatingsContext';
+import { useAuth } from '../src/context/AuthContext';
+import * as api from '../src/services/api';
 
 interface Perfume {
   id: string;
@@ -27,17 +30,60 @@ interface RatingModalProps {
 export default function RatingModal({ visible, onClose, perfume }: RatingModalProps) {
   const [rating, setRating] = useState(0);
   const [showFeedback, setShowFeedback] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const { addRating } = useRatings();
+  const { user } = useAuth();
 
-  const handleRatingPress = (selectedRating: number) => {
-    setRating(selectedRating);
-    console.log('Adding rating for perfume:', perfume.id, 'rating:', selectedRating);
-    addRating(perfume.id, selectedRating);
-    setShowFeedback(true);
-    setTimeout(() => {
+  // When modal opens, fetch current rating
+  useEffect(() => {
+    if (visible) {
+      fetchCurrentRating();
+    }
+  }, [visible, perfume.id]);
+
+  const fetchCurrentRating = async () => {
+    try {
+      setIsLoading(true);
+      const currentRating = await api.getRating(perfume.id);
+      if (currentRating) {
+        setRating(currentRating.rating);
+      } else {
+        setRating(0);
+      }
+    } catch (err) {
+      console.error('Error fetching rating:', err);
+      setError('No pudimos cargar tu calificación existente.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleRatingPress = async (selectedRating: number) => {
+    try {
+      setIsLoading(true);
+      setRating(selectedRating);
+      console.log('Adding rating for perfume:', perfume.id, 'rating:', selectedRating);
+
+      // Submit to backend first
+      await api.submitRating(perfume.id, selectedRating);
+
+      // Then update local state
+      addRating(perfume.id, selectedRating);
+
+      setError(null);
+      setShowFeedback(true);
+      setTimeout(() => {
+        setShowFeedback(false);
+        onClose();
+      }, 1500);
+    } catch (err) {
+      console.error('Error saving rating:', err);
+      setError('No pudimos guardar tu calificación. Por favor intenta de nuevo.');
       setShowFeedback(false);
-      onClose();
-    }, 1500);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -62,21 +108,29 @@ export default function RatingModal({ visible, onClose, perfume }: RatingModalPr
           <Text style={styles.brandText}>{perfume.brand}</Text>
           <Text style={styles.nameText}>{perfume.name}</Text>
 
-          <View style={styles.starsContainer}>
-            {[1, 2, 3, 4, 5].map((star) => (
-              <TouchableOpacity
-                key={star}
-                onPress={() => handleRatingPress(star)}
-                style={styles.starButton}
-              >
-                <Ionicons
-                  name={star <= rating ? "star" : "star-outline"}
-                  size={32}
-                  color="#FFD700"
-                />
-              </TouchableOpacity>
-            ))}
-          </View>
+          {isLoading ? (
+            <ActivityIndicator size="large" color="#FFD700" style={{ marginVertical: 20 }} />
+          ) : (
+            <View style={styles.starsContainer}>
+              {[1, 2, 3, 4, 5].map((star) => (
+                <TouchableOpacity
+                  key={star}
+                  onPress={() => handleRatingPress(star)}
+                  style={styles.starButton}
+                >
+                  <Ionicons
+                    name={star <= rating ? "star" : "star-outline"}
+                    size={32}
+                    color="#FFD700"
+                  />
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
+
+          {error && (
+            <Text style={styles.errorText}>{error}</Text>
+          )}
 
           {showFeedback && (
             <Animated.View style={styles.feedbackContainer}>
@@ -145,5 +199,11 @@ const styles = StyleSheet.create({
     color: '#2E7D32',
     fontSize: 16,
     fontWeight: '500',
+  },
+  errorText: {
+    color: '#D32F2F',
+    fontSize: 14,
+    marginTop: 12,
+    textAlign: 'center',
   },
 });

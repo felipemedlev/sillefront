@@ -86,7 +86,7 @@ export default function LoginScreen() {
           <View style={styles.header}>
             <TouchableOpacity
               style={styles.backButton}
-              onPress={() => router.push('/landing')}
+              onPress={() => router.back()}
               disabled={isLoading}
             >
               <Ionicons name="chevron-back" size={26} color="#333" />

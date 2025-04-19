@@ -19,23 +19,38 @@ interface DecantPopupProps {
 
 const DecantPopup = ({ visible, onClose }: DecantPopupProps) => {
   const [fadeAnim] = useState(new Animated.Value(0));
+  const [scaleAnim] = useState(new Animated.Value(0.9));
   const isDesktop = useMediaQuery({ minWidth: 768 });
 
   useEffect(() => {
     if (visible) {
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 300,
-        useNativeDriver: true,
-      }).start();
+      Animated.parallel([
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 250,
+          useNativeDriver: true,
+        }),
+        Animated.timing(scaleAnim, {
+          toValue: 1,
+          duration: 250,
+          useNativeDriver: true,
+        })
+      ]).start();
     } else {
-      Animated.timing(fadeAnim, {
-        toValue: 0,
-        duration: 300,
-        useNativeDriver: true,
-      }).start();
+      Animated.parallel([
+        Animated.timing(fadeAnim, {
+          toValue: 0,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+        Animated.timing(scaleAnim, {
+          toValue: 0.9,
+          duration: 200,
+          useNativeDriver: true,
+        })
+      ]).start();
     }
-  }, [visible, fadeAnim]);
+  }, [visible, fadeAnim, scaleAnim]);
 
   return (
     <Modal
@@ -48,32 +63,45 @@ const DecantPopup = ({ visible, onClose }: DecantPopupProps) => {
         <View style={styles.overlay}>
           <TouchableWithoutFeedback>
             <Animated.View style={[
-              styles.popupContainer, 
+              styles.popupContainer,
               isDesktop && styles.desktopPopupContainer,
-              { opacity: fadeAnim }
+              {
+                opacity: fadeAnim,
+                transform: [{ scale: scaleAnim }]
+              }
             ]}>
 
               {/* Header with Title and Close Button */}
               <View style={styles.header}>
                 <Text style={styles.title}>¿Qué es un decant?</Text>
                 <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-                  <Text style={styles.closeButtonText}>x</Text>
+                  <View style={styles.closeIconContainer}>
+                    <Text style={styles.closeButtonText}>×</Text>
+                  </View>
                 </TouchableOpacity>
               </View>
+
+              {/* Content Divider */}
+              <View style={styles.divider} />
 
               {/* Image & Description Layout */}
               <View style={styles.contentContainer}>
                 {/* Left Side - Image */}
-                <Image
-                  source={require('../../assets/images/decant-general.png')}
-                  style={[styles.image, isDesktop && styles.desktopImage]}
-                  resizeMode="contain"
-                />
+                <View style={styles.imageContainer}>
+                  <Image
+                    source={require('../../assets/images/decant-general.png')}
+                    style={[styles.image, isDesktop && styles.desktopImage]}
+                    resizeMode="contain"
+                  />
+                </View>
 
                 {/* Right Side - Text */}
                 <View style={styles.textContainer}>
                   <Text style={[styles.description, isDesktop && styles.desktopDescription]}>
-                    Un <Text style={styles.bold}>decant</Text> es una muestra de perfume original transferida a un frasco más pequeño.{"\n\n"}
+                    Un <Text style={styles.bold}>decant</Text> es una muestra de perfume original transferida a un frasco más pequeño.
+                  </Text>
+
+                  <Text style={[styles.description, styles.spacedParagraph, isDesktop && styles.desktopDescription]}>
                     Contamos con formatos de <Text style={styles.bold}>3, 5 o 10 ml</Text>, perfectos para descubrir nuevas fragancias.
                   </Text>
                 </View>
@@ -92,72 +120,101 @@ const { width, height } = Dimensions.get('window');
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   popupContainer: {
     width: width * 0.9,
     backgroundColor: '#FFFFFF',
-    borderRadius: 20,
-    padding: 20,
+    borderRadius: 16,
+    paddingVertical: 24,
+    paddingHorizontal: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.15,
+    shadowRadius: 20,
+    elevation: 5,
   },
   desktopPopupContainer: {
-    width: width * 0.6,
+    width: Math.min(width * 0.6, 600),
+    maxWidth: 600,
   },
   header: {
     width: '100%',
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 15,
   },
   title: {
     flex: 1,
     fontFamily: 'InstrumentSans',
-    fontWeight: 'bold',
-    fontSize: 20,
-    color: '#000000',
-    textAlign: 'center',
-    paddingBottom: 10
+    fontWeight: '600',
+    fontSize: 22,
+    color: '#1A1A1A',
+    paddingRight: 15,
   },
   closeButton: {
-    padding: 5,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  closeIconContainer: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#F5F5F5',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   closeButtonText: {
-    fontSize: 22,
-    color: '#000000',
+    fontSize: 24,
+    color: '#666',
+    lineHeight: 28,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: '#EEEEEE',
+    marginVertical: 16,
+    width: '100%',
   },
   contentContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    marginTop: 8,
+  },
+  imageContainer: {
+    width: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   image: {
-    width: width * 0.2,  // 30% of screen width
-    height: height * 0.3, // 30% of screen height
-    marginRight: width * 0.01, // Add spacing relative to width
+    width: '100%',
+    height: 150,
   },
   textContainer: {
-    flex: 1, // Takes remaining space
+    width: 220,
+    paddingLeft: 5,
   },
   description: {
     fontFamily: 'InstrumentSans',
-    fontSize: width * 0.04, // Scales based on screen width
-    lineHeight: width * 0.06,
-    textAlign: 'left',
+    fontSize: 16,
+    lineHeight: 22,
     color: '#333333',
   },
+  spacedParagraph: {
+    marginTop: 16,
+  },
   bold: {
-    fontWeight: 'bold',
+    fontWeight: '700',
+    color: '#000000',
   },
   desktopImage: {
-    width: width * 0.2,  // 40% of screen width
-    height: height * 0.3, // 35% of screen height
+    height: height * 0.28,
   },
   desktopDescription: {
-    fontSize: 18, // Smaller text for desktop
-    lineHeight: 18*1.2,
+    fontSize: 17,
+    lineHeight: 24,
   },
 });
 

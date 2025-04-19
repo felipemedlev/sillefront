@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, Dimensions, Platform } from 'react-native';
+import { Dimensions, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import {
   Button,
@@ -10,8 +10,10 @@ import {
   Box,
   MobileStepper,
   useTheme,
-  Typography
+  Typography,
+  IconButton
 } from '@mui/material';
+import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 
 // Import SVG Assets
 import Logo from '../../assets/images/Logo.svg';
@@ -73,6 +75,11 @@ const LandingScreen: React.FC = () => {
     }
   };
 
+  // Handle back button click
+  const handleBack = () => {
+    setActiveStep((prevStep) => prevStep - 1);
+  };
+
   // Handle skip button click (on last step)
   const handleSkip = () => {
     router.push('/manual-box');
@@ -80,8 +87,6 @@ const LandingScreen: React.FC = () => {
 
   // Render decant text with clickable link
   const renderDecantText = (text: string) => {
-    const parts = text.split(/(decants)/g);
-
     return (
       <Typography variant="body1" sx={{
         fontSize: 18,
@@ -90,28 +95,7 @@ const LandingScreen: React.FC = () => {
         minHeight: 60,
         lineHeight: 1.4,
       }}>
-        {parts.map((part, index) =>
-          part === "decants" ? (
-            <Typography
-              key={index}
-              component="span"
-              onClick={() => setShowDecantPopup(true)}
-              sx={{
-                color: '#0000EE',
-                textDecoration: 'underline',
-                fontSize: 18,
-                fontWeight: 500,
-                cursor: 'pointer',
-              }}
-            >
-              {part}
-            </Typography>
-          ) : (
-            <Typography key={index} component="span">
-              {part}
-            </Typography>
-          )
-        )}
+        {text}
       </Typography>
     );
   };
@@ -154,6 +138,19 @@ const LandingScreen: React.FC = () => {
         zIndex: 1,
         position: 'relative',
       }}>
+        {activeStep > 0 && (
+          <IconButton
+            onClick={handleBack}
+            sx={{
+              position: 'absolute',
+              left: 16,
+              top: 16,
+              color: '#222222',
+            }}
+          >
+            <ArrowBackIosNewIcon fontSize="small" />
+          </IconButton>
+        )}
         <Logo
           width={logoWidth}
           height="auto"
@@ -318,6 +315,23 @@ const LandingScreen: React.FC = () => {
             >
               Elegir mis decants
             </Button>
+          )}
+
+          {activeStep === 1 && (
+            <Typography
+              component="span"
+              onClick={() => setShowDecantPopup(true)}
+              sx={{
+                color: '#0000EE',
+                textDecoration: 'underline',
+                fontSize: 16,
+                fontWeight: 500,
+                cursor: 'pointer',
+                mt: 1,
+              }}
+            >
+              ¿Qué es un decant?
+            </Typography>
           )}
         </Box>
       </Box>

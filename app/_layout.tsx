@@ -112,13 +112,15 @@ function ProtectedRoutes() {
     const inAuthGroup = firstSegment === '(auth)';
     const inTabsGroup = firstSegment === '(tabs)';
     const inProfileSection = segments.length > 1 && segments[1] === '(profile)';
+    const inRatingsSection = segments.length > 1 && segments[1] === '(ratings)';
     const isCheckoutRoute = firstSegment === 'checkout';
 
     console.log("Root layout auth check:", {
       isLoggedIn: !!user,
       segments,
       inAuthGroup,
-      inProfileSection
+      inProfileSection,
+      inRatingsSection
     });
 
     // Redirection logic
@@ -127,6 +129,14 @@ function ProtectedRoutes() {
       if (isCheckoutRoute) {
         // Redirect checkout to login
         router.replace('/(auth)/login');
+      } else if (inRatingsSection) {
+        // Redirect ratings section to auth-prompt when not logged in
+        // Get the current path to use as returnTo
+        const currentPath = segments.join('/');
+        router.replace({
+          pathname: '/auth-prompt',
+          params: { returnTo: encodeURIComponent(`/${currentPath}`) }
+        });
       }
     } else {
       // Logged in

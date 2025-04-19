@@ -1,4 +1,3 @@
-
 export interface Rating {
   perfumeId: string; // Changed to string
   rating: number;
@@ -15,6 +14,7 @@ export interface RatingsContextType {
   addRating: (perfumeId: string, rating: number, aiMatch?: number) => Promise<void>; // Updated perfumeId type
   getRating: (perfumeId: string) => Rating | undefined; // Updated perfumeId type
   clearRatings: () => Promise<void>;
+  fetchUserRatings: () => Promise<void>; // Added method to fetch user ratings from backend
   addFavorite: (perfumeId: string) => Promise<void>; // Added addFavorite
   removeFavorite: (perfumeId: string) => Promise<void>; // Added removeFavorite
   isFavorite: (perfumeId: string) => boolean; // Added isFavorite

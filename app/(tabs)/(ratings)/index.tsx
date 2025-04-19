@@ -68,6 +68,8 @@ export default function RatingsScreen() {
   // --- Handlers ---
 
   const handlePerfumePress = (perfume: DisplayPerfume) => {
+    // Set the selected perfume regardless of authentication status
+    // The RatingModal will handle the authentication check and potential redirect
     setSelectedPerfume(perfume);
     setIsRatingModalVisible(true);
   };

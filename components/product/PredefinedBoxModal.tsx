@@ -13,6 +13,7 @@ import { Feather } from '@expo/vector-icons';
 import { ApiPredefinedBox, ApiPerfumeSummary } from '../../src/services/api'; // Import API types
 import { DecantSize } from '../../types/cart'; // Import DecantSize type
 import { useCart } from '../../context/CartContext';
+import { useSnackbar } from '../../context/SnackbarContext'; // Import useSnackbar hook
 import { BasicPerfumeInfo } from '../../types/perfume'; // Keep BasicPerfumeInfo for cart item structure
 import { COLORS, FONT_SIZES, SPACING } from '../../types/constants'; // Assuming constants exist
 
@@ -34,6 +35,7 @@ const PredefinedBoxModal: React.FC<PredefinedBoxModalProps> = ({
   decantCount,
 }) => {
   const { addItemToCart } = useCart();
+  const { showSnackbar } = useSnackbar(); // Add useSnackbar hook
 
   // Get the list of perfumes to display based on boxData and decantCount
   const perfumesToShow: ApiPerfumeSummary[] = useMemo(() => {
@@ -76,11 +78,28 @@ const PredefinedBoxModal: React.FC<PredefinedBoxModalProps> = ({
     try {
       await addItemToCart(itemData);
       console.log('Predefined Box added to cart:', itemData);
-      // Add success feedback (e.g., toast message) - Consider adding later
+
+      // Show success snackbar at the top with redirect
+      showSnackbar(
+        'Se ha agregado el producto al carro.\nRedirigiendo al carro...',
+        'success',
+        2000,
+        '/(tabs)/(cart)',
+        'top'
+      );
+
       onClose(); // Close the modal on success
     } catch (error) {
       console.error("Error adding Predefined Box to cart:", error);
-      // Add error feedback - Consider adding later
+
+      // Show error snackbar at the bottom
+      showSnackbar(
+        "Error al añadir al carrito.",
+        'error',
+        undefined,
+        undefined,
+        'bottom'
+      );
     }
   };
 

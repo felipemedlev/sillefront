@@ -27,6 +27,7 @@ const accordTranslations: { [key: string]: string } = {
   'honey': 'de miel',
   'coffee': 'de café',
   'earthy': 'terrosos',
+  'warm spicy': 'especiados cálidos',
   'powdery': 'atalcados',
   'cinnamon': 'acanelados',
 };

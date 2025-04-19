@@ -22,6 +22,14 @@ export interface ApiPerfumeSummary {
   pricePerML: number | null; // Assuming DecimalField maps to number or null
 }
 
+// Rating API Types
+export interface ApiRating {
+  id: number;
+  perfume: number;
+  rating: number;
+  timestamp: string;
+}
+
 export interface ApiPredefinedBox {
     id: number;
     title: string;
@@ -360,4 +368,68 @@ export const authUtils = {
   getToken,
   setToken,
   removeToken,
+};
+
+// --- Rating API Functions ---
+
+/**
+ * Get all ratings for the current authenticated user
+ * @returns Array of rating objects or empty array if none exist
+ */
+export const getAllUserRatings = async (): Promise<ApiRating[]> => {
+  const headers = await createHeaders(true); // Requires auth
+  const url = `${API_BASE_URL}/ratings/`;
+  // Note: This endpoint needs to be implemented in the backend
+  const response = await fetch(url, {
+    method: 'GET',
+    headers,
+  });
+
+  const data = await handleResponse(response);
+  return data.results || data || []; // Handle both paginated and non-paginated responses
+};
+
+/**
+ * Get the current user's rating for a specific perfume
+ * @param perfumeId The ID of the perfume
+ * @returns The rating data or null if not found
+ */
+export const getRating = async (perfumeId: number | string): Promise<ApiRating | null> => {
+  try {
+    const headers = await createHeaders(true); // Requires auth
+    const url = `${API_BASE_URL}/perfumes/${perfumeId}/rating/`;
+    const response = await fetch(url, {
+      method: 'GET',
+      headers,
+    });
+
+    if (response.status === 404) {
+      return null; // No rating found is a normal case
+    }
+
+    return handleResponse(response);
+  } catch (error) {
+    // Return null rather than throwing for 404s
+    if ((error as any).status === 404) {
+      return null;
+    }
+    throw error;
+  }
+};
+
+/**
+ * Submit or update a rating for a perfume
+ * @param perfumeId The ID of the perfume to rate
+ * @param rating Rating value (1-5)
+ * @returns The saved rating data
+ */
+export const submitRating = async (perfumeId: number | string, rating: number): Promise<ApiRating> => {
+  const headers = await createHeaders(true); // Requires auth
+  const url = `${API_BASE_URL}/perfumes/${perfumeId}/rating/`;
+  const response = await fetch(url, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({ rating }),
+  });
+  return handleResponse(response);
 };

@@ -16,6 +16,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '../../src/context/AuthContext';
 import { useSurveyContext } from '../../context/SurveyContext';
+import { useRatings } from '../../context/RatingsContext';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { COLORS, FONTS, SPACING, FONT_SIZES } from '../../types/constants';
 
 const { width } = Dimensions.get('window');
@@ -29,6 +31,7 @@ export default function SignUpScreen() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const { register, user } = useAuth();
   const { submitSurveyIfAuthenticated } = useSurveyContext();
+  const { submitRatingsToBackend } = useRatings();
 
   const handleSignUp = async () => {
     if (isLoading) return;
@@ -40,6 +43,9 @@ export default function SignUpScreen() {
          setIsLoading(false);
          return;
       }
+
+      // Clear any previous sync flags to avoid issues
+      await AsyncStorage.removeItem('hasSubmittedRatings');
 
       const result = await register({ email: email.trim(), password });
 
@@ -53,6 +59,16 @@ export default function SignUpScreen() {
         } catch (surveyError) {
           console.error('Error submitting survey after registration:', surveyError);
           // Don't fail the registration process if survey submission fails
+        }
+
+        // Also attempt to submit locally stored ratings to the backend
+        try {
+          await submitRatingsToBackend();
+          // Mark that ratings have been submitted this session
+          await AsyncStorage.setItem('hasSubmittedRatings', 'true');
+        } catch (ratingsError) {
+          console.error('Error submitting ratings after registration:', ratingsError);
+          // Don't fail the registration process if ratings submission fails
         }
 
         // Navigate immediately - the root layout will handle redirection properly

@@ -1,8 +1,10 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { View, Text, useWindowDimensions, StyleSheet, TextInput, TouchableOpacity, ScrollView, Image, SafeAreaView, ActivityIndicator, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import RatingModal from '../../../components/RatingModal';
 import { useRatings } from '../../../context/RatingsContext';
+import { useAuth } from '../../../src/context/AuthContext';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { COLORS, FONT_SIZES, SPACING, FONTS } from '../../../types/constants';
 import { MOCK_PERFUMES } from '../../../data/mockPerfumes'; // Import all mock perfumes
 
@@ -29,7 +31,45 @@ export default function RatingsScreen() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedPerfume, setSelectedPerfume] = useState<DisplayPerfume | null>(null);
   const [isRatingModalVisible, setIsRatingModalVisible] = useState(false);
-  const { ratings, getRating, isLoadingRatings } = useRatings(); // Use ratings map directly
+  const [hasSyncedRatings, setHasSyncedRatings] = useState(false);
+  const { ratings, getRating, isLoadingRatings, fetchUserRatings, submitRatingsToBackend } = useRatings();
+  const { isAuthenticated } = useAuth();
+  const { width } = useWindowDimensions();
+  const isDesktop = width >= DESKTOP_BREAKPOINT;
+
+  // Effect to refresh ratings data when the component mounts or auth state changes
+  useEffect(() => {
+    const refreshRatingsData = async () => {
+      if (isAuthenticated) {
+        // Fetch ratings from backend if user is authenticated
+        await fetchUserRatings();
+      }
+    };
+
+    refreshRatingsData();
+  }, [isAuthenticated, fetchUserRatings]);
+
+  // Effect to attempt submitting local ratings when user becomes authenticated
+  // Will only run once when user becomes authenticated
+  useEffect(() => {
+    const syncRatingsWithBackend = async () => {
+      // Check if we've already synced in this session
+      const hasSubmitted = await AsyncStorage.getItem('hasSubmittedRatings');
+
+      if (isAuthenticated && ratings.length > 0 && !hasSyncedRatings && !hasSubmitted) {
+        console.log('User authenticated, attempting to sync local ratings with backend');
+        await submitRatingsToBackend();
+        setHasSyncedRatings(true); // Mark as synced to prevent loop
+        // Also store in AsyncStorage to persist across component remounts
+        await AsyncStorage.setItem('hasSubmittedRatings', 'true');
+      } else if (hasSubmitted) {
+        // If already submitted, just mark as synced in component state
+        setHasSyncedRatings(true);
+      }
+    };
+
+    syncRatingsWithBackend();
+  }, [isAuthenticated, ratings, submitRatingsToBackend, hasSyncedRatings]);
 
   // --- Data Derivation ---
 
@@ -125,13 +165,10 @@ export default function RatingsScreen() {
     return (
       <SafeAreaView style={[styles.container, styles.loadingContainer]}>
         <ActivityIndicator size="large" color={COLORS.PRIMARY} />
-        <Text style={styles.loadingText}>Loading perfumes...</Text>
+        <Text style={styles.loadingText}>Cargando perfumes...</Text>
       </SafeAreaView>
     );
   }
-
-  const { width } = useWindowDimensions();
-  const isDesktop = width >= DESKTOP_BREAKPOINT;
 
   // --- Main Render ---
 
@@ -141,6 +178,16 @@ export default function RatingsScreen() {
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Mis Perfumes</Text>
       </View>
+
+      {/* Authentication Status Indicator */}
+      {!isAuthenticated && (
+        <View style={styles.authStatusContainer}>
+          <Ionicons name="information-circle-outline" size={16} color={COLORS.TEXT_SECONDARY} />
+          <Text style={styles.authStatusText}>
+            Tus calificaciones se guardan localmente. Inicia sesión para sincronizarlas.
+          </Text>
+        </View>
+      )}
 
       {/* Search Box */}
       <View style={styles.searchContainer}>
@@ -242,6 +289,22 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: COLORS.PRIMARY,
     fontFamily: FONTS.INSTRUMENT_SANS,
+  },
+  authStatusContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginHorizontal: SPACING.LARGE,
+    marginBottom: SPACING.MEDIUM,
+    backgroundColor: '#F9F9F9',
+    borderRadius: 8,
+    padding: SPACING.SMALL,
+  },
+  authStatusText: {
+    fontSize: FONT_SIZES.SMALL,
+    color: COLORS.TEXT_SECONDARY,
+    marginLeft: 8,
+    fontFamily: FONTS.INSTRUMENT_SANS,
+    flex: 1,
   },
   searchContainer: {
     flexDirection: 'row',

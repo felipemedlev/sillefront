@@ -377,16 +377,34 @@ export const authUtils = {
  * @returns Array of rating objects or empty array if none exist
  */
 export const getAllUserRatings = async (): Promise<ApiRating[]> => {
-  const headers = await createHeaders(true); // Requires auth
-  const url = `${API_BASE_URL}/ratings/`;
-  // Note: This endpoint needs to be implemented in the backend
-  const response = await fetch(url, {
-    method: 'GET',
-    headers,
-  });
+  try {
+    const headers = await createHeaders(true); // Requires auth
+    // The backend doesn't have a dedicated /ratings/ endpoint
+    // Instead, we need to use the user-specific ratings endpoint
+    const url = `${API_BASE_URL}/users/ratings/`;
 
-  const data = await handleResponse(response);
-  return data.results || data || []; // Handle both paginated and non-paginated responses
+    // Handle potential 404s gracefully - backend may not have implemented this yet
+    try {
+      const response = await fetch(url, {
+        method: 'GET',
+        headers,
+      });
+
+      if (response.status === 404) {
+        console.warn('User ratings endpoint not found. This endpoint may not be implemented yet.');
+        return [];
+      }
+
+      const data = await handleResponse(response);
+      return data.results || data || [];
+    } catch (error) {
+      console.error('Error fetching user ratings:', error);
+      return [];
+    }
+  } catch (error) {
+    console.error('Error in getAllUserRatings:', error);
+    return [];
+  }
 };
 
 /**

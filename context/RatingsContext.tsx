@@ -24,6 +24,7 @@ export function RatingsProvider({ children }: { children: ReactNode }) {
       // Use the new API function to get all user ratings
       try {
         const userRatings = await api.getAllUserRatings();
+
         if (userRatings && userRatings.length > 0) {
           // Convert API ratings to our internal format
           const formattedRatings: Rating[] = userRatings.map(apiRating => ({
@@ -37,9 +38,12 @@ export function RatingsProvider({ children }: { children: ReactNode }) {
           // Also update local storage for offline access
           await AsyncStorage.setItem(STORAGE_KEYS.RATINGS, JSON.stringify(formattedRatings));
           return;
+        } else {
+          console.log('No ratings found from API, using local storage');
         }
       } catch (apiError) {
         console.error('Error fetching ratings from API:', apiError);
+        // Continue to fallback to local storage
       }
 
       // Fallback to local storage if API fails or returns no ratings
@@ -67,6 +71,81 @@ export function RatingsProvider({ children }: { children: ReactNode }) {
       setIsLoadingRatings(false);
     }
   }, []);
+
+  // Submit all locally stored ratings to the backend
+  const submitRatingsToBackend = useCallback(async (): Promise<boolean> => {
+    try {
+      if (!isAuthenticated || !user) {
+        console.log('User not authenticated, ratings saved locally only');
+        return false;
+      }
+
+      if (ratings.length === 0) {
+        console.log('No ratings to submit');
+        return false;
+      }
+
+      console.log('Attempting to submit local ratings to backend');
+      let successCount = 0;
+
+      // Create a list to track successfully submitted ratings
+      const successfulRatings: Rating[] = [];
+
+      // Submit each rating one by one to the backend
+      const submissionPromises = ratings.map(async (rating) => {
+        try {
+          await api.submitRating(rating.perfumeId, rating.rating);
+          successCount++;
+          successfulRatings.push(rating);
+          return true;
+        } catch (err: any) {
+          // Check if it's a 404 (endpoint not found) error
+          if (err.status === 404 || (err.message && err.message.includes('404'))) {
+            console.warn(`API endpoint for rating perfume ${rating.perfumeId} not found. This feature may not be implemented yet on the backend.`);
+          } else {
+            console.error(`Error submitting rating for perfume ${rating.perfumeId}:`, err);
+          }
+          return false;
+        }
+      });
+
+      try {
+        // Wait for all submissions to complete
+        await Promise.all(submissionPromises);
+
+        console.log(`Successfully submitted ${successCount}/${ratings.length} ratings to backend`);
+
+        // Instead of fetching again (which can cause loops), just update our state
+        // to reflect what we know was successfully uploaded
+        if (successCount > 0) {
+          // Don't trigger fetchUserRatings() as it can cause an infinite loop
+          // Just mark these ratings as having timestamps from the server
+          const now = new Date().getTime();
+
+          setRatings(prevRatings =>
+            prevRatings.map(rating => {
+              // If this rating was successfully submitted, update its timestamp
+              const wasSubmitted = successfulRatings.some(r => r.perfumeId === rating.perfumeId);
+              if (wasSubmitted) {
+                return { ...rating, timestamp: now };
+              }
+              return rating;
+            })
+          );
+        }
+
+        return successCount > 0;
+      } catch (promiseError) {
+        console.error('Error processing rating submissions:', promiseError);
+        return successCount > 0; // Still return true if any succeeded
+      }
+    } catch (err) {
+      const appError = handleError(err);
+      console.error('Error submitting ratings to backend:', appError);
+      setError(`Error submitting ratings: ${appError.message}`);
+      return false;
+    }
+  }, [isAuthenticated, user, ratings]);
 
   // Load ratings based on authentication status
   useEffect(() => {
@@ -251,6 +330,7 @@ export function RatingsProvider({ children }: { children: ReactNode }) {
     getRating,
     clearRatings,
     fetchUserRatings, // Add this to allow manual refresh
+    submitRatingsToBackend, // Add new function to submit ratings to backend
     addFavorite, // Added
     removeFavorite, // Added
     isFavorite, // Added

@@ -16,6 +16,9 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '../../src/context/AuthContext';
 import { useSurveyContext } from '../../context/SurveyContext';
+import { useRatings } from '../../context/RatingsContext';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { STORAGE_KEYS } from '../../types/constants';
 import { COLORS, FONTS, SPACING, FONT_SIZES } from '../../types/constants';
 
 const { width } = Dimensions.get('window');
@@ -29,6 +32,7 @@ export default function LoginScreen() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const { login } = useAuth();
   const { submitSurveyIfAuthenticated } = useSurveyContext();
+  const { submitRatingsToBackend } = useRatings();
 
   const handleLogin = async () => {
     if (isLoading) return;
@@ -39,6 +43,10 @@ export default function LoginScreen() {
       if (!email || !password) {
         throw new Error("Por favor, ingresa email y contraseña.");
       }
+
+      // Clear any "hasSubmitted" flags from previous sessions to avoid sync issues
+      await AsyncStorage.removeItem('hasSubmittedRatings');
+
       await login({ email: email.trim(), password });
 
       // After successful login, attempt to submit any pending survey responses
@@ -47,6 +55,16 @@ export default function LoginScreen() {
       } catch (surveyError) {
         console.error('Error submitting survey after login:', surveyError);
         // Don't fail the login process if survey submission fails
+      }
+
+      // Also attempt to submit locally stored ratings to the backend
+      try {
+        await submitRatingsToBackend();
+        // Mark that we've submitted ratings in this session
+        await AsyncStorage.setItem('hasSubmittedRatings', 'true');
+      } catch (ratingsError) {
+        console.error('Error submitting ratings after login:', ratingsError);
+        // Don't fail the login process if ratings submission fails
       }
 
       // Navigate immediately - the root layout will handle redirection properly

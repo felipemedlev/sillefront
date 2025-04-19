@@ -15,6 +15,7 @@ export interface RatingsContextType {
   getRating: (perfumeId: string) => Rating | undefined; // Updated perfumeId type
   clearRatings: () => Promise<void>;
   fetchUserRatings: () => Promise<void>; // Added method to fetch user ratings from backend
+  submitRatingsToBackend: () => Promise<boolean>; // Added method to submit local ratings to backend
   addFavorite: (perfumeId: string) => Promise<void>; // Added addFavorite
   removeFavorite: (perfumeId: string) => Promise<void>; // Added removeFavorite
   isFavorite: (perfumeId: string) => boolean; // Added isFavorite

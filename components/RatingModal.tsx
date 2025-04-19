@@ -8,10 +8,12 @@ import {
   Image,
   Animated,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRatings } from '../context/RatingsContext';
 import { useAuth } from '../src/context/AuthContext';
+import { router } from 'expo-router';
 import * as api from '../src/services/api';
 
 interface Perfume {
@@ -32,8 +34,8 @@ export default function RatingModal({ visible, onClose, perfume }: RatingModalPr
   const [showFeedback, setShowFeedback] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { addRating } = useRatings();
-  const { user } = useAuth();
+  const { addRating, getRating } = useRatings();
+  const { user, isAuthenticated } = useAuth();
 
   // When modal opens, fetch current rating
   useEffect(() => {
@@ -45,11 +47,19 @@ export default function RatingModal({ visible, onClose, perfume }: RatingModalPr
   const fetchCurrentRating = async () => {
     try {
       setIsLoading(true);
-      const currentRating = await api.getRating(perfume.id);
-      if (currentRating) {
-        setRating(currentRating.rating);
+
+      if (isAuthenticated) {
+        // If authenticated, try to get rating from API
+        const currentRating = await api.getRating(perfume.id);
+        if (currentRating) {
+          setRating(currentRating.rating);
+        } else {
+          setRating(0);
+        }
       } else {
-        setRating(0);
+        // If not authenticated, use local rating from the context we already have
+        const localRating = getRating(perfume.id);
+        setRating(localRating?.rating || 0);
       }
     } catch (err) {
       console.error('Error fetching rating:', err);
@@ -65,10 +75,39 @@ export default function RatingModal({ visible, onClose, perfume }: RatingModalPr
       setRating(selectedRating);
       console.log('Adding rating for perfume:', perfume.id, 'rating:', selectedRating);
 
-      // Submit to backend first
-      await api.submitRating(perfume.id, selectedRating);
+      if (isAuthenticated) {
+        // If authenticated, submit to backend first
+        await api.submitRating(perfume.id, selectedRating);
+      } else {
+        // If not authenticated, offer to login/signup
+        const shouldContinue = await new Promise((resolve) => {
+          Alert.alert(
+            'No has iniciado sesión',
+            'Puedes guardar tu calificación localmente, pero para sincronizar con tu cuenta necesitas iniciar sesión.',
+            [
+              {
+                text: 'Iniciar sesión',
+                onPress: () => {
+                  resolve(false);
+                  onClose();
+                  router.push('/login');
+                },
+              },
+              {
+                text: 'Guardar localmente',
+                onPress: () => resolve(true),
+              },
+            ]
+          );
+        });
 
-      // Then update local state
+        if (!shouldContinue) {
+          setIsLoading(false);
+          return;
+        }
+      }
+
+      // Update local state regardless of authentication
       addRating(perfume.id, selectedRating);
 
       setError(null);
@@ -135,7 +174,18 @@ export default function RatingModal({ visible, onClose, perfume }: RatingModalPr
           {showFeedback && (
             <Animated.View style={styles.feedbackContainer}>
               <Text style={styles.feedbackText}>¡Gracias por tu calificación!</Text>
+              {!isAuthenticated && (
+                <Text style={styles.feedbackNote}>
+                  Tu calificación se guardó localmente. Inicia sesión para sincronizarla con tu cuenta.
+                </Text>
+              )}
             </Animated.View>
+          )}
+
+          {!isAuthenticated && !showFeedback && !isLoading && (
+            <Text style={styles.loginPrompt}>
+              Inicia sesión para sincronizar tus calificaciones
+            </Text>
           )}
         </View>
       </View>
@@ -194,16 +244,31 @@ const styles = StyleSheet.create({
     padding: 12,
     backgroundColor: '#E8F5E9',
     borderRadius: 8,
+    width: '100%',
   },
   feedbackText: {
     color: '#2E7D32',
     fontSize: 16,
     fontWeight: '500',
+    textAlign: 'center',
+  },
+  feedbackNote: {
+    color: '#4A8055',
+    fontSize: 14,
+    marginTop: 6,
+    textAlign: 'center',
   },
   errorText: {
     color: '#D32F2F',
     fontSize: 14,
     marginTop: 12,
+    textAlign: 'center',
+  },
+  loginPrompt: {
+    color: '#666',
+    fontSize: 14,
+    marginTop: 16,
+    fontStyle: 'italic',
     textAlign: 'center',
   },
 });

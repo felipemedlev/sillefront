@@ -1,17 +1,20 @@
-import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import React from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ImageBackground, Dimensions } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS, FONT_SIZES, SPACING, FONTS } from '../../../types/constants';
-import { SafeAreaView } from 'react-native-safe-area-context'; // Use SafeAreaView
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../../src/context/AuthContext';
+import { LinearGradient } from 'expo-linear-gradient';
+
+const { width } = Dimensions.get('window');
 
 export default function AuthPromptScreen() {
   const router = useRouter();
   const { user, isLoading } = useAuth();
 
   // Redirect to profile index if user is logged in
-  useEffect(() => {
+  React.useEffect(() => {
     if (!isLoading && user) {
       router.replace('/(tabs)/(profile)');
     }
@@ -26,30 +29,49 @@ export default function AuthPromptScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <View style={styles.container}>
-        <Ionicons name="person-circle-outline" size={80} color={COLORS.ACCENT} style={styles.icon} />
-        <Text style={styles.title}>Accede a tu Perfil</Text>
-        <Text style={styles.subtitle}>
-          Inicia sesión o regístrate para ver tus compras, favoritos y más.
-        </Text>
+    <SafeAreaView edges={['top']} style={styles.safeArea}>
+      <LinearGradient
+        colors={['#F8F9FA', '#F5F5F7', '#FFFFFF']}
+        style={styles.gradient}
+      >
+        <View style={styles.container}>
+          <View style={styles.topSection}>
+            <View style={styles.iconContainer}>
+              <Ionicons name="person-circle" size={70} color={COLORS.ACCENT} style={styles.icon} />
+            </View>
+          </View>
 
-        <TouchableOpacity
-          style={[styles.button, styles.loginButton]}
-          onPress={() => router.push('/login')}
-          activeOpacity={0.8}
-        >
-          <Text style={styles.buttonText}>Iniciar Sesión</Text>
-        </TouchableOpacity>
+          <View style={styles.contentContainer}>
+            <Text style={styles.title}>Accede a tu Perfil</Text>
+            <Text style={styles.subtitle}>
+              Inicia sesión o regístrate para acceder a calificaciones, ver tus compras, favoritos y más.
+            </Text>
 
-        <TouchableOpacity
-          style={[styles.button, styles.signupButton]}
-          onPress={() => router.push('/signup')}
-          activeOpacity={0.8}
-        >
-          <Text style={[styles.buttonText, styles.signupButtonText]}>Registrarse</Text>
-        </TouchableOpacity>
-      </View>
+            <TouchableOpacity
+              style={[styles.button, styles.loginButton]}
+              onPress={() => router.push('/login')}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="log-in-outline" size={22} color={COLORS.BACKGROUND} style={styles.buttonIcon} />
+              <Text style={styles.buttonText}>Iniciar Sesión</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.button, styles.signupButton]}
+              onPress={() => router.push('/signup')}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="person-add-outline" size={22} color={COLORS.ACCENT} style={styles.buttonIcon} />
+              <Text style={[styles.buttonText, styles.signupButtonText]}>Registrarse</Text>
+            </TouchableOpacity>
+
+            <View style={styles.infoContainer}>
+              <Ionicons name="information-circle" size={22} color={COLORS.ACCENT} />
+              <Text style={styles.infoText}>Al registrarte podrás guardar tus preferencias y gestionar pedidos.</Text>
+            </View>
+          </View>
+        </View>
+      </LinearGradient>
     </SafeAreaView>
   );
 }
@@ -57,20 +79,62 @@ export default function AuthPromptScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: COLORS.BACKGROUND_ALT, // Light background
+    backgroundColor: COLORS.BACKGROUND,
+  },
+  gradient: {
+    flex: 1,
+    justifyContent: 'flex-start',
+    backgroundColor: 'rgba(249, 246, 243, 0.7)',
   },
   container: {
     flex: 1,
-    justifyContent: 'center',
+    width: '100%',
+    justifyContent: 'flex-start',
     alignItems: 'center',
     paddingHorizontal: SPACING.LARGE,
+    paddingTop: 40,
+  },
+  topSection: {
+    width: '100%',
+    alignItems: 'center',
+    marginBottom: SPACING.MEDIUM,
+  },
+  iconContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 3,
+    borderWidth: 1,
+    borderColor: 'rgba(225, 225, 225, 0.5)',
   },
   icon: {
-    marginBottom: SPACING.LARGE,
+    marginBottom: 0,
+  },
+  contentContainer: {
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    borderRadius: 20,
+    padding: SPACING.LARGE,
+    width: '100%',
+    maxWidth: 400,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 3,
+    borderWidth: 1,
+    borderColor: 'rgba(225, 225, 225, 0.5)',
+    marginTop: SPACING.SMALL,
   },
   title: {
     fontSize: FONT_SIZES.XLARGE,
-    fontWeight: '700', // Bold title
+    fontWeight: '700',
     color: COLORS.TEXT_PRIMARY,
     fontFamily: FONTS.INSTRUMENT_SANS,
     textAlign: 'center',
@@ -81,28 +145,32 @@ const styles = StyleSheet.create({
     color: COLORS.TEXT_SECONDARY,
     fontFamily: FONTS.INSTRUMENT_SANS,
     textAlign: 'center',
-    marginBottom: SPACING.XLARGE, // More space before buttons
+    marginBottom: SPACING.XLARGE,
     lineHeight: FONT_SIZES.REGULAR * 1.4,
   },
   button: {
     width: '100%',
     paddingVertical: SPACING.MEDIUM,
-    borderRadius: 30, // Rounded buttons
+    borderRadius: 30,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: SPACING.MEDIUM,
-    height: 55, // Match auth screen button height
+    height: 55,
+    flexDirection: 'row',
+  },
+  buttonIcon: {
+    marginRight: SPACING.SMALL,
   },
   loginButton: {
     backgroundColor: COLORS.ACCENT,
-    elevation: 2, // Add subtle shadow
+    elevation: 2,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.2,
     shadowRadius: 1.5,
   },
   signupButton: {
-    backgroundColor: COLORS.BACKGROUND, // White background
+    backgroundColor: COLORS.BACKGROUND,
     borderWidth: 1,
     borderColor: COLORS.ACCENT,
   },
@@ -110,9 +178,27 @@ const styles = StyleSheet.create({
     fontSize: FONT_SIZES.REGULAR,
     fontWeight: '600',
     fontFamily: FONTS.INSTRUMENT_SANS,
-    color: COLORS.BACKGROUND, // White text for primary button
+    color: COLORS.BACKGROUND,
   },
   signupButtonText: {
-    color: COLORS.ACCENT, // Accent color text for secondary button
+    color: COLORS.ACCENT,
+  },
+  infoContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(242, 242, 242, 0.6)',
+    padding: SPACING.MEDIUM,
+    borderRadius: 12,
+    marginTop: SPACING.MEDIUM,
+    borderWidth: 1,
+    borderColor: 'rgba(225, 225, 225, 0.8)',
+  },
+  infoText: {
+    fontSize: FONT_SIZES.SMALL,
+    color: COLORS.TEXT_SECONDARY,
+    fontFamily: FONTS.INSTRUMENT_SANS,
+    marginLeft: 10,
+    flex: 1,
+    lineHeight: FONT_SIZES.SMALL * 1.3,
   },
 });

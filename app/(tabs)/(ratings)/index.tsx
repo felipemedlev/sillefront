@@ -6,23 +6,25 @@ import { useRatings } from '../../../context/RatingsContext';
 import { useAuth } from '../../../src/context/AuthContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { COLORS, FONT_SIZES, SPACING, FONTS } from '../../../types/constants';
-import { MOCK_PERFUMES } from '../../../data/mockPerfumes'; // Import all mock perfumes
+import * as api from '../../../src/services/api';
 
 // Define the simplified perfume type needed for this screen
 interface DisplayPerfume {
-  id: string;
+  id: string;         // This will store the external_id for ratings
   name: string;
   brand: string;
   image: string;
 }
 
-// Map the full mock data to the simplified structure needed for display
-const allPerfumes: DisplayPerfume[] = MOCK_PERFUMES.map(p => ({
-  id: p.id,
-  name: p.name,
-  brand: p.brand,
-  image: p.thumbnailUrl, // Use thumbnailUrl for the image
-}));
+// Define the API response type for perfumes
+interface PerfumeApiResponse {
+  id: number;
+  external_id: string;
+  name: string;
+  brand: string;
+  thumbnailUrl: string | null;
+  [key: string]: any; // Allow other properties without explicitly defining them
+}
 
 const DESKTOP_BREAKPOINT = 768;
 
@@ -36,6 +38,41 @@ export default function RatingsScreen() {
   const { isAuthenticated } = useAuth();
   const { width } = useWindowDimensions();
   const isDesktop = width >= DESKTOP_BREAKPOINT;
+  const [allPerfumes, setAllPerfumes] = useState<DisplayPerfume[]>([]);
+  const [isLoadingPerfumes, setIsLoadingPerfumes] = useState(true);
+  const [searchResults, setSearchResults] = useState<DisplayPerfume[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchTimeout, setSearchTimeout] = useState<NodeJS.Timeout | null>(null);
+
+  // Fetch all perfumes from the backend when component mounts
+  useEffect(() => {
+    const fetchPerfumes = async () => {
+      try {
+        setIsLoadingPerfumes(true);
+        // Get a large number of perfumes to ensure we have a comprehensive list
+        // Use a large page size to minimize API calls
+        const response = await api.fetchPerfumes(1, 20);
+
+        if (response && Array.isArray(response.results)) {
+          // Map API response to the DisplayPerfume type
+          // Use the external_id instead of database ID for rating endpoints
+          const perfumesData = response.results.map((p: PerfumeApiResponse) => ({
+            id: p.external_id || p.id.toString(), // Use external_id if available, fall back to id if not
+            name: p.name,
+            brand: p.brand,
+            image: p.thumbnailUrl || '', // Fallback to empty string if null
+          }));
+          setAllPerfumes(perfumesData);
+        }
+      } catch (error) {
+        console.error('Error fetching perfumes:', error);
+      } finally {
+        setIsLoadingPerfumes(false);
+      }
+    };
+
+    fetchPerfumes();
+  }, []);
 
   // Effect to refresh ratings data when the component mounts or auth state changes
   useEffect(() => {
@@ -71,31 +108,85 @@ export default function RatingsScreen() {
     syncRatingsWithBackend();
   }, [isAuthenticated, ratings, submitRatingsToBackend, hasSyncedRatings]);
 
+  // --- Search Handling ---
+
+  // Use effect for debounced search
+  useEffect(() => {
+    // Clear any existing timeout
+    if (searchTimeout) {
+      clearTimeout(searchTimeout);
+    }
+
+    // If search query is empty, clear results and return
+    if (!searchQuery.trim()) {
+      setSearchResults([]);
+      setIsSearching(false);
+      return;
+    }
+
+    // Set a new timeout for debounced search
+    const timeout = setTimeout(() => {
+      searchPerfumes(searchQuery.trim());
+    }, 500); // 500ms debounce
+
+    setSearchTimeout(timeout as unknown as NodeJS.Timeout);
+
+    // Cleanup function to clear timeout
+    return () => {
+      if (timeout) {
+        clearTimeout(timeout);
+      }
+    };
+  }, [searchQuery]);
+
+  // Function to search perfumes from the backend
+  const searchPerfumes = async (query: string) => {
+    if (!query) return;
+
+    try {
+      setIsSearching(true);
+
+      // Call the API with the search query
+      const response = await api.fetchPerfumes(1, 20, query);
+
+      if (response && Array.isArray(response.results)) {
+        // Map API response to the DisplayPerfume type
+        const perfumesData = response.results.map((p: PerfumeApiResponse) => ({
+          id: p.external_id || p.id.toString(),
+          name: p.name,
+          brand: p.brand,
+          image: p.thumbnailUrl || '',
+        }));
+
+        setSearchResults(perfumesData);
+      } else {
+        setSearchResults([]);
+      }
+    } catch (error) {
+      console.error('Error searching perfumes:', error);
+      setSearchResults([]);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
   // --- Data Derivation ---
 
   // Get rated perfumes based on the ratings context
   const ratedPerfumes = useMemo(() => {
+    if (isLoadingPerfumes || !allPerfumes.length) return [];
+
     const ratedIds = new Set(ratings.map(r => r.perfumeId)); // Correctly map array to set of IDs
     return allPerfumes.filter(perfume => ratedIds.has(perfume.id));
-  }, [ratings]);
+  }, [ratings, allPerfumes, isLoadingPerfumes]);
 
   // Get perfumes to be rated (initially all perfumes not yet rated)
-  // TODO: Integrate logic for "ordered" perfumes. Currently shows all unrated perfumes.
   const porCalificarPerfumes = useMemo(() => {
+    if (isLoadingPerfumes || !allPerfumes.length) return [];
+
     const ratedIds = new Set(ratings.map(r => r.perfumeId)); // Correctly map array to set of IDs
     return allPerfumes.filter(perfume => !ratedIds.has(perfume.id));
-  }, [ratings]);
-
-  // Filter perfumes based on search query (searches across ALL perfumes)
-  const searchResults = useMemo(() => {
-    if (!searchQuery.trim()) return []; // Return empty if no search query
-
-    const query = searchQuery.toLowerCase().trim();
-    return allPerfumes.filter(perfume =>
-      perfume.name.toLowerCase().includes(query) ||
-      perfume.brand.toLowerCase().includes(query)
-    );
-  }, [searchQuery]);
+  }, [ratings, allPerfumes, isLoadingPerfumes]);
 
   // Determine which list to display based on search query and active tab
   const perfumesToDisplay = useMemo(() => {
@@ -119,6 +210,18 @@ export default function RatingsScreen() {
     setSelectedPerfume(null);
     // Optionally clear search after rating?
     // setSearchQuery('');
+  };
+
+  // Handle text input for search
+  const handleSearchChange = (text: string) => {
+    setSearchQuery(text);
+    // Actual search will be triggered by the useEffect with debounce
+  };
+
+  // Clear search query
+  const handleClearSearch = () => {
+    setSearchQuery('');
+    setSearchResults([]);
   };
 
   // --- Render Functions ---
@@ -161,7 +264,7 @@ export default function RatingsScreen() {
 
   // --- Loading State ---
 
-  if (isLoadingRatings) { // Only check ratings loading state
+  if (isLoadingRatings || isLoadingPerfumes) { // Check both loading states
     return (
       <SafeAreaView style={[styles.container, styles.loadingContainer]}>
         <ActivityIndicator size="large" color={COLORS.PRIMARY} />
@@ -197,13 +300,13 @@ export default function RatingsScreen() {
           placeholder="Buscar perfumes..." // Updated placeholder
           placeholderTextColor="#999"
           value={searchQuery}
-          onChangeText={setSearchQuery}
+          onChangeText={handleSearchChange}
         />
         {searchQuery.length > 0 && (
-             <TouchableOpacity onPress={() => setSearchQuery('')} style={styles.clearSearchButton}>
-                 <Ionicons name="close-circle" size={20} color="#888" />
-             </TouchableOpacity>
-         )}
+          <TouchableOpacity onPress={handleClearSearch} style={styles.clearSearchButton}>
+            <Ionicons name="close-circle" size={20} color="#888" />
+          </TouchableOpacity>
+        )}
       </View>
 
       {/* Conditionally render Tabs or Search Results Info */}
@@ -228,26 +331,44 @@ export default function RatingsScreen() {
         </View>
       ) : (
         <View style={styles.searchResultsInfo}>
-            <Text style={styles.searchResultsText}>
-                Mostrando {searchResults.length} resultado(s) para "{searchQuery}"
-            </Text>
+          <Text style={styles.searchResultsText}>
+            {isSearching
+              ? "Buscando..."
+              : `Mostrando ${searchResults.length} resultado(s) para "${searchQuery}"`}
+          </Text>
         </View>
       )}
 
       {/* Perfume Cards Grid */}
       <ScrollView style={styles.cardsContainer} showsVerticalScrollIndicator={false}>
-        {perfumesToDisplay.length > 0 ? (
-            <View style={styles.cardsGrid}>
-              {perfumesToDisplay.map(perfume => renderPerfumeCard(perfume))}
-            </View>
+        {isSearching ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="small" color={COLORS.PRIMARY} />
+          </View>
+        ) : perfumesToDisplay.length > 0 ? (
+          <View style={styles.cardsGrid}>
+            {perfumesToDisplay.map(perfume => renderPerfumeCard(perfume))}
+          </View>
         ) : (
-            <View style={styles.emptyStateContainer}>
-                <Text style={styles.emptyStateText}>
-                    {searchQuery.trim() ? 'No se encontraron perfumes.' : (activeTab === 'calificados' ? 'Aún no has calificado perfumes.' : 'No hay perfumes por calificar.')}
-                </Text>
-                 {/* Optional: Add an icon or illustration for empty state */}
-                 <Ionicons name={searchQuery.trim() ? "search-outline" : (activeTab === 'calificados' ? "star-outline" : "list-outline")} size={40} color={COLORS.TEXT_SECONDARY} style={{ marginTop: SPACING.MEDIUM }}/>
-            </View>
+          <View style={styles.emptyStateContainer}>
+            <Text style={styles.emptyStateText}>
+              {searchQuery.trim()
+                ? 'No se encontraron perfumes.'
+                : (activeTab === 'calificados'
+                    ? 'Aún no has calificado perfumes.'
+                    : 'No hay perfumes por calificar.')
+              }
+            </Text>
+            <Ionicons
+              name={searchQuery.trim()
+                ? "search-outline"
+                : (activeTab === 'calificados' ? "star-outline" : "list-outline")
+              }
+              size={40}
+              color={COLORS.TEXT_SECONDARY}
+              style={{ marginTop: SPACING.MEDIUM }}
+            />
+          </View>
         )}
       </ScrollView>
 
@@ -378,6 +499,7 @@ const styles = StyleSheet.create({
     flex: 1,
     marginTop: 20,
     paddingHorizontal: SPACING.LARGE - SPACING.SMALL / 2,
+    marginBottom: 40,
   },
   cardsGrid: {
     flexDirection: 'row',

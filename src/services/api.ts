@@ -408,25 +408,49 @@ export const getAllUserRatings = async (): Promise<ApiRating[]> => {
 };
 
 /**
- * Get the current user's rating for a specific perfume
- * @param perfumeId The ID of the perfume
+ * Get the current user's rating for a specific perfume using external_id
+ * @param externalId The external_id of the perfume
  * @returns The rating data or null if not found
  */
-export const getRating = async (perfumeId: number | string): Promise<ApiRating | null> => {
+export const getRating = async (externalId: string): Promise<ApiRating | null> => {
   try {
     const headers = await createHeaders(true); // Requires auth
-    const url = `${API_BASE_URL}/perfumes/${perfumeId}/rating/`;
-    const response = await fetch(url, {
+
+    // Get perfume by external_id first, then get rating
+    const url = `${API_BASE_URL}/perfumes/by_external_ids/?external_ids=${externalId}`;
+    // console.log(`API Call to get perfume: GET ${url}`);
+
+    const perfumesResponse = await fetch(url, {
       method: 'GET',
       headers,
     });
 
-    if (response.status === 404) {
+    const perfumes = await handleResponse(perfumesResponse);
+
+    if (!perfumes || !Array.isArray(perfumes) || perfumes.length === 0) {
+      // console.log(`No perfume found with external_id: ${externalId}`);
+      return null;
+    }
+
+    // Use the database ID from the first result to get the rating
+    const perfumeId = perfumes[0].id;
+    const ratingUrl = `${API_BASE_URL}/perfumes/${perfumeId}/rating/`;
+    // console.log(`API Call for rating: GET ${ratingUrl}`);
+
+    const ratingResponse = await fetch(ratingUrl, {
+      method: 'GET',
+      headers,
+    });
+
+    // console.log(`API Response status: ${ratingResponse.status}`);
+    if (ratingResponse.status === 404) {
+      console.log('API: No rating found (404)');
       return null; // No rating found is a normal case
     }
 
-    return handleResponse(response);
+    return handleResponse(ratingResponse);
   } catch (error) {
+    console.error('API Error in getRating:', error);
     // Return null rather than throwing for 404s
     if ((error as any).status === 404) {
       return null;
@@ -436,18 +460,51 @@ export const getRating = async (perfumeId: number | string): Promise<ApiRating |
 };
 
 /**
- * Submit or update a rating for a perfume
- * @param perfumeId The ID of the perfume to rate
+ * Submit or update a rating for a perfume using external_id
+ * @param externalId The external_id of the perfume to rate
  * @param rating Rating value (1-5)
  * @returns The saved rating data
  */
-export const submitRating = async (perfumeId: number | string, rating: number): Promise<ApiRating> => {
-  const headers = await createHeaders(true); // Requires auth
-  const url = `${API_BASE_URL}/perfumes/${perfumeId}/rating/`;
-  const response = await fetch(url, {
-    method: 'POST',
-    headers,
-    body: JSON.stringify({ rating }),
-  });
-  return handleResponse(response);
+export const submitRating = async (externalId: string, rating: number): Promise<ApiRating> => {
+  try {
+    const headers = await createHeaders(true); // Requires auth
+
+    // Get perfume by external_id first, then submit rating
+    const url = `${API_BASE_URL}/perfumes/by_external_ids/?external_ids=${externalId}`;
+    // console.log(`API Call to get perfume: GET ${url}`);
+
+    const perfumesResponse = await fetch(url, {
+      method: 'GET',
+      headers,
+    });
+
+    const perfumes = await handleResponse(perfumesResponse);
+
+    if (!perfumes || !Array.isArray(perfumes) || perfumes.length === 0) {
+      throw new Error(`No perfume found with external_id: ${externalId}`);
+    }
+
+    // Use the database ID from the first result to submit the rating
+    const perfumeId = perfumes[0].id;
+    const ratingUrl = `${API_BASE_URL}/perfumes/${perfumeId}/rating/`;
+    // console.log(`API Call for rating: POST ${ratingUrl}`, { rating });
+
+    const ratingResponse = await fetch(ratingUrl, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ rating }),
+    });
+
+    // console.log(`API Response status: ${ratingResponse.status}`);
+    if (!ratingResponse.ok) {
+      const errorText = await ratingResponse.text();
+      console.error(`API Error response: ${errorText}`);
+      throw new Error(`API error (${ratingResponse.status}): ${errorText}`);
+    }
+
+    return handleResponse(ratingResponse);
+  } catch (error) {
+    console.error('API Error in submitRating:', error);
+    throw error;
+  }
 };

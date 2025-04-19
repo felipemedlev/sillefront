@@ -6,6 +6,7 @@ import { handleError } from '../types/error';
 import { useAuth } from '../src/context/AuthContext';
 import * as api from '../src/services/api';
 
+// Import specific functions and constants
 const RatingsContext = createContext<RatingsContextType | undefined>(undefined);
 
 export function RatingsProvider({ children }: { children: ReactNode }) {
@@ -26,12 +27,48 @@ export function RatingsProvider({ children }: { children: ReactNode }) {
         const userRatings = await api.getAllUserRatings();
 
         if (userRatings && userRatings.length > 0) {
-          // Convert API ratings to our internal format
-          const formattedRatings: Rating[] = userRatings.map(apiRating => ({
-            perfumeId: apiRating.perfume.toString(), // Convert to string if it's a number
-            rating: apiRating.rating,
-            timestamp: new Date(apiRating.timestamp).getTime(),
-          }));
+          // We need to get the external_ids for each perfume
+          // First, get a list of all perfume IDs from the ratings
+          const perfumeIds = [...new Set(userRatings.map(rating => rating.perfume))];
+
+          // Then, for each perfume ID, fetch the corresponding perfume
+          const perfumes = await Promise.all(
+            perfumeIds.map(async (id) => {
+              try {
+                // Get all perfumes first in a separate call
+                const allPerfumesResponse = await api.fetchPerfumes(1, 100);
+                if (allPerfumesResponse && allPerfumesResponse.results) {
+                  // Find the matching perfume by ID
+                  return allPerfumesResponse.results.find((p: { id: number; external_id?: string }) => p.id === id);
+                }
+                return null;
+              } catch (error) {
+                console.error(`Error fetching perfume details for ID ${id}:`, error);
+                return null;
+              }
+            })
+          );
+
+          // Create a mapping from database ID to external_id
+          const idToExternalIdMap: Record<number, string> = {};
+          perfumes.forEach(perfume => {
+            if (perfume && perfume.id && perfume.external_id) {
+              idToExternalIdMap[perfume.id] = perfume.external_id;
+            }
+          });
+
+          // Convert API ratings to our internal format using external_ids when available
+          const formattedRatings: Rating[] = userRatings.map(apiRating => {
+            const perfumeId = apiRating.perfume;
+            // Use external_id if available, otherwise use the perfume ID as a string
+            const externalId = idToExternalIdMap[perfumeId] || perfumeId.toString();
+
+            return {
+              perfumeId: externalId,
+              rating: apiRating.rating,
+              timestamp: new Date(apiRating.timestamp).getTime(),
+            };
+          });
 
           setRatings(formattedRatings);
 
@@ -49,7 +86,7 @@ export function RatingsProvider({ children }: { children: ReactNode }) {
       // Fallback to local storage if API fails or returns no ratings
       const savedRatings = await AsyncStorage.getItem(STORAGE_KEYS.RATINGS);
       if (savedRatings) {
-        console.log('Loading ratings from storage:', savedRatings);
+        // console.log('Loading ratings from storage:', savedRatings);
         setRatings(JSON.parse(savedRatings));
       }
 
@@ -94,6 +131,8 @@ export function RatingsProvider({ children }: { children: ReactNode }) {
       // Submit each rating one by one to the backend
       const submissionPromises = ratings.map(async (rating) => {
         try {
+          // Submit rating to backend - perfumeId is the external_id in our state
+          // The submitRating function now handles finding the correct database ID
           await api.submitRating(rating.perfumeId, rating.rating);
           successCount++;
           successfulRatings.push(rating);
@@ -113,7 +152,7 @@ export function RatingsProvider({ children }: { children: ReactNode }) {
         // Wait for all submissions to complete
         await Promise.all(submissionPromises);
 
-        console.log(`Successfully submitted ${successCount}/${ratings.length} ratings to backend`);
+        // console.log(`Successfully submitted ${successCount}/${ratings.length} ratings to backend`);
 
         // Instead of fetching again (which can cause loops), just update our state
         // to reflect what we know was successfully uploaded
@@ -159,7 +198,7 @@ export function RatingsProvider({ children }: { children: ReactNode }) {
         } else {
           // Not authenticated, load from local storage
           const savedRatings = await AsyncStorage.getItem(STORAGE_KEYS.RATINGS);
-          console.log('Loading ratings from storage:', savedRatings);
+          // console.log('Loading ratings from storage:', savedRatings);
           if (savedRatings) {
             setRatings(JSON.parse(savedRatings));
           }
@@ -200,7 +239,7 @@ export function RatingsProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const saveRatings = async () => {
       try {
-        console.log('Saving ratings to storage:', ratings);
+        // console.log('Saving ratings to storage:', ratings);
         await AsyncStorage.setItem(STORAGE_KEYS.RATINGS, JSON.stringify(ratings));
       } catch (err) {
         const appError = handleError(err);

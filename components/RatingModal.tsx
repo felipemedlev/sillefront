@@ -50,15 +50,20 @@ export default function RatingModal({ visible, onClose, perfume }: RatingModalPr
 
       if (isAuthenticated) {
         // If authenticated, try to get rating from API
+        // console.log(`Fetching rating for perfume ID: ${perfume.id}`);
         const currentRating = await api.getRating(perfume.id);
+
         if (currentRating) {
+          // console.log(`Rating found: ${currentRating.rating}`);
           setRating(currentRating.rating);
         } else {
+          console.log(`No rating found for perfume ID: ${perfume.id}`);
           setRating(0);
         }
       } else {
         // If not authenticated, use local rating from the context we already have
         const localRating = getRating(perfume.id);
+        // console.log(`Using local rating for perfume ID: ${perfume.id}, rating: ${localRating?.rating || 0}`);
         setRating(localRating?.rating || 0);
       }
     } catch (err) {
@@ -73,11 +78,18 @@ export default function RatingModal({ visible, onClose, perfume }: RatingModalPr
     try {
       setIsLoading(true);
       setRating(selectedRating);
-      console.log('Adding rating for perfume:', perfume.id, 'rating:', selectedRating);
+      // console.log('Adding rating for perfume:', perfume.id, 'rating:', selectedRating);
 
       if (isAuthenticated) {
         // If authenticated, submit to backend first
-        await api.submitRating(perfume.id, selectedRating);
+        // console.log(`Submitting rating to API for perfume ID: ${perfume.id}`);
+        try {
+          const result = await api.submitRating(perfume.id, selectedRating);
+          // console.log(`Rating submission successful:`, result);
+        } catch (submitError) {
+          console.error(`API error when submitting rating:`, submitError);
+          throw submitError; // Re-throw to be caught by the outer try/catch
+        }
       } else {
         // If not authenticated, offer to login/signup
         const shouldContinue = await new Promise((resolve) => {
@@ -108,6 +120,7 @@ export default function RatingModal({ visible, onClose, perfume }: RatingModalPr
       }
 
       // Update local state regardless of authentication
+      // console.log(`Updating local rating for perfume ID: ${perfume.id}`);
       addRating(perfume.id, selectedRating);
 
       setError(null);

@@ -98,16 +98,8 @@ export const AIBoxProvider: React.FC<AIBoxProviderProps> = ({ children }) => {
     try {
       console.log('AIBox: Starting recommendation fetch sequence');
 
-      // First ensure survey answers are submitted
-      const surveySubmitted = await submitSurveyIfAuthenticated();
-      console.log(`AIBox: Survey submission result: ${surveySubmitted ? 'success' : 'not submitted'}`);
-
-      // Wait a short time after survey submission to ensure backend processing
-      if (surveySubmitted) {
-        console.log('AIBox: Waiting for backend to process survey data...');
-        await new Promise(resolve => setTimeout(resolve, 1000)); // 1 second delay
-      }
-
+      // Survey submission is now handled by SurveyContext upon authentication change.
+      // We proceed directly to fetching recommendations.
       console.log('AIBox: Fetching recommendations...');
       // Fetch recommendations (IDs + scores)
       const recommendations: ApiRecommendation[] = await fetchRecommendations();
@@ -197,7 +189,7 @@ export const AIBoxProvider: React.FC<AIBoxProviderProps> = ({ children }) => {
     } finally {
       setIsLoading(false);
     }
-  }, [submitSurveyIfAuthenticated]);
+  }, []); // Removed submitSurveyIfAuthenticated dependency, relies on SurveyContext logic
 
   // --- Initial Selection Effect ---
   useEffect(() => {
@@ -271,8 +263,11 @@ export const AIBoxProvider: React.FC<AIBoxProviderProps> = ({ children }) => {
 
   // Load recommendations on mount
   useEffect(() => {
+    // Load recommendations once when the provider mounts.
+    // Assumes AuthContext initializes first and SurveyContext handles
+    // survey submission based on auth state if needed.
     loadRecommendations();
-  }, [loadRecommendations]);
+  }, []); // Empty dependency array ensures this runs only once on mount
 
   return children({
     isLoading,

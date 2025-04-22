@@ -193,42 +193,18 @@ export const SurveyProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
   };
 
-  // Process changes to answers
+  // Process changes to answers - Save locally whenever answers change
   useEffect(() => {
     if (Object.keys(answers).length === 0) return;
 
     // Always save locally
     saveAllAnswers();
 
-    // Declare timer reference outside conditional
-    let debounceTimer: NodeJS.Timeout | null = null;
+    // Note: Automatic submission on answer change is removed.
+    // Submission now primarily happens on authentication state change (if pending)
+    // or when explicitly called (e.g., by AIBoxProvider if needed, though we aim to remove that).
 
-    // If authenticated and initialized, try to submit after a delay
-    if (isAuthenticated && authInitialized) {
-      const now = Date.now();
-      const timeSinceLastSubmission = now - lastSubmissionTime.current;
-
-      // Only schedule a submission if enough time has passed
-      if (timeSinceLastSubmission > MIN_SUBMISSION_INTERVAL) {
-        debounceTimer = setTimeout(() => {
-          console.log('Authenticated user changed answers - attempting to submit');
-          // Only attempt submission if not already submitting
-          if (!isSubmitting.current) {
-            submitSurveyIfAuthenticated();
-          }
-        }, 1000);
-      } else {
-        console.log(`Skipping debounced submission (last submission was ${Math.round(timeSinceLastSubmission/1000)}s ago)`);
-      }
-    }
-
-    // Clean up timer on unmount or dependency change
-    return () => {
-      if (debounceTimer) {
-        clearTimeout(debounceTimer);
-      }
-    };
-  }, [answers, isAuthenticated, authInitialized]);
+  }, [answers]); // Only depends on answers for saving locally
 
   // Check if user is authenticated and submit survey if they are
   const submitSurveyIfAuthenticated = async (): Promise<boolean> => {

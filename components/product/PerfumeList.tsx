@@ -50,8 +50,8 @@ const PerfumeList: React.FC<PerfumeListProps> = ({
               </View>
               <Text style={styles.perfumeName}>{perfume.name}</Text>
               <Text style={styles.perfumeBrand}>{perfume.brand}</Text>
-              <Text style={styles.perfumePrice}>${(perfume.price_per_ml ?? 0).toLocaleString()}/mL</Text>
-              <Text style={styles.perfumeTotalPrice}>Total: ${((perfume.price_per_ml ?? 0) * decantSize).toLocaleString()}</Text>
+              <Text style={styles.perfumePrice}>${Math.round(perfume.price_per_ml ?? 0).toLocaleString('es-CL')}/mL</Text>
+              <Text style={styles.perfumeTotalPrice}>Total: ${Math.round((perfume.price_per_ml ?? 0) * decantSize).toLocaleString('es-CL')}</Text>
               <View style={{ flexDirection: 'row', gap: 8, marginTop: 10 }}>
                 <Pressable
                   style={styles.swapButton}

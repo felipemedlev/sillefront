@@ -18,8 +18,9 @@ export interface ApiPerfumeSummary {
   id: number;
   name: string;
   brand: string; // Assuming brand is stringified in the serializer
-  thumbnailUrl: string | null;
-  pricePerML: number | null; // Assuming DecimalField maps to number or null
+  thumbnailUrl: string | null; // Note: Frontend type uses thumbnail_url
+  pricePerML: number | null; // Note: Frontend type uses price_per_ml
+  external_id: string; // Add external_id property
 }
 
 // Rating API Types
@@ -37,6 +38,13 @@ export interface ApiPredefinedBox {
     icon: string | null;
     gender: 'masculino' | 'femenino' | null;
     perfumes: ApiPerfumeSummary[];
+}
+
+// --- Recommendation API Types ---
+export interface ApiRecommendation {
+  perfume: ApiPerfumeSummary;
+  score: number; // Assuming score is a number (DecimalField maps to number)
+  last_updated: string;
 }
 
 // --- Survey API Types ---
@@ -177,6 +185,7 @@ type PerfumeFilters = {
   genders?: string[]; // Expect keys: 'male', 'female', 'unisex'
   dayNights?: string[]; // Expect keys: 'day', 'night'
   seasons?: string[]; // Expect keys: 'winter', 'summer', etc.
+  ids?: number[]; // Added for filtering by specific IDs
 };
 
 export const fetchPerfumes = async (
@@ -185,7 +194,7 @@ export const fetchPerfumes = async (
   searchQuery = '',
   filters: PerfumeFilters = {}
 ) => {
-  const headers = await createHeaders();
+  const headers = await createHeaders(); // Auth might be needed if recommendations influence results
   const params = new URLSearchParams({
     page: String(page),
     page_size: String(pageSize),
@@ -204,6 +213,9 @@ export const fetchPerfumes = async (
   // Add price range filters (using explicit filter names from filters.py)
   if (filters.priceRange?.min != null) params.append('price_min', String(filters.priceRange.min));
   if (filters.priceRange?.max != null) params.append('price_max', String(filters.priceRange.max));
+
+  // Add ID filter (assuming backend supports 'id__in')
+  if (filters.ids?.length) params.append('id__in', filters.ids.map(String).join(','));
 
   const url = `${API_BASE_URL}/perfumes/?${params.toString()}`;
   // console.log('Fetching perfumes with URL:', url);
@@ -277,17 +289,49 @@ export const register = async (userData: RegisterData) => {
 };
 
 export const fetchPerfumesByExternalIds = async (externalIds: string[]): Promise<any[]> => {
-  if (!externalIds.length) return [];
-  const headers = await createHeaders();
-  const params = new URLSearchParams();
-  params.append('external_ids', externalIds.join(','));
-  const url = `${API_BASE_URL}/perfumes/by_external_ids/?${params.toString()}`;
-  // console.log('Fetching similar perfumes with URL:', url);
-  const response = await fetch(url, {
-    method: 'GET',
-    headers,
-  });
-  return handleResponse(response);
+  if (!externalIds || !externalIds.length) {
+    console.log("fetchPerfumesByExternalIds: No external IDs provided");
+    return [];
+  }
+
+  // Filter out any invalid IDs
+  const validIds = externalIds.filter(id => id && typeof id === 'string');
+
+  if (validIds.length === 0) {
+    console.log("fetchPerfumesByExternalIds: No valid external IDs after filtering");
+    return [];
+  }
+
+  try {
+    const headers = await createHeaders();
+    const params = new URLSearchParams();
+    params.append('external_ids', validIds.join(','));
+    const url = `${API_BASE_URL}/perfumes/by_external_ids/?${params.toString()}`;
+    console.log(`fetchPerfumesByExternalIds: Fetching with URL: ${url}`);
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers,
+    });
+
+    if (!response.ok) {
+      console.error(`fetchPerfumesByExternalIds: HTTP error ${response.status}`);
+      return [];
+    }
+
+    const data = await handleResponse(response);
+
+    if (!data || !Array.isArray(data)) {
+      console.error("fetchPerfumesByExternalIds: Response is not an array:", data);
+      return [];
+    }
+
+    console.log(`fetchPerfumesByExternalIds: Successfully fetched ${data.length} perfumes`);
+    return data;
+  } catch (error) {
+    console.error("fetchPerfumesByExternalIds: Error:", error);
+    return [];
+  }
 };
 
 export const getPredefinedBoxes = async (gender?: 'masculino' | 'femenino'): Promise<ApiPredefinedBox[]> => {
@@ -313,6 +357,72 @@ export const getPredefinedBoxes = async (gender?: 'masculino' | 'femenino'): Pro
   }
   console.warn("Unexpected response structure for predefined boxes:", data);
   return []; // Return empty array as fallback
+};
+
+/**
+ * Fetch personalized recommendations for the authenticated user.
+ */
+export const fetchRecommendations = async (): Promise<ApiRecommendation[]> => {
+  try {
+    const headers = await createHeaders(true); // Requires auth
+    const url = `${API_BASE_URL}/recommendations/`;
+    console.log(`fetchRecommendations: Calling API: ${url}`);
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers,
+    });
+
+    if (!response.ok) {
+      console.error(`fetchRecommendations: HTTP error ${response.status}`);
+      return [];
+    }
+
+    const data = await handleResponse(response);
+    console.log(`fetchRecommendations: Response received, type: ${Array.isArray(data) ? 'array' : typeof data}`);
+
+    // Handle potential pagination wrapper from DRF ViewSets
+    let results: ApiRecommendation[];
+
+    if (Array.isArray(data)) {
+      results = data as ApiRecommendation[]; // Return data if it's already an array
+    } else if (data && Array.isArray(data.results)) {
+      results = data.results as ApiRecommendation[]; // Return the results array if paginated
+    } else {
+      console.warn("fetchRecommendations: Unexpected response structure:", data);
+      return [];
+    }
+
+    // Log the number of recommendations and a sample
+    console.log(`fetchRecommendations: Retrieved ${results.length} recommendations`);
+
+    if (results.length > 0) {
+      // Log the first recommendation structure and types
+      const sample = results[0];
+      console.log('fetchRecommendations: Sample recommendation:', {
+        perfumeId: sample.perfume.id,
+        perfumeIdType: typeof sample.perfume.id,
+        name: sample.perfume.name,
+        score: sample.score,
+        scoreType: typeof sample.score
+      });
+
+      // Log first 3 recommendations sorted by score
+      const sortedSample = [...results]
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 3);
+
+      console.log('fetchRecommendations: Top 3 recommendations by score:');
+      sortedSample.forEach((rec, i) => {
+        console.log(`  ${i+1}. Perfume ID: ${rec.perfume.id}, Name: ${rec.perfume.name}, Score: ${rec.score}`);
+      });
+    }
+
+    return results;
+  } catch (error) {
+    console.error("fetchRecommendations: Error:", error);
+    return [];
+  }
 };
 
 // --- Utility HTTP Methods ---
@@ -498,13 +608,12 @@ export const submitRating = async (externalId: string, rating: number): Promise<
     // console.log(`API Response status: ${ratingResponse.status}`);
     if (!ratingResponse.ok) {
       const errorText = await ratingResponse.text();
-      console.error(`API Error response: ${errorText}`);
-      throw new Error(`API error (${ratingResponse.status}): ${errorText}`);
+      console.error(`API Error submitting rating: ${ratingResponse.status} ${errorText}`);
+      throw new Error(`Failed to submit rating: ${errorText}`);
     }
-
     return handleResponse(ratingResponse);
   } catch (error) {
     console.error('API Error in submitRating:', error);
-    throw error;
+    throw error; // Re-throw the error after logging
   }
 };

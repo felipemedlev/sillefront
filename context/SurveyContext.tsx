@@ -7,6 +7,8 @@ import Constants from 'expo-constants';
 const API_BASE_URL = Constants.expoConfig?.extra?.apiBaseUrl || 'http://127.0.0.1:8000/api';
 const AUTH_STATE_EVENT = 'auth.changed';
 const SURVEY_ANSWERS_KEY = 'survey.answers';
+// Minimum time between survey submissions (in milliseconds)
+const MIN_SUBMISSION_INTERVAL = 5000; // 5 seconds
 
 export type Accord = {
   id: string;
@@ -44,6 +46,9 @@ export const SurveyProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   // Add a submission lock to prevent multiple submissions
   const isSubmitting = useRef<boolean>(false);
 
+  // Track the last time a submission was attempted
+  const lastSubmissionTime = useRef<number>(0);
+
   // Calculate progress based on the number of questions answered vs total questions
   const progress = questions.length > 0 ? Object.keys(answers).length / questions.length : 0;
   const isComplete = questions.length > 0 && progress === 1;
@@ -76,15 +81,23 @@ export const SurveyProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
           // Handle transition to authenticated state
           if (isValid && !isAuthenticated && Object.keys(answers).length > 0) {
-            console.log('User authenticated with pending survey data - attempting submission');
-            // Use setTimeout to ensure state updates are processed first
-            setTimeout(() => {
-              // Only attempt submission if not already submitting
-              if (!isSubmitting.current) {
-                submitSurveyIfAuthenticated();
-              }
-            }, 300);
-            setPendingUpload(false);
+            // Check if we've recently submitted
+            const now = Date.now();
+            const timeSinceLastSubmission = now - lastSubmissionTime.current;
+
+            if (timeSinceLastSubmission > MIN_SUBMISSION_INTERVAL) {
+              console.log('User authenticated with pending survey data - attempting submission');
+              // Use setTimeout to ensure state updates are processed first
+              setTimeout(() => {
+                // Only attempt submission if not already submitting
+                if (!isSubmitting.current) {
+                  submitSurveyIfAuthenticated();
+                }
+              }, 300);
+              setPendingUpload(false);
+            } else {
+              console.log(`Skipping auth-triggered submission (last submission was ${Math.round(timeSinceLastSubmission/1000)}s ago)`);
+            }
           }
 
           // Handle transition to unauthenticated state
@@ -187,18 +200,34 @@ export const SurveyProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     // Always save locally
     saveAllAnswers();
 
+    // Declare timer reference outside conditional
+    let debounceTimer: NodeJS.Timeout | null = null;
+
     // If authenticated and initialized, try to submit after a delay
     if (isAuthenticated && authInitialized) {
-      const debounceTimer = setTimeout(() => {
-        console.log('Authenticated user changed answers - attempting to submit');
-        // Only attempt submission if not already submitting
-        if (!isSubmitting.current) {
-          submitSurveyIfAuthenticated();
-        }
-      }, 1000);
+      const now = Date.now();
+      const timeSinceLastSubmission = now - lastSubmissionTime.current;
 
-      return () => clearTimeout(debounceTimer);
+      // Only schedule a submission if enough time has passed
+      if (timeSinceLastSubmission > MIN_SUBMISSION_INTERVAL) {
+        debounceTimer = setTimeout(() => {
+          console.log('Authenticated user changed answers - attempting to submit');
+          // Only attempt submission if not already submitting
+          if (!isSubmitting.current) {
+            submitSurveyIfAuthenticated();
+          }
+        }, 1000);
+      } else {
+        console.log(`Skipping debounced submission (last submission was ${Math.round(timeSinceLastSubmission/1000)}s ago)`);
+      }
     }
+
+    // Clean up timer on unmount or dependency change
+    return () => {
+      if (debounceTimer) {
+        clearTimeout(debounceTimer);
+      }
+    };
   }, [answers, isAuthenticated, authInitialized]);
 
   // Check if user is authenticated and submit survey if they are
@@ -209,6 +238,8 @@ export const SurveyProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       return false;
     }
 
+    // Update last submission time
+    lastSubmissionTime.current = Date.now();
     isSubmitting.current = true;
 
     try {

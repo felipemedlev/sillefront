@@ -36,7 +36,7 @@ const PerfumeList: React.FC<PerfumeListProps> = ({
           >
             <View style={styles.imageContainer}>
               <Image
-                source={{ uri: perfume.thumbnailUrl }}
+                source={{ uri: perfume.thumbnail_url }}
                 style={styles.perfumeImage}
               />
               <Image
@@ -46,12 +46,12 @@ const PerfumeList: React.FC<PerfumeListProps> = ({
             </View>
             <View style={styles.perfumeInfo}>
               <View style={styles.matchBadge}>
-                <Text style={styles.matchText}>{perfume.matchPercentage}% AI Match</Text>
+                <Text style={styles.matchText}>{perfume.match_percentage}% AI Match</Text>
               </View>
               <Text style={styles.perfumeName}>{perfume.name}</Text>
               <Text style={styles.perfumeBrand}>{perfume.brand}</Text>
-              <Text style={styles.perfumePrice}>${(perfume.pricePerML ?? 0).toLocaleString()}/mL</Text>
-              <Text style={styles.perfumeTotalPrice}>Total: ${((perfume.pricePerML ?? 0) * decantSize).toLocaleString()}</Text>
+              <Text style={styles.perfumePrice}>${(perfume.price_per_ml ?? 0).toLocaleString()}/mL</Text>
+              <Text style={styles.perfumeTotalPrice}>Total: ${((perfume.price_per_ml ?? 0) * decantSize).toLocaleString()}</Text>
               <View style={{ flexDirection: 'row', gap: 8, marginTop: 10 }}>
                 <Pressable
                   style={styles.swapButton}

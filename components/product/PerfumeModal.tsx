@@ -8,17 +8,13 @@ import {
   SEASON_TRANSLATIONS,
   GENDER_TRANSLATIONS
 } from '../../types/constants';
-
-import { fetchPerfumesByExternalIds } from '../../src/services/api'; // Import the API function
-
-// Import refactored components
+import { fetchPerfumesByExternalIds } from '../../src/services/api';
 import StarRating from '../ui/StarRating';
 import TagItem from '../ui/TagItem';
 import RatingBar from '../ui/RatingBar';
 import PerfumeCard from './PerfumeCard';
 
 // --- Interfaces ---
-
 interface PerfumeModalProps {
   perfume?: Perfume | null;
   onClose?: () => void;
@@ -33,7 +29,6 @@ export interface PerfumeModalRef {
 }
 
 // --- Component ---
-
 const PerfumeModal = forwardRef<PerfumeModalRef, PerfumeModalProps>((props, ref) => {
   const [isVisible, setIsVisible] = useState(false);
   const [currentPerfume, setCurrentPerfume] = useState<Perfume | null>(props.perfume ?? null);
@@ -62,11 +57,9 @@ const PerfumeModal = forwardRef<PerfumeModalRef, PerfumeModalProps>((props, ref)
     }
   }));
 
-  // Effect to fetch similar perfumes when modal opens - MOVED HERE!
   useEffect(() => {
     // console.log(`useEffect triggered: isVisible=${isVisible}, currentPerfume exists=${!!currentPerfume}`); // Log effect trigger
-
-    if (isVisible && currentPerfume?.similar_perfume_ids && currentPerfume.similar_perfume_ids.length > 0) { // Use correct field name
+    if (isVisible && currentPerfume?.similar_perfume_ids && currentPerfume.similar_perfume_ids.length > 0) {
       // console.log('Condition met: Fetching similar perfumes...'); // Log condition met
       const fetchSimilar = async () => {
         setIsLoadingSimilar(true);
@@ -77,12 +70,50 @@ const PerfumeModal = forwardRef<PerfumeModalRef, PerfumeModalProps>((props, ref)
             console.error("Similar perfume IDs array is undefined, cannot fetch.");
             return; // Exit if undefined
           }
-          // console.log('Fetching similar perfumes for IDs:', currentPerfume.similar_perfume_ids); // Use correct field name
-          const similarData = await fetchPerfumesByExternalIds(currentPerfume.similar_perfume_ids); // Use correct field name
-          // console.log('Fetched similar perfumes data:', similarData);
-          setFetchedSimilarPerfumes(similarData);
+
+          console.log('Fetching similar perfumes for IDs:', currentPerfume.similar_perfume_ids);
+          const similarData = await fetchPerfumesByExternalIds(currentPerfume.similar_perfume_ids);
+
+          // Check if we got data and log a sample
+          if (similarData && similarData.length > 0) {
+            console.log(`Fetched ${similarData.length} similar perfumes`);
+            const sample = similarData[0];
+            console.log('Sample perfume data:', JSON.stringify({
+              id: sample.id,
+              external_id: sample.external_id,
+              name: sample.name,
+              thumbnail_url: sample.thumbnail_url || sample.thumbnailUrl,
+              full_size_url: sample.full_size_url || sample.fullSizeUrl,
+              ratings: {
+                overall: sample.overall_rating,
+                price_value: sample.price_value_rating,
+                longevity: sample.longevity_rating,
+                sillage: sample.sillage_rating
+              },
+              similar_ids: sample.similar_perfume_ids?.length || 0
+            }));
+
+            // Normalize the data to ensure consistent property names
+            const normalizedSimilarData = similarData.map(p => ({
+              ...p,
+              thumbnail_url: p.thumbnail_url || p.thumbnailUrl || '',
+              full_size_url: p.full_size_url || p.fullSizeUrl || '',
+              price_per_ml: p.price_per_ml || p.pricePerML,
+              // Handle match percentage for similar perfumes - normalize value if exists
+              match_percentage: p.match_percentage !== undefined ?
+                (p.match_percentage > 1 ? p.match_percentage : p.match_percentage * 100) :
+                null,
+              // Ensure brand is properly formatted
+              brand: typeof p.brand === 'string' ? p.brand : (p.brand?.name || p.brand || '')
+            }));
+
+            setFetchedSimilarPerfumes(normalizedSimilarData);
+          } else {
+            console.log('No similar perfumes data returned');
+            setFetchedSimilarPerfumes([]);
+          }
         } catch (error) {
-          // console.error('Error fetching similar perfumes:', error);
+          console.error('Error fetching similar perfumes:', error);
           setFetchedSimilarPerfumes([]); // Clear on error
         } finally {
           setIsLoadingSimilar(false);
@@ -99,13 +130,27 @@ const PerfumeModal = forwardRef<PerfumeModalRef, PerfumeModalProps>((props, ref)
   };
 
   const handleSimilarPerfumePress = (perfumeId: string) => {
+    console.log(`handleSimilarPerfumePress called with perfumeId: ${perfumeId}`);
     if (isSwapping && onSimilarPerfumeSelect) {
       onSimilarPerfumeSelect(perfumeId);
     } else {
       // Find the full perfume data from the fetchedSimilarPerfumes array using external_id
+      console.log(`Looking for perfume with external_id ${perfumeId} in ${fetchedSimilarPerfumes.length} similar perfumes`);
       const similarPerfume = fetchedSimilarPerfumes.find((p: Perfume) => String(p.external_id) === String(perfumeId));
       if (similarPerfume) {
-        // console.log("Found similar perfume data:", JSON.stringify(similarPerfume, null, 2)); // Log the found object
+        console.log("Found similar perfume data:", JSON.stringify({
+          id: similarPerfume.id,
+          name: similarPerfume.name,
+          external_id: similarPerfume.external_id,
+          thumbnail_url: similarPerfume.thumbnail_url || similarPerfume.thumbnailUrl,
+          full_size_url: similarPerfume.full_size_url || similarPerfume.fullSizeUrl,
+          ratings: {
+            overall: similarPerfume.overall_rating,
+            price_value: similarPerfume.price_value_rating,
+            longevity: similarPerfume.longevity_rating,
+            sillage: similarPerfume.sillage_rating
+          }
+        }));
         setCurrentPerfume(similarPerfume);
         setRenderKey(prevKey => prevKey + 1); // Increment key to force re-render
         scrollViewRef.current?.scrollTo({ y: 0, animated: true });
@@ -125,8 +170,8 @@ const PerfumeModal = forwardRef<PerfumeModalRef, PerfumeModalProps>((props, ref)
       id: perfume.id,
       name: perfume.name,
       brand: perfume.brand,
-      thumbnailUrl: perfume.thumbnailUrl,
-      fullSizeUrl: perfume.fullSizeUrl,
+      thumbnail_url: perfume.thumbnail_url || perfume.thumbnailUrl || '',
+      full_size_url: perfume.full_size_url || perfume.fullSizeUrl || '',
     };
   };
 
@@ -176,16 +221,19 @@ const PerfumeModal = forwardRef<PerfumeModalRef, PerfumeModalProps>((props, ref)
   }
 
   const {
-    name, brand, pricePerML, description, // Keep camelCase for these if they match
-    accords, // Keep camelCase if it matches
-    // Use snake_case for properties coming from the backend JSON
-    top_notes, middle_notes, base_notes, overall_rating,
-    price_value_rating, sillage_rating, longevity_rating,
-    match_percentage, // Use snake_case
-    similar_perfume_ids, // Already correct
-    season, // Keep camelCase if it matches
-    best_for, // Use snake_case
-    gender // Keep camelCase if it matches
+    name, brand, description,
+    accords,
+    top_notes, middle_notes, base_notes,
+    overall_rating,
+    price_value_rating,
+    sillage_rating,
+    longevity_rating,
+    match_percentage,
+    similar_perfume_ids, // Array of similar perfume IDs
+    season,
+    best_for,
+    gender,
+    price_per_ml = currentPerfume.price_per_ml,
   } = currentPerfume;
 
   return (
@@ -204,9 +252,11 @@ const PerfumeModal = forwardRef<PerfumeModalRef, PerfumeModalProps>((props, ref)
 
           <ScrollView ref={scrollViewRef} showsVerticalScrollIndicator={false}>
             {/* Match Percentage at Top */}
-            {match_percentage !== undefined && match_percentage !== null && ( // Check for null as well, use snake_case
+            {(match_percentage !== undefined && match_percentage !== null) && (
               <View style={styles.matchContainer}>
-                <Text style={styles.matchPercentage}>{match_percentage}%</Text>
+                <Text style={styles.matchPercentage}>
+                  {match_percentage > 1 ? Math.round(match_percentage) : Math.round(match_percentage * 100)}%
+                </Text>
                 <Text style={styles.matchLabel}>Match</Text>
               </View>
             )}
@@ -221,15 +271,20 @@ const PerfumeModal = forwardRef<PerfumeModalRef, PerfumeModalProps>((props, ref)
 
             {/* Image Header */}
             <View style={styles.imageContainer}>
-              <Image source={{ uri: currentPerfume.fullSizeUrl }} style={[styles.perfumeImage, { width: width * 0.6, height: width * 0.6 }]} />
+              <Image source={{ uri: currentPerfume.full_size_url }} style={[styles.perfumeImage, { width: width * 0.6, height: width * 0.6 }]} />
             </View>
 
             {/* Basic Info */}
             <View style={styles.section}>
               <Text style={styles.perfumeName}>{name}</Text>
               {/* Ensure brand is an object with name before rendering */}
-              <Text style={styles.perfumeBrand}>{(brand as { name?: string })?.name ?? ''}</Text>
-              <Text style={styles.perfumePrice}>${pricePerML?.toLocaleString()}/mL</Text>
+              <Text style={styles.perfumeBrand}>{typeof brand === 'string' ? brand : (brand as { name?: string })?.name ?? ''}</Text>
+              <Text style={styles.perfumePrice}>
+                {price_per_ml !== undefined && price_per_ml !== null
+                  ? `$${typeof price_per_ml === 'number' ? price_per_ml.toFixed(2) : price_per_ml}/mL`
+                  : 'Precio no disponible'
+                }
+              </Text>
             </View>
 
             {/* Accords - Redesigned */}
@@ -262,7 +317,7 @@ const PerfumeModal = forwardRef<PerfumeModalRef, PerfumeModalProps>((props, ref)
               {/* General Rating with Stars */}
               <View style={styles.ratingItem}>
                 <Text style={styles.ratingLabel}>General:</Text>
-                {overall_rating !== undefined ? (
+                {overall_rating !== undefined && overall_rating !== null ? (
                   <StarRating rating={overall_rating} />
                 ) : (
                   <Text style={styles.ratingValue}>N/A</Text>
@@ -271,9 +326,9 @@ const PerfumeModal = forwardRef<PerfumeModalRef, PerfumeModalProps>((props, ref)
 
               <View style={styles.ratingItem}>
                 <Text style={styles.ratingLabel}>Valor/Precio:</Text>
-                {price_value_rating !== undefined ? (
+                {price_value_rating !== undefined && price_value_rating !== null ? (
                   <RatingBar
-                    rating={price_value_rating} // Already in 0-1 range
+                    rating={price_value_rating}
                     labels={priceValueLabels}
                   />
                 ) : (
@@ -284,9 +339,9 @@ const PerfumeModal = forwardRef<PerfumeModalRef, PerfumeModalProps>((props, ref)
               {/* Longevity Rating Bar */}
               <View style={styles.ratingItem}>
                 <Text style={styles.ratingLabel}>Duración:</Text>
-                {longevity_rating !== undefined ? (
+                {longevity_rating !== undefined && longevity_rating !== null ? (
                   <RatingBar
-                    rating={longevity_rating ?? 0.5}
+                    rating={longevity_rating}
                     labels={longevityLabels}
                   />
                 ) : (
@@ -297,9 +352,9 @@ const PerfumeModal = forwardRef<PerfumeModalRef, PerfumeModalProps>((props, ref)
               {/* Sillage Rating Bar */}
               <View style={styles.ratingItem}>
                 <Text style={styles.ratingLabel}>Sillage:</Text>
-                {sillage_rating !== undefined ? (
+                {sillage_rating !== undefined && sillage_rating !== null ? (
                   <RatingBar
-                    rating={sillage_rating ?? 0.5}
+                    rating={sillage_rating}
                     labels={sillageLabels}
                   />
                 ) : (

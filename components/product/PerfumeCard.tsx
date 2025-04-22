@@ -9,7 +9,7 @@ interface PerfumeCardProps {
 
 const PerfumeCard = ({ perfume, onPress }: PerfumeCardProps) => (
   <Pressable onPress={onPress} style={styles.similarPerfumeCard}>
-    <Image source={{ uri: perfume.thumbnailUrl }} style={styles.similarPerfumeImage} />
+    <Image source={{ uri: perfume.thumbnail_url }} style={styles.similarPerfumeImage} />
     <Text style={styles.similarPerfumeName} numberOfLines={1}>{perfume.name}</Text>
     <Text style={styles.similarPerfumeBrand} numberOfLines={1}>{perfume.brand}</Text>
   </Pressable>

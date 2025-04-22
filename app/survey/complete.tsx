@@ -10,42 +10,35 @@ export default function CompleteScreen() {
   const scaleAnim = useRef(new Animated.Value(0.8)).current;
   const { width } = Dimensions.get('window');
   const isDesktop = width >= 768;
-  const { submitSurveyIfAuthenticated } = useSurveyContext();
 
   useEffect(() => {
-    // Try to submit survey responses if user is authenticated
-    const attemptSubmission = async () => {
-      await submitSurveyIfAuthenticated();
-    };
-    attemptSubmission();
-
     // Entrance animation
     Animated.parallel([
       Animated.timing(fadeAnim, {
-              toValue: 1,
-              duration: 800,
-              useNativeDriver: true,
-            }),
-            Animated.spring(scaleAnim, {
-              toValue: 1,
-              tension: 50,
-              friction: 7,
-              useNativeDriver: true,
-            }),
+        toValue: 1,
+        duration: 800,
+        useNativeDriver: true,
+      }),
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        tension: 50,
+        friction: 7,
+        useNativeDriver: true,
+      }),
     ]).start();
 
     // Exit animation after delay
     setTimeout(() => {
       Animated.timing(fadeAnim, {
-              toValue: 0,
-              duration: 1000,
-              useNativeDriver: true,
-            }).start(() => {
-              // Redirect to home after survey completion
-              router.replace('/home');
-            });
+        toValue: 0,
+        duration: 1000,
+        useNativeDriver: true,
+      }).start(() => {
+        // Redirect to home after survey completion
+        router.replace('/home');
+      });
     }, 2000);
-  }, [fadeAnim, scaleAnim, router, submitSurveyIfAuthenticated]);
+  }, [fadeAnim, scaleAnim, router]);
 
   return (
     <Animated.View style={[styles.container, { opacity: fadeAnim }]}>

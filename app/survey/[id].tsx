@@ -39,26 +39,26 @@ const getAccordTranslation = (accord?: string): string => {
   // assuming your keys in accordTranslations are lowercase.
   // Adjust if your API sends varying cases and you want to handle that.
   const lowerAccord = accord.toLowerCase();
-  return accordTranslations[lowerAccord] || accord; // Fallback to original if no translation found
+  return accordTranslations[lowerAccord] || accord;// Fallback to original if no translation found
 };
 
 // Map images using lowercase accord names as keys
 const imageMap: { [key: string]: any } = { // Added type annotation
-  'sweet': require('../../assets/images/survey1.png'),    // Was 2
-  'citrus': require('../../assets/images/survey2.png'),   // Was 3
-  'woody': require('../../assets/images/survey3.png'),    // Was 4
-  'floral': require('../../assets/images/survey4.png'),   // Was 5
-  'vanilla': require('../../assets/images/survey5.png'),  // Was 6
+  'sweet': require('../../assets/images/survey1.png'),
+  'citrus': require('../../assets/images/survey2.png'),
+  'woody': require('../../assets/images/survey3.png'),
+  'floral': require('../../assets/images/survey4.png'),
+  'vanilla': require('../../assets/images/survey5.png'),
   // 'smoky': require('...'), // No image for 7?
-  'lavender': require('../../assets/images/survey7.png'), // Was 8
-  'fruity': require('../../assets/images/survey8.png'),   // Was 9
-  'cinnamon': require('../../assets/images/survey9.png'), // Was 10
-  'spicy': require('../../assets/images/survey11.png'),  // Was 11
-  'leather': require('../../assets/images/survey10.png'), // Was 12
+  'lavender': require('../../assets/images/survey7.png'),
+  'fruity': require('../../assets/images/survey8.png'),
+  'cinnamon': require('../../assets/images/survey9.png'),
+  'spicy': require('../../assets/images/survey11.png'),
+  'leather': require('../../assets/images/survey10.png'),
   // 'honey': require('...'), // No image for 13?
   // 'coffee': require('...'), // No image for 14?
   // 'earthy': require('...'), // No image for 15?
-  'powdery': require('../../assets/images/survey6.png'),  // Was 16
+  'powdery': require('../../assets/images/survey6.png'),
 };
 
 const emojiRatings = ['😖', '😒', '😐', '🙂', '😍'];
@@ -281,7 +281,7 @@ export default function SurveyQuestion() {
                         styles.ratingButton,
                         isDesktop && styles.desktopRatingButton,
                         question.accord && answers[question.accord] === index + 1 ? styles.selectedRating : null,
-                      ].filter(Boolean)} // Filter nulls
+                      ].filter(Boolean)}
                       onPress={() => handleRate(index + 1)}
                       onPressIn={() => handlePressIn(index)}
                       onPressOut={() => handlePressOut(index)}
@@ -292,8 +292,6 @@ export default function SurveyQuestion() {
                 ))}
               </View>
             )}
-
-            {/* "No sé" Button (Only for non-gender questions) */}
             {question.type !== 'gender' && (
               <TouchableOpacity
                 style={[styles.noAnswerButton, isDesktop && styles.desktopNoAnswerButton]}
@@ -306,13 +304,11 @@ export default function SurveyQuestion() {
           </Animated.View>
         </>
       ) : (
-        // Optional: Render a loading indicator or null while question is being determined
-        // Or rely on the loading/error checks at the top
         null
       )}
 
-    </View> // Closing tag for the main container View
-  ); // Closing parenthesis for the component return
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({

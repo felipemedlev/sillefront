@@ -1,6 +1,12 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { fetchSurveyQuestions, ApiSurveyQuestion, submitSurveyResponse, authUtils } from '../src/services/api';
+import Constants from 'expo-constants';
+
+// Define API_BASE_URL
+const API_BASE_URL = Constants.expoConfig?.extra?.apiBaseUrl || 'http://127.0.0.1:8000/api';
+const AUTH_STATE_EVENT = 'auth.changed';
+const SURVEY_ANSWERS_KEY = 'survey.answers';
 
 export type Accord = {
   id: string;
@@ -32,6 +38,11 @@ export const SurveyProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [questions, setQuestions] = useState<ApiSurveyQuestion[]>([]);
   const [isLoadingQuestions, setIsLoadingQuestions] = useState(true);
   const [questionError, setQuestionError] = useState<string | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [pendingUpload, setPendingUpload] = useState<boolean>(false);
+  const [authInitialized, setAuthInitialized] = useState<boolean>(false);
+  // Add a submission lock to prevent multiple submissions
+  const isSubmitting = useRef<boolean>(false);
 
   // Calculate progress based on the number of questions answered vs total questions
   const progress = questions.length > 0 ? Object.keys(answers).length / questions.length : 0;
@@ -45,58 +56,62 @@ export const SurveyProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   // Reset the survey
   const resetSurvey = async () => {
     setAnswers({});
-    await AsyncStorage.removeItem('surveyAnswers');
+    await AsyncStorage.removeItem(SURVEY_ANSWERS_KEY);
   };
 
-  // Save survey answers locally
-  const saveAllAnswers = async () => {
-    try {
-      await AsyncStorage.setItem('surveyAnswers', JSON.stringify(answers));
-      // Note: This no longer automatically submits to the backend
-      // Use submitSurveyIfAuthenticated() for that functionality
-    } catch (error) {
-      console.error('Error saving survey answers:', error);
-    }
-  };
-
-  // Check if user is authenticated and submit survey if they are
-  const submitSurveyIfAuthenticated = async (): Promise<boolean> => {
-    try {
-      // Check if user has an auth token (is logged in)
-      const token = await authUtils.getToken();
-
-      if (token && Object.keys(answers).length > 0) {
-        // User is authenticated and has answers to submit
-        await submitSurveyResponse(answers);
-        console.log('Survey responses uploaded to backend successfully');
-        return true;
-      } else if (!token) {
-        console.log('User not authenticated, survey responses saved locally only');
-        return false;
-      } else {
-        console.log('No survey answers to submit');
-        return false;
-      }
-    } catch (error) {
-      console.error('Error submitting survey responses:', error);
-      return false;
-    }
-  };
-
-  // Check authentication status whenever answers change and submit if authenticated
+  // Listen for standard auth events
   useEffect(() => {
-    if (Object.keys(answers).length > 0) {
-      // Only attempt to save answers if there are any
-      saveAllAnswers();
+    // Function to check auth status and handle accordingly
+    const checkAuthState = async () => {
+      try {
+        console.log('Checking auth state in SurveyContext');
+        const token = await authUtils.getToken();
+        const isValid = !!(token && token.trim() !== '');
 
-      // Also try to submit if user is authenticated
-      const attemptSubmission = async () => {
-        await submitSurveyIfAuthenticated();
-      };
+        // If auth state changed, update and take appropriate actions
+        if (isValid !== isAuthenticated || !authInitialized) {
+          console.log(`Auth state changed: ${isAuthenticated} → ${isValid}`);
+          setIsAuthenticated(isValid);
+          setAuthInitialized(true);
 
-      attemptSubmission();
-    }
-  }, [answers]);
+          // Handle transition to authenticated state
+          if (isValid && !isAuthenticated && Object.keys(answers).length > 0) {
+            console.log('User authenticated with pending survey data - attempting submission');
+            // Use setTimeout to ensure state updates are processed first
+            setTimeout(() => {
+              // Only attempt submission if not already submitting
+              if (!isSubmitting.current) {
+                submitSurveyIfAuthenticated();
+              }
+            }, 300);
+            setPendingUpload(false);
+          }
+
+          // Handle transition to unauthenticated state
+          if (!isValid && isAuthenticated && Object.keys(answers).length > 0) {
+            console.log('User logged out with survey data - marking as pending');
+            setPendingUpload(true);
+          }
+        }
+      } catch (error) {
+        console.error('Error checking auth state:', error);
+      }
+    };
+
+    // Initial check
+    checkAuthState();
+
+    // Listen for the standardized auth event
+    const handleAuthEvent = () => {
+      checkAuthState();
+    };
+
+    window.addEventListener(AUTH_STATE_EVENT, handleAuthEvent);
+
+    return () => {
+      window.removeEventListener(AUTH_STATE_EVENT, handleAuthEvent);
+    };
+  }, [isAuthenticated, answers]);
 
   // Fetch questions from API on mount
   useEffect(() => {
@@ -122,9 +137,22 @@ export const SurveyProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   useEffect(() => {
     const loadSurveyAnswers = async () => {
       try {
-        const storedAnswers = await AsyncStorage.getItem('surveyAnswers');
+        // Try localStorage first (for web)
+        const storedAnswersWeb = localStorage.getItem(SURVEY_ANSWERS_KEY);
+
+        if (storedAnswersWeb) {
+          setAnswers(JSON.parse(storedAnswersWeb));
+          return;
+        }
+
+        // Fall back to AsyncStorage if needed
+        const storedAnswers = await AsyncStorage.getItem(SURVEY_ANSWERS_KEY);
         if (storedAnswers) {
-          setAnswers(JSON.parse(storedAnswers));
+          const parsedAnswers = JSON.parse(storedAnswers);
+          setAnswers(parsedAnswers);
+
+          // Also save to localStorage for future use
+          localStorage.setItem(SURVEY_ANSWERS_KEY, storedAnswers);
         }
       } catch (error) {
         console.error('Error loading survey answers:', error);
@@ -133,6 +161,115 @@ export const SurveyProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     loadSurveyAnswers();
   }, []);
+
+  // Save survey answers locally
+  const saveAllAnswers = async () => {
+    try {
+      // Save to AsyncStorage for React Native compatibility
+      await AsyncStorage.setItem(SURVEY_ANSWERS_KEY, JSON.stringify(answers));
+
+      // Also save to localStorage for web
+      localStorage.setItem(SURVEY_ANSWERS_KEY, JSON.stringify(answers));
+
+      // Mark as pending if not authenticated
+      if (Object.keys(answers).length > 0 && !isAuthenticated) {
+        setPendingUpload(true);
+      }
+    } catch (error) {
+      console.error('Error saving survey answers:', error);
+    }
+  };
+
+  // Process changes to answers
+  useEffect(() => {
+    if (Object.keys(answers).length === 0) return;
+
+    // Always save locally
+    saveAllAnswers();
+
+    // If authenticated and initialized, try to submit after a delay
+    if (isAuthenticated && authInitialized) {
+      const debounceTimer = setTimeout(() => {
+        console.log('Authenticated user changed answers - attempting to submit');
+        // Only attempt submission if not already submitting
+        if (!isSubmitting.current) {
+          submitSurveyIfAuthenticated();
+        }
+      }, 1000);
+
+      return () => clearTimeout(debounceTimer);
+    }
+  }, [answers, isAuthenticated, authInitialized]);
+
+  // Check if user is authenticated and submit survey if they are
+  const submitSurveyIfAuthenticated = async (): Promise<boolean> => {
+    // Prevent duplicate submissions
+    if (isSubmitting.current) {
+      console.log('Submission already in progress, skipping');
+      return false;
+    }
+
+    isSubmitting.current = true;
+
+    try {
+      // Check auth status
+      if (!isAuthenticated) {
+        console.log('Not authenticated, storing answers locally only');
+        isSubmitting.current = false;
+        return false;
+      }
+
+      if (Object.keys(answers).length === 0) {
+        console.log('No answers to submit');
+        isSubmitting.current = false;
+        return false;
+      }
+
+      // Additional validation - verify the token is still valid
+      const token = await authUtils.getToken();
+      if (!token || token.trim() === '') {
+        console.log('Token missing or invalid');
+        setIsAuthenticated(false);
+        isSubmitting.current = false;
+        return false;
+      }
+
+      // Log submission attempt with timestamp
+      console.log(`Attempting to submit survey at ${new Date().toISOString()}`);
+
+      try {
+        const result = await submitSurveyResponse(answers);
+
+        // Check if the response indicates actual server-side saving
+        if (result && result.user) {
+          console.log('Survey successfully saved to server');
+          isSubmitting.current = false;
+          return true;
+        } else {
+          console.log('Survey API returned success but data may not have been saved');
+          isSubmitting.current = false;
+          return false;
+        }
+      } catch (error: any) {
+        // Handle auth-related errors
+        if (error.status === 401 || error.status === 403) {
+          console.error('Authentication error during survey submission');
+          setIsAuthenticated(false);
+          isSubmitting.current = false;
+          return false;
+        }
+
+        // Other errors
+        console.error('Error submitting survey:', error);
+        isSubmitting.current = false;
+        return false;
+      }
+    } catch (error) {
+      console.error('Error in submitSurveyIfAuthenticated:', error);
+      isSubmitting.current = false;
+      return false;
+    }
+  };
 
   return (
     <SurveyContext.Provider

@@ -1,6 +1,12 @@
 import React, { createContext, useState, useEffect, useContext, ReactNode } from 'react';
 import * as api from '../services/api'; // Import your API service
 import { authUtils } from '../services/api'; // Import token utilities
+import Constants from 'expo-constants';
+
+// Define API_BASE_URL matching the one in api.ts
+const API_BASE_URL = Constants.expoConfig?.extra?.apiBaseUrl || 'http://127.0.0.1:8000/api';
+const AUTH_TOKEN_KEY = 'auth.token';
+const AUTH_STATE_EVENT = 'auth.changed';
 
 // Define interfaces for credentials and user data
 
@@ -46,43 +52,124 @@ interface AuthProviderProps {
   children: ReactNode;
 }
 
+// Custom event for auth state changes
+const createAuthEvent = () => {
+  return new Event(AUTH_STATE_EVENT);
+};
+
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [token, setToken] = useState<string | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Check for token on initial load
-  useEffect(() => {
-    const loadTokenAndProfile = async () => {
-      const storedToken = await authUtils.getToken();
-      if (storedToken) {
-        setToken(storedToken);
-        try {
-          await fetchUserProfile();
-        } catch (err) {
-          console.error('Failed to fetch user profile on load:', err);
-          await handleLogout();
+  // Token management with SecureStore for native and localStorage for web
+  const storeToken = async (newToken: string | null): Promise<void> => {
+    try {
+      if (newToken) {
+        // Web implementation - use localStorage
+        localStorage.setItem(AUTH_TOKEN_KEY, newToken);
+        // Also update in AsyncStorage for compatibility with other parts of the app
+        await authUtils.setToken(newToken);
+      } else {
+        // Remove token
+        localStorage.removeItem(AUTH_TOKEN_KEY);
+        await authUtils.removeToken();
+      }
+
+      // Update state and notify observers
+      setToken(newToken);
+      window.dispatchEvent(createAuthEvent());
+
+    } catch (error) {
+      console.error('Token storage error:', error);
+    }
+  };
+
+  // Load token from storage
+  const loadToken = async (): Promise<string | null> => {
+    try {
+      // Web implementation - use localStorage
+      let loadedToken = localStorage.getItem(AUTH_TOKEN_KEY);
+
+      // Fall back to AsyncStorage if needed
+      if (!loadedToken) {
+        loadedToken = await authUtils.getToken();
+        // If found in AsyncStorage but not localStorage, migrate it
+        if (loadedToken) {
+          localStorage.setItem(AUTH_TOKEN_KEY, loadedToken);
         }
       }
-      setIsLoading(false);
+
+      return loadedToken;
+    } catch (error) {
+      console.error('Token loading error:', error);
+      return null;
+    }
+  };
+
+  // Verify token is valid by making a test request
+  const verifyToken = async (tokenToVerify: string): Promise<boolean> => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/users/me/`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Token ${tokenToVerify}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      return response.ok;
+    } catch (error) {
+      console.error('Token verification error:', error);
+      return false;
+    }
+  };
+
+  // Check for token on initial load and verify it
+  useEffect(() => {
+    const initAuth = async () => {
+      setIsLoading(true);
+      try {
+        const storedToken = await loadToken();
+
+        if (storedToken) {
+          // Verify token is valid
+          const isValid = await verifyToken(storedToken);
+
+          if (isValid) {
+            console.log('Valid token found, setting authenticated state');
+            setToken(storedToken);
+            await fetchUserProfile();
+          } else {
+            console.log('Invalid token found, clearing auth state');
+            await storeToken(null);
+          }
+        }
+      } catch (error) {
+        console.error('Auth initialization error:', error);
+      } finally {
+        setIsLoading(false);
+      }
     };
-    loadTokenAndProfile();
+
+    initAuth();
   }, []);
 
   const fetchUserProfile = async () => {
     if (!token) return;
+
     try {
-      setIsLoading(true);
       setError(null);
       const userData = await api.get('/auth/users/me/');
       setUser(userData);
     } catch (err: any) {
-      console.error('Failed to fetch user profile:', err);
+      console.error('Profile fetch error:', err);
       setError(err.message || 'Failed to fetch user profile');
-      await handleLogout();
-    } finally {
-      setIsLoading(false);
+      // Clear auth if token is invalid
+      if (err.status === 401 || err.status === 403) {
+        await storeToken(null);
+      }
     }
   };
 
@@ -90,22 +177,25 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       setIsLoading(true);
       setError(null);
-      const response = await api.login({ email, password });
-      if (response?.auth_token) {
-        setToken(response.auth_token);
-        await authUtils.setToken(response.auth_token); // Set token first
-        await fetchUserProfile(); // Fetch profile
 
-        // We can't use useSurveyContext directly in this file,
-        // so we'll handle survey submission at the component level
-        // after login completes successfully.
+      // Clear existing token first
+      await storeToken(null);
+
+      const response = await api.login({ email, password });
+
+      if (response?.auth_token) {
+        // Store the new token
+        await storeToken(response.auth_token);
+        console.log('Login successful, token stored');
+
+        // Fetch user profile
+        await fetchUserProfile();
       } else {
         throw new Error('Login failed: No auth token received');
       }
     } catch (err: any) {
-      console.error('Login error in context:', err);
+      console.error('Login error:', err);
       setError(err.message || 'Login failed');
-      await handleLogout();
       throw err;
     } finally {
       setIsLoading(false);
@@ -116,22 +206,34 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       setIsLoading(true);
       setError(null);
-      await api.logout();
-    } catch (error) {
-      console.error('API logout error:', error);
-    } finally {
-      setToken(null);
+
+      // Attempt server logout if we have a token
+      if (token) {
+        try {
+          await api.logout();
+        } catch (error) {
+          console.error('Server logout error:', error);
+          // Continue with client-side logout regardless
+        }
+      }
+
+      // Clear local auth state
       setUser(null);
-      await authUtils.removeToken();
+      await storeToken(null);
+
+      console.log('Logout complete');
+    } finally {
       setIsLoading(false);
     }
   };
 
-  const handleRegister = async (userData: RegisterData): Promise<{ success: boolean; error?: string; }> => { // Add return type to implementation
+  const handleRegister = async (userData: RegisterData): Promise<{ success: boolean; error?: string; }> => {
     try {
       setIsLoading(true);
       setError(null);
-      await api.register(userData); // Call register
+
+      // Register the user
+      await api.register(userData);
 
       // Auto-login after successful registration
       try {
@@ -141,45 +243,46 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         });
 
         if (loginResponse?.auth_token) {
-          // Store the token properly
-          setToken(loginResponse.auth_token);
-          await authUtils.setToken(loginResponse.auth_token);
+          // Store the token
+          await storeToken(loginResponse.auth_token);
 
-          // Create a minimal user object immediately to ensure authenticated state
-          // This is critical for proper redirection after signup
+          // Create minimal user object for immediate UI feedback
           setUser({
-            id: 0, // Placeholder ID, will be updated by fetchUserProfile
+            id: 0, // Will be updated by fetchUserProfile
             email: userData.email,
             username: '' // Will be updated by fetchUserProfile
           });
 
-          // Fetch the user profile in the background
+          // Fetch full profile in background
           fetchUserProfile().catch(err => {
-            console.error('Error fetching user profile after registration:', err);
-            // Don't fail registration if profile fetch fails
+            console.error('Profile fetch after registration failed:', err);
           });
 
-          return { success: true }; // Return success early after setting token
+          return { success: true };
         }
       } catch (loginErr) {
         console.error('Auto-login after registration failed:', loginErr);
-        // Don't throw error here - registration was still successful
+        // Registration was still successful even if auto-login failed
       }
 
-      // SUCCESS: Registration successful.
-      return { success: true }; // Return success object
+      return { success: true };
     } catch (err: any) {
-      console.error('Registration error in context:', err); // Log the error
-      const errorMessage = err?.data?.email?.[0] || err?.data?.password?.[0] || err?.data?.non_field_errors?.[0] || err.message || 'Registration failed'; // Extract specific error if possible
-      setError(errorMessage); // Set context error state (optional)
-      return { success: false, error: errorMessage }; // Return failure object with message
+      console.error('Registration error:', err);
+      const errorMessage = err?.data?.email?.[0] ||
+                          err?.data?.password?.[0] ||
+                          err?.data?.non_field_errors?.[0] ||
+                          err.message ||
+                          'Registration failed';
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
     } finally {
-      setIsLoading(false); // Ensure loading is always set to false
+      setIsLoading(false);
     }
   };
 
   const updatePassword = async (newPassword: string): Promise<void> => {
     if (!token) throw new Error('Not authenticated');
+
     try {
       setIsLoading(true);
       setError(null);
@@ -188,7 +291,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         new_password: newPassword,
       });
     } catch (err: any) {
-      console.error('Error updating password:', err);
+      console.error('Password update error:', err);
       setError(err.message || 'Failed to update password');
       throw err;
     } finally {
@@ -198,13 +301,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const updateProfile = async (updates: Partial<Pick<User, 'name' | 'phone' | 'address'>>): Promise<void> => {
     if (!token) throw new Error('Not authenticated');
+
     try {
       setIsLoading(true);
       setError(null);
       const updatedUser = await api.patch('/auth/users/me/', updates);
       setUser((prev) => prev ? { ...prev, ...updatedUser } : updatedUser);
     } catch (err: any) {
-      console.error('Error updating profile:', err);
+      console.error('Profile update error:', err);
       setError(err.message || 'Failed to update profile');
       throw err;
     } finally {

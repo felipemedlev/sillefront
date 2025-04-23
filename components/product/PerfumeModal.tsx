@@ -98,7 +98,7 @@ const PerfumeModal = forwardRef<PerfumeModalRef, PerfumeModalProps>((props, ref)
               ...p,
               thumbnail_url: p.thumbnail_url || p.thumbnailUrl || '',
               full_size_url: p.full_size_url || p.fullSizeUrl || '',
-              price_per_ml: p.price_per_ml || p.pricePerML,
+              pricePerML: p.pricePerML || p.price_per_ml, // Use pricePerML, fallback to snake_case if needed during transition
               // Handle match percentage for similar perfumes - normalize value if exists
               match_percentage: p.match_percentage !== undefined ?
                 (p.match_percentage > 1 ? p.match_percentage : p.match_percentage * 100) :
@@ -233,7 +233,7 @@ const PerfumeModal = forwardRef<PerfumeModalRef, PerfumeModalProps>((props, ref)
     season,
     best_for,
     gender,
-    price_per_ml = currentPerfume.price_per_ml,
+    pricePerML = currentPerfume.pricePerML, // Use camelCase to match standardized field
   } = currentPerfume;
 
   return (
@@ -280,8 +280,8 @@ const PerfumeModal = forwardRef<PerfumeModalRef, PerfumeModalProps>((props, ref)
               {/* Ensure brand is an object with name before rendering */}
               <Text style={styles.perfumeBrand}>{typeof brand === 'string' ? brand : (brand as { name?: string })?.name ?? ''}</Text>
               <Text style={styles.perfumePrice}>
-                {price_per_ml !== undefined && price_per_ml !== null
-                  ? `$${typeof price_per_ml === 'number' ? price_per_ml.toFixed(2) : price_per_ml}/mL`
+                {pricePerML !== undefined && pricePerML !== null
+                  ? `$${typeof pricePerML === 'number' ? pricePerML.toFixed(2) : pricePerML}/mL`
                   : 'Precio no disponible'
                 }
               </Text>

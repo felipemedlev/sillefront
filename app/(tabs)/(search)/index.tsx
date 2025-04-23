@@ -115,6 +115,7 @@ export default function SearchScreen() {
 
       setPerfumes(prev => isNewQuery ? newResults : [...prev, ...newResults]);
       setHasNextPage(!!data.next);
+      console.log('[SearchScreen] API Response: data.next =', data.next, '| Setting hasNextPage to:', !!data.next); // DEBUG LOG
       setPage(pageToLoad); // Update page state
 
     } catch (error) {
@@ -164,6 +165,7 @@ export default function SearchScreen() {
 
   const loadMorePerfumes = () => {
     // Pass current debounced query/filters when loading more
+    console.log('[SearchScreen] loadMorePerfumes called. isLoading:', isLoading, 'hasNextPage:', hasNextPage, 'Current Page:', page); // DEBUG LOG
     if (!isLoading && hasNextPage) {
       loadPerfumes(page + 1, debouncedSearchQuery, debouncedFilters);
     }
@@ -194,24 +196,13 @@ export default function SearchScreen() {
 
   // --- Sort Options ---
   const sortOptions: { label: string; field: ActiveSort['field'] }[] = [
-    { label: 'Precio', field: 'pricePerML' },
-    { label: 'Match AI', field: 'matchPercentage' },
+    { label: 'Precio', field: 'pricePerML' }, // Use pricePerML to match backend model
+    { label: 'Match AI', field: 'match_percentage' },
     { label: 'Valoración', field: 'overall_rating' },
     { label: 'Duración', field: 'longevity_rating' },
     { label: 'Estela', field: 'sillage_rating' },
     { label: 'Calidad/Precio', field: 'price_value_rating' },
   ];
-
-  // Generate deterministic mock match percentages for each perfume
-  function getMockMatchPercentage(perfume: Perfume): number {
-    const str = (perfume as any).id ?? perfume.name;
-    let hash = 0;
-    for (let i = 0; i < str.length; i++) {
-      hash = str.charCodeAt(i) + ((hash << 5) - hash);
-    }
-    const normalized = Math.abs(hash % 31); // 0-30
-    return 70 + normalized; // 70-100%
-  }
 
   const perfumesWithMatch = useMemo(() => {
     return perfumes
@@ -220,30 +211,59 @@ export default function SearchScreen() {
           // Ensure brand is treated as an object { id: number, name: string }
           // If the API returns brand as just an ID or name, this needs adjustment
           const brandData = (perfume as any).brand;
-          const brandObj = typeof brandData === 'object' && brandData !== null ? brandData : { id: null, name: String(brandData) };
+          // Ensure brandObj has a name property, default to stringified data if not an object
+          const brandObj = typeof brandData === 'object' && brandData !== null && brandData.name ? brandData : { name: String(brandData ?? 'Unknown Brand') };
 
-          const priceStr = (perfume as any).pricePerML;
+          const priceStr = (perfume as any).price_per_ml ?? (perfume as any).pricePerML; // Check both possible keys from API/previous state
           // Attempt to parse the price string to a number, handle null explicitly
-          const priceNum = priceStr === null ? null : parseFloat(String(priceStr));
+          const priceNum = priceStr === null || priceStr === undefined ? null : parseFloat(String(priceStr));
 
-          return {
-              ...perfume, // Spread original properties first
-              brand: brandObj, // Ensure brand is an object
-              id: String((perfume as any).external_id), // Use external_id consistently and convert to string
-              pricePerML: isNaN(priceNum as number) ? null : priceNum, // Assign parsed number or null if NaN
-              matchPercentage: (perfume as any).match_percentage ?? getMockMatchPercentage(perfume),
-              overall_rating: (perfume as any).overall_rating, // Use snake_case from API
-              price_value_rating: (perfume as any).price_value_rating, // Use snake_case
-              best_for: (perfume as any).best_for, // Use snake_case
-              longevity_rating: (perfume as any).longevity_rating, // Use snake_case
-              sillage_rating: (perfume as any).sillage_rating, // Use snake_case
-              similarPerfumes: ((perfume as any).similar_perfume_ids ?? []).map(String), // Match type definition
-              season: (perfume as any).season,
-              gender: (perfume as any).gender,
-              topNotes: (perfume as any).top_notes,
-              middleNotes: (perfume as any).middle_notes,
-              baseNotes: (perfume as any).base_notes,
+          // Calculate and format match percentage
+          const rawMatch = (perfume as any).match_percentage ?? (perfume as any).matchPercentage; // Check both keys, NO MOCK FALLBACK
+          // If rawMatch exists (not null/undefined), format it; otherwise, default to 0
+          const formattedMatch = rawMatch !== null && rawMatch !== undefined ? Math.round(rawMatch * 100) : 0;
+
+          // Construct the final object conforming to the Perfume type
+          const finalPerfume: Perfume = {
+              // Base info (ensure correct types)
+              id: String((perfume as any).external_id ?? (perfume as any).id), // Use external_id primarily, fallback to id
+              external_id: String((perfume as any).external_id ?? (perfume as any).id), // Ensure external_id is present and string
+              name: perfume.name || 'Unknown Name',
+              brand: brandObj.name, // Use the name string from the brand object
+              thumbnail_url: (perfume as any).thumbnail_url ?? (perfume as any).thumbnailUrl ?? '', // Keep snake_case
+              full_size_url: (perfume as any).full_size_url ?? (perfume as any).fullSizeUrl ?? '', // Keep snake_case
+              // Add camelCase versions for component compatibility
+              thumbnailUrl: (perfume as any).thumbnail_url ?? (perfume as any).thumbnailUrl ?? '',
+              fullSizeUrl: (perfume as any).full_size_url ?? (perfume as any).fullSizeUrl ?? '',
+
+              // --- Ratings and Numbers (use snake_case keys from Perfume type) ---
+              match_percentage: formattedMatch, // Use formatted integer percentage
+              pricePerML: priceNum === null || isNaN(priceNum) ? undefined : priceNum, // Ensure null or NaN becomes undefined
+              overall_rating: (perfume as any).overall_rating,
+              price_value_rating: (perfume as any).price_value_rating,
+              sillage_rating: (perfume as any).sillage_rating,
+              longevity_rating: (perfume as any).longevity_rating,
+
+              // --- Details (use keys from Perfume type) ---
+              description: perfume.description,
+              accords: perfume.accords,
+              top_notes: (perfume as any).top_notes,
+              middle_notes: (perfume as any).middle_notes,
+              base_notes: (perfume as any).base_notes,
+              similar_perfume_ids: ((perfume as any).similar_perfume_ids ?? (perfume as any).similarPerfumes ?? []).map(String), // Use snake_case key
+              occasions: perfume.occasions,
+              gender: perfume.gender,
+              best_for: (perfume as any).best_for,
+              season: perfume.season,
           };
+
+          // Clean up potential undefined values that might cause issues if explicitly set
+          Object.keys(finalPerfume).forEach(key => {
+              if ((finalPerfume as any)[key] === undefined) {
+                  delete (finalPerfume as any)[key];
+              }
+          });
+          return finalPerfume;
       });
   }, [perfumes]);
 
@@ -298,7 +318,7 @@ export default function SearchScreen() {
         horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.sortButtonsContainer}
-        style={{ minHeight: 50, flexGrow: 0 }}
+        style={{ minHeight: 55, flexGrow: 0 }}
       >
         {sortOptions.map((option) => (
           <TouchableOpacity
@@ -368,10 +388,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFEFC',
   },
   sortButton: {
-    paddingVertical: 0,
+    paddingVertical: 2,
     paddingHorizontal:14,
     marginHorizontal: 4,
-    borderRadius: 20,
+    borderRadius: 10,
     borderWidth: 1,
     borderColor: '#E0E0E0',
     backgroundColor: '#F8F8F8', // Original light gray background

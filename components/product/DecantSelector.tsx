@@ -52,7 +52,7 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   decantCountButton: {
-    paddingVertical: SPACING.XSMALL,
+    paddingVertical: SPACING.SMALL,
     paddingHorizontal: SPACING.MEDIUM,
     borderRadius: 16,
     backgroundColor: COLORS.GIFTBOX.BACKGROUND_ALT,
@@ -71,7 +71,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
   },
   decantCountText: {
-    fontSize: FONT_SIZES.XSMALL,
+    fontSize: FONT_SIZES.SMALL,
     color: COLORS.GIFTBOX.TEXT_PRIMARY,
     fontWeight: '600',
   },

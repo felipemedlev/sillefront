@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, Pressable, Image, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, Pressable, Image, Dimensions, ScrollView } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { Perfume } from '../../types/perfume';
 
@@ -11,8 +11,8 @@ interface PerfumeListProps {
   perfumes: Perfume[];
 }
 
-const { height } = Dimensions.get('window');
-const cardHeight = height * 0.3;
+const { width } = Dimensions.get('window');
+const isSmallScreen = width < 480; // Small devices like iPhone SE
 
 const PerfumeList: React.FC<PerfumeListProps> = ({
   selectedPerfumes,
@@ -21,181 +21,243 @@ const PerfumeList: React.FC<PerfumeListProps> = ({
   decantSize,
   perfumes,
 }) => {
-  return (
-    <View style={styles.section}>
-      <Text style={styles.sectionTitle}>Perfumes Seleccionados</Text>
-      {selectedPerfumes.map((perfumeId) => {
-        const perfume = perfumes.find(p => p.id === perfumeId);
-        if (!perfume) return null;
+  if (selectedPerfumes.length === 0) {
+    return (
+      <View style={styles.emptyContainer}>
+        <Text style={styles.sectionTitle}>Perfumes Seleccionados</Text>
+        <Text style={styles.emptyText}>No hay perfumes seleccionados</Text>
+      </View>
+    );
+  }
 
-        return (
-          <Pressable
-            key={perfume.id}
-            style={styles.perfumeCard}
-            onPress={() => onPerfumePress(perfume.id)}
-          >
-            <View style={styles.imageContainer}>
-              <Image
-                source={{ uri: perfume.thumbnail_url }}
-                style={styles.perfumeImage}
-              />
-              <Image
-                source={require('../../assets/images/decant-general.png')}
-                style={styles.decantIcon}
-              />
-            </View>
-            <View style={styles.perfumeInfo}>
-              <View style={styles.matchBadge}>
-                <Text style={styles.matchText}>{perfume.match_percentage}% AI Match</Text>
-              </View>
-              <Text style={styles.perfumeName}>{perfume.name}</Text>
-              <Text style={styles.perfumeBrand}>{perfume.brand}</Text>
-              <Text style={styles.perfumePrice}>${Math.round(perfume.price_per_ml ?? 0).toLocaleString('es-CL')}/mL</Text>
-              <Text style={styles.perfumeTotalPrice}>Total: ${Math.round((perfume.price_per_ml ?? 0) * decantSize).toLocaleString('es-CL')}</Text>
-              <View style={{ flexDirection: 'row', gap: 8, marginTop: 10 }}>
-                <Pressable
-                  style={styles.swapButton}
-                  onPress={() => onSwapPress(perfume.id)}
-                >
-                  <Text style={styles.swapButtonText}>Cambiar</Text>
-                </Pressable>
-                <Pressable
-                  style={[styles.swapButton, styles.primaryButton]}
-                  onPress={() => onPerfumePress(perfume.id)}
-                >
-                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                    <Text style={[styles.swapButtonText, styles.primaryButtonText]}>
-                      <Text>
-                        <Text>
-                          <Text>
-                            {/* Feather icon will be inserted here */}
-                          </Text>
-                        </Text>
-                      </Text>
-                    </Text>
-                    <Feather name="info" size={16} color="#FFFFFF" style={{ marginRight: 6 }} />
-                    <Text style={[styles.swapButtonText, styles.primaryButtonText]}>Detalle</Text>
+  return (
+    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+      <View style={styles.cardsContainer}>
+        {selectedPerfumes.map((perfumeId) => {
+          const perfume = perfumes.find(p => p.id === perfumeId);
+          if (!perfume) return null;
+
+          return (
+            <Pressable
+              key={perfume.id}
+              style={styles.card}
+              onPress={() => onPerfumePress(perfume.id)}
+            >
+              <View style={styles.cardContent}>
+                <View style={styles.imageContainer}>
+                  <Image
+                    source={{ uri: perfume.thumbnail_url }}
+                    style={styles.perfumeImage}
+                    resizeMode="contain"
+                  />
+                  <Image
+                    source={require('../../assets/images/decant-general.png')}
+                    style={styles.decantIcon}
+                    resizeMode="contain"
+                  />
+                </View>
+
+                <View style={styles.infoContainer}>
+                  <View style={styles.matchBadge}>
+                    <Text style={styles.matchText}>{perfume.match_percentage}% AI Match</Text>
                   </View>
-                </Pressable>
+
+                  <Text
+                    style={styles.perfumeName}
+                    numberOfLines={1}
+                    ellipsizeMode="tail"
+                  >
+                    {perfume.name}
+                  </Text>
+
+                  <Text
+                    style={styles.perfumeBrand}
+                    numberOfLines={1}
+                    ellipsizeMode="tail"
+                  >
+                    {perfume.brand}
+                  </Text>
+
+                  <View style={styles.priceContainer}>
+                    <Text style={styles.perfumePrice}>
+                      ${Math.round(perfume.price_per_ml ?? 0).toLocaleString('es-CL')}/mL
+                    </Text>
+                    <Text style={styles.perfumeTotalPrice}>
+                      Total: ${Math.round((perfume.price_per_ml ?? 0) * decantSize).toLocaleString('es-CL')}
+                    </Text>
+                  </View>
+
+                  <View style={styles.buttonGroup}>
+                    <Pressable
+                      style={styles.swapButton}
+                      onPress={() => onSwapPress(perfume.id)}
+                    >
+                      <Text style={styles.swapButtonText}>Cambiar</Text>
+                    </Pressable>
+
+                    <Pressable
+                      style={styles.detailButton}
+                      onPress={() => onPerfumePress(perfume.id)}
+                    >
+                      <View style={styles.buttonInner}>
+                        <Feather name="info" size={14} color="#FFFFFF" style={styles.buttonIcon} />
+                        <Text style={styles.detailButtonText}>Detalle</Text>
+                      </View>
+                    </Pressable>
+                  </View>
+                </View>
               </View>
-            </View>
-          </Pressable>
-        );
-      })}
-    </View>
+            </Pressable>
+          );
+        })}
+      </View>
+    </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
-  section: {
+  container: {
+    flex: 1,
     padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E6E6E6',
+    // backgroundColor: '#FAFAFA',
+  },
+  emptyContainer: {
+    padding: 16,
+    alignItems: 'center',
+    backgroundColor: '#FAFAFA',
+  },
+  emptyText: {
+    fontSize: 16,
+    color: '#757575',
+    marginTop: 12,
+    textAlign: 'center',
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: 22,
     fontWeight: '600',
     color: '#333',
     marginBottom: 16,
+    letterSpacing: 0.3,
   },
-  perfumeCard: {
-    flexDirection: 'row',
-    padding: 20,
+  cardsContainer: {
+    width: '100%',
+  },
+  card: {
+    marginBottom: 16,
     borderRadius: 12,
     backgroundColor: '#FFFFFF',
-    marginBottom: 16,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
     elevation: 2,
-    height: cardHeight,
-    alignItems: 'center',
+    overflow: 'hidden',
     borderWidth: 1,
     borderColor: '#F0F0F0',
-    overflow: 'hidden',
+  },
+  cardContent: {
+    padding: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   imageContainer: {
     position: 'relative',
-    marginRight: 30,
+    marginRight: 16,
+    width: 110,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  perfumeImage: {
+    width: 100,
+    height: 100,
+    borderRadius: 6,
   },
   decantIcon: {
     position: 'absolute',
-    right: -10,
-    bottom: '0%',
-    width: 30,
-    height: 70,
-    resizeMode: 'contain',
+    right: 0,
+    bottom: 5,
+    width: 25,
+    height: 60,
+  },
+  infoContainer: {
+    flex: 1,
+    marginLeft: 4,
   },
   matchBadge: {
     backgroundColor: '#809CAC',
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 6,
-    marginTop: 20,
-    marginBottom: 6,
+    borderRadius: 20,
     alignSelf: 'flex-start',
+    marginBottom: 8,
   },
   matchText: {
     color: '#FFFFFF',
-    fontSize: 13,
-    fontWeight: '700',
-    letterSpacing: 0.5,
-  },
-  perfumeImage: {
-    width: cardHeight * 0.55,
-    height: cardHeight * 0.55,
-    borderRadius: 8,
-    resizeMode: 'contain',
-  },
-  perfumeInfo: {
-    flex: 1,
+    fontSize: 12,
+    fontWeight: '600',
   },
   perfumeName: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#222',
+    color: '#333',
     marginBottom: 4,
-    letterSpacing: 0.1,
   },
   perfumeBrand: {
-    fontSize: 15,
+    fontSize: 14,
     color: '#666',
-    marginBottom: 10,
+    marginBottom: 8,
+  },
+  priceContainer: {
+    marginBottom: 12,
   },
   perfumePrice: {
-    fontSize: 15,
+    fontSize: 14,
     color: '#666',
-    fontWeight: '500',
-    marginBottom: 6,
   },
   perfumeTotalPrice: {
-    fontSize: 17,
+    fontSize: 16,
     fontWeight: '600',
     color: '#809CAC',
+    marginTop: 2,
+  },
+  buttonGroup: {
+    flexDirection: 'row',
+    gap: 8,
   },
   swapButton: {
     backgroundColor: '#F5F5F7',
-    paddingVertical: 6,
-    paddingHorizontal: 14,
-    borderRadius: 6,
-    marginTop: 10,
-    marginBottom: 20,
-    alignSelf: 'flex-start',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#E6E6E6',
+    borderColor: '#E0E0E0',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   swapButtonText: {
     color: '#809CAC',
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '600',
   },
-  primaryButton: {
+  detailButton: {
     backgroundColor: '#809CAC',
-    borderColor: '#809CAC',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  primaryButtonText: {
+  buttonInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  buttonIcon: {
+    marginRight: 4,
+  },
+  detailButtonText: {
     color: '#FFFFFF',
+    fontSize: 13,
+    fontWeight: '600',
   },
 });
 

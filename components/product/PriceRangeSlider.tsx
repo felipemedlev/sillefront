@@ -4,23 +4,23 @@ import MultiSlider from '@ptomasroos/react-native-multi-slider';
 
 interface PriceRangeSliderProps {
   range: [number, number];
-  onRangeChange: (values: number[]) => void;
+  onRangeChange: (values: number[]) => void; // Called while sliding
+  onRangeChangeFinish?: (values: number[]) => void; // Called when sliding stops
   sliderContainerRef: React.RefObject<View>;
 }
 
 const PriceRangeSlider: React.FC<PriceRangeSliderProps> = ({
   range,
   onRangeChange,
+  onRangeChangeFinish,
   sliderContainerRef,
 }) => {
   const [isSliderReady, setIsSliderReady] = useState(false);
-
   useEffect(() => {
     if (sliderContainerRef.current) {
       setIsSliderReady(true);
     }
   }, [sliderContainerRef]);
-
   return (
     <View style={[styles.section, styles.filterSection]}>
       <Text style={[styles.sectionTitle, styles.filterTitle]}>Rango de Precio por mL</Text>
@@ -37,6 +37,7 @@ const PriceRangeSlider: React.FC<PriceRangeSliderProps> = ({
               max={5000}
               step={100}
               onValuesChange={onRangeChange}
+              onValuesChangeFinish={onRangeChangeFinish}
               sliderLength={Dimensions.get('window').width - 80}
               selectedStyle={{
                 backgroundColor: '#809CAC',

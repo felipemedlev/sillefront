@@ -19,7 +19,7 @@ export interface ApiPerfumeSummary {
   name: string;
   brand: string; // Assuming brand is stringified in the serializer
   thumbnailUrl: string | null; // Note: Frontend type uses thumbnail_url
-  pricePerML: number | null; // Note: Frontend type uses price_per_ml
+  pricePerML: number | null; // Use camelCase to match backend model
   external_id: string; // Add external_id property
 }
 
@@ -181,7 +181,7 @@ const handleResponse = async (response: Response) => {
 type PerfumeFilters = {
   brands?: number[]; // Expect brand IDs
   occasions?: number[]; // Expect Occasion IDs
-  priceRange?: { min: number; max: number } | null;
+  priceRange?: { min?: number | null; max?: number | null } | null; // Make min/max optional or nullable within the object
   genders?: string[]; // Expect keys: 'male', 'female', 'unisex'
   dayNights?: string[]; // Expect keys: 'day', 'night'
   seasons?: string[]; // Expect keys: 'winter', 'summer', etc.
@@ -362,10 +362,19 @@ export const getPredefinedBoxes = async (gender?: 'masculino' | 'femenino'): Pro
 /**
  * Fetch personalized recommendations for the authenticated user.
  */
-export const fetchRecommendations = async (): Promise<ApiRecommendation[]> => {
+export const fetchRecommendations = async (filters: PerfumeFilters = {}): Promise<ApiRecommendation[]> => {
   try {
     const headers = await createHeaders(true); // Requires auth
-    const url = `${API_BASE_URL}/recommendations/`;
+    const params = new URLSearchParams();
+
+    // Add price range filters
+    if (filters.priceRange?.min != null) params.append('price_min', String(filters.priceRange.min));
+    if (filters.priceRange?.max != null) params.append('price_max', String(filters.priceRange.max));
+
+    // Add occasion filters
+    if (filters.occasions?.length) params.append('occasions', filters.occasions.map(String).join(','));
+
+    const url = `${API_BASE_URL}/recommendations/?${params.toString()}`;
     console.log(`fetchRecommendations: Calling API: ${url}`);
 
     const response = await fetch(url, {

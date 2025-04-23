@@ -4,13 +4,13 @@ import { router } from 'expo-router';
 import { Perfume, BasicPerfumeInfo } from '../../types/perfume';
 import PerfumeModal, { PerfumeModalRef } from '../product/PerfumeModal';
 import { useCart } from '../../context/CartContext';
+import { useSnackbar } from '../../context/SnackbarContext'; // Import Snackbar context
 
 type AIBoxInteractionsProps = {
   children: (props: {
     handlePerfumePress: (perfumeId: string) => void;
     handleSwapPress: (perfumeId: string) => void;
     handleAddToCart: () => Promise<void>;
-    feedbackMessage: string | null;
   }) => React.ReactNode;
   selectedPerfumeIds: string[];
   decantCount: 4 | 8;
@@ -32,16 +32,16 @@ export const AIBoxInteractions: React.FC<AIBoxInteractionsProps> = ({
   recommendedPerfumes
 }) => {
   const { addItemToCart } = useCart();
+  const { showSnackbar } = useSnackbar(); // Use Snackbar context
   const [swappingPerfumeId, setSwappingPerfumeId] = useState<string | null>(null);
-  const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
   const modalRef = useRef<PerfumeModalRef>(null);
-  const feedbackTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const redirectTimeoutRef = useRef<NodeJS.Timeout | null>(null); // Rename ref for clarity
 
-  // Clear timeout on unmount
+  // Clear redirect timeout on unmount
   useEffect(() => {
     return () => {
-      if (feedbackTimeoutRef.current) {
-        clearTimeout(feedbackTimeoutRef.current);
+      if (redirectTimeoutRef.current) {
+        clearTimeout(redirectTimeoutRef.current);
       }
     };
   }, []);
@@ -112,19 +112,18 @@ export const AIBoxInteractions: React.FC<AIBoxInteractionsProps> = ({
     try {
       await addItemToCart(itemData);
       console.log('AI Box added to cart:', itemData);
-      setFeedbackMessage("¡Añadido al carro!");
+      showSnackbar("¡Añadido al carro! Redirigiendo..."); // Show snackbar on success
 
-      if (feedbackTimeoutRef.current) clearTimeout(feedbackTimeoutRef.current);
-      feedbackTimeoutRef.current = setTimeout(() => {
-        setFeedbackMessage(null);
+      // Clear previous redirect timeout if any
+      if (redirectTimeoutRef.current) clearTimeout(redirectTimeoutRef.current);
+
+      // Set timeout only for redirect
+      redirectTimeoutRef.current = setTimeout(() => {
         router.push('/(tabs)/(cart)');
-      }, 2000);
-
+      }, 2000); // Redirect after 2 seconds
     } catch (error) {
       console.error("Error adding AI Box to cart:", error);
-      setFeedbackMessage("Error al añadir.");
-      if (feedbackTimeoutRef.current) clearTimeout(feedbackTimeoutRef.current);
-      feedbackTimeoutRef.current = setTimeout(() => setFeedbackMessage(null), 2000);
+      showSnackbar("Error al añadir."); // Show snackbar on error
     }
   }, [decantCount, decantSize, selectedPerfumeIds, calculateTotalPrice, addItemToCart, findPerfumeById]);
 
@@ -134,7 +133,6 @@ export const AIBoxInteractions: React.FC<AIBoxInteractionsProps> = ({
         handlePerfumePress,
         handleSwapPress,
         handleAddToCart,
-        feedbackMessage,
       })}
 
       <PerfumeModal

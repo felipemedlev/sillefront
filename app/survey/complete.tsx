@@ -6,12 +6,16 @@ import { useSurveyContext } from '../../context/SurveyContext';
 
 export default function CompleteScreen() {
   const router = useRouter();
+  const { submitSurveyIfAuthenticated } = useSurveyContext(); // Get submission function
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.8)).current;
   const { width } = Dimensions.get('window');
   const isDesktop = width >= 768;
 
   useEffect(() => {
+    // Attempt survey submission on mount
+    submitSurveyIfAuthenticated();
+
     // Entrance animation
     Animated.parallel([
       Animated.timing(fadeAnim, {
@@ -27,6 +31,7 @@ export default function CompleteScreen() {
       }),
     ]).start();
 
+
     // Exit animation after delay
     setTimeout(() => {
       Animated.timing(fadeAnim, {
@@ -38,7 +43,7 @@ export default function CompleteScreen() {
         router.replace('/home');
       });
     }, 2000);
-  }, [fadeAnim, scaleAnim, router]);
+  }, [fadeAnim, scaleAnim, router, submitSurveyIfAuthenticated]); // Add submitSurveyIfAuthenticated to dependencies
 
   return (
     <Animated.View style={[styles.container, { opacity: fadeAnim }]}>

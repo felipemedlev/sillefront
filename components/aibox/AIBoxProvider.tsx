@@ -35,7 +35,7 @@ const normalizePerfumeData = (perfume: any): Perfume => {
     thumbnail_url: perfume.thumbnail_url || perfume.thumbnailUrl || '',
     full_size_url: perfume.full_size_url || perfume.fullSizeUrl || '',
     match_percentage: perfume.match_percentage ?? null,
-    price_per_ml: perfume.price_per_ml ?? perfume.pricePerML ?? null,
+    pricePerML: perfume.pricePerML ?? null, // Assign only from pricePerML (camelCase)
     external_id: perfume.external_id || '',
     description: perfume.description || '',
     accords: perfume.accords || [],
@@ -57,14 +57,16 @@ const normalizePerfumeData = (perfume: any): Perfume => {
 // Helper function to get price regardless of format
 const getPerfumePrice = (perfume: Perfume | undefined): number => {
   if (!perfume) return 0;
-  return typeof perfume.price_per_ml === 'number' ? perfume.price_per_ml : 0;
+  // Handle cases where pricePerML might be a string
+  const price = parseFloat(perfume.pricePerML as any);
+  return isNaN(price) ? 0 : price;
 };
 
 export const AIBoxProvider: React.FC<AIBoxProviderProps> = ({ children }) => {
   const { submitSurveyIfAuthenticated } = useSurveyContext();
   const [decantCount, setDecantCount] = useState<4 | 8>(4);
   const [decantSize, setDecantSize] = useState<3 | 5 | 10>(5);
-  const [rangoPrecio, setRangoPrecio] = useState<[number, number]>([200, 5000]);
+  const [rangoPrecio, setRangoPrecio] = useState<[number, number]>([0, 5000]);
   const [selectedOccasionIds, setSelectedOccasionIds] = useState<number[]>([]); // Add state for selected occasion IDs
   const [selectedPerfumeIds, setSelectedPerfumeIds] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -90,7 +92,6 @@ export const AIBoxProvider: React.FC<AIBoxProviderProps> = ({ children }) => {
 
       // Survey submission is now handled by SurveyContext upon authentication change.
       // We proceed directly to fetching recommendations.
-      console.log('AIBox: Fetching recommendations...');
       // Fetch recommendations (IDs + scores)
       const recommendations: ApiRecommendation[] = await fetchRecommendations(filters);
 
@@ -99,19 +100,16 @@ export const AIBoxProvider: React.FC<AIBoxProviderProps> = ({ children }) => {
         throw new Error("No recommendations received from the server.");
       }
 
-      console.log(`AIBox: Received ${recommendations.length} recommendations`);
-
       // Log the first few recommendations to inspect their structure
       if (recommendations.length > 0) {
-        console.log(`AIBox: First 3 recommendations:`);
+        // console.log(`AIBox: First 3 recommendations:`);
         recommendations.slice(0, 3).forEach((rec: ApiRecommendation, i: number) => {
-          console.log(`  ${i+1}. Perfume ID: ${rec.perfume.id}, Name: ${rec.perfume.name}, Score: ${rec.score}`);
+          // console.log(`  ${i+1}. Perfume ID: ${rec.perfume.id}, Name: ${rec.perfume.name}, Score: ${rec.score}`);
         });
       }
 
       // Important: Sort recommendations by score (highest first) to ensure correct order
       const sortedRecommendations = [...recommendations].sort((a, b) => b.score - a.score);
-      console.log(`AIBox: Sorted recommendations. Top score: ${sortedRecommendations[0]?.score}`);
 
       // Extract top 20 perfume data to find external_ids
       const top20Recs = sortedRecommendations.slice(0, 20);
@@ -140,8 +138,6 @@ export const AIBoxProvider: React.FC<AIBoxProviderProps> = ({ children }) => {
         throw new Error("Failed to fetch full perfume details in the expected format.");
       }
 
-      console.log(`AIBox: Received full details for ${fullPerfumeDetailsData.length} perfumes`);
-
       // Normalize the fetched full details
       const normalizedPerfumes = fullPerfumeDetailsData.map(normalizePerfumeData);
 
@@ -163,12 +159,12 @@ export const AIBoxProvider: React.FC<AIBoxProviderProps> = ({ children }) => {
       }).filter(p => p.match_percentage !== null) // Filter out any perfumes without match percentage
         .sort((a, b) => (b.match_percentage ?? 0) - (a.match_percentage ?? 0)); // Re-sort by match percentage DESC
 
-      console.log(`AIBox: Normalized and merged ${finalRecommendedPerfumes.length} perfume objects with full details`);
+      // console.log(`AIBox: Normalized and merged ${finalRecommendedPerfumes.length} perfume objects with full details`);
 
       // Log the top 5 perfumes for debugging
-      console.log('AIBox: Top 5 perfumes with full details (after merge & sort):');
+      // console.log('AIBox: Top 5 perfumes with full details (after merge & sort):');
       finalRecommendedPerfumes.slice(0, 5).forEach((p: Perfume, i: number) => {
-        console.log(`  ${i+1}. ${p.name} - ${p.match_percentage}% match, ID=${p.id}, ExternalID=${p.external_id}, Similar IDs: ${p.similar_perfume_ids?.length ?? 0}`);
+        // console.log(`  ${i+1}. ${p.name} - ${p.match_percentage}% match, ID=${p.id}, ExternalID=${p.external_id}, Similar IDs: ${p.similar_perfume_ids?.length ?? 0}`);
       });
 
       setRecommendedPerfumes(finalRecommendedPerfumes);
@@ -189,28 +185,27 @@ export const AIBoxProvider: React.FC<AIBoxProviderProps> = ({ children }) => {
   }, [loadRecommendations, selectedOccasionIds]); // Add dependencies
 
   const calculateTotalPrice = useCallback(() => {
-    return selectedPerfumeIds.reduce((total, perfumeId) => {
+    const finalTotal = selectedPerfumeIds.reduce((total, perfumeId) => {
       const perfume = findPerfumeById(perfumeId);
       const price = getPerfumePrice(perfume);
       return total + (price * decantSize);
     }, 0);
-  }, [decantSize, selectedPerfumeIds, findPerfumeById]);
+    return Math.round(finalTotal);
+  }, [decantSize, selectedPerfumeIds, findPerfumeById, recommendedPerfumes]); // Added recommendedPerfumes dependency
 
 
   // --- Initial Selection Effect ---
   useEffect(() => {
     if (recommendedPerfumes.length > 0) {
-      console.log(`AIBox: Initial Selection - Starting with ${recommendedPerfumes.length} perfumes`);
 
       // Filter recommendations by price range
       const priceFilteredPerfumes = recommendedPerfumes.filter((perfume: Perfume) => {
         const perfumePrice = getPerfumePrice(perfume);
         const meetsMinPrice = perfumePrice >= rangoPrecio[0];
         const meetsMaxPrice = perfumePrice <= rangoPrecio[1];
+        // console.log(`  - Filtering Perfume ID ${perfume.id}: Price ${perfumePrice}, Meets Min: ${meetsMinPrice}, Meets Max: ${meetsMaxPrice}`); // Optional detailed log
         return meetsMinPrice && meetsMaxPrice;
       });
-
-      console.log(`AIBox: After price filtering (${rangoPrecio[0]}-${rangoPrecio[1]}): ${priceFilteredPerfumes.length} perfumes remain`);
 
       // Select top N based on decantCount from the price-filtered list
       let initialSelection: string[] = [];
@@ -223,7 +218,6 @@ export const AIBoxProvider: React.FC<AIBoxProviderProps> = ({ children }) => {
           .filter(id => id && id.trim() !== ''); // Ensure valid IDs only
       } else {
         // Fallback to all perfumes if price filter results in empty list
-        console.log('AIBox: Price filter eliminated all perfumes, using fallback sorting by match percentage');
         initialSelection = recommendedPerfumes
           .sort((a, b) => {
             // Convert to numbers with fallback to 0 for null/undefined values

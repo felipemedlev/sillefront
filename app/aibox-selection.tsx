@@ -17,7 +17,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
   },
   content: {
-    flex: 1,
+    // flex: 1, // Removed flex: 1 to potentially fix scrolling
     backgroundColor: '#F5F5F7', // Background for scroll area
   },
 });
@@ -80,6 +80,8 @@ export default function AIBoxSelectionScreen() {
                   <DecantSelector
                     decantCount={decantCount}
                     onSelectDecant={setDecantCount}
+                    decantSize={decantSize}
+                    onDecantSize={setDecantSize}
                   />
 
                   <PriceRangeSlider

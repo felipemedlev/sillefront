@@ -151,28 +151,121 @@ const createHeaders = async (includeAuth = true): Promise<HeadersInit> => {
   return headers;
 };
 
+// Helper function to recursively transform pricePerML in fetched data
+const transformPricePerML = (data: any): any => {
+  if (Array.isArray(data)) {
+    // If it's an array, map over its elements and apply the transformation recursively
+    return data.map(item => transformPricePerML(item));
+  } else if (data !== null && typeof data === 'object') {
+    // If it's an object, create a new object to hold the transformed data
+    const newData: { [key: string]: any } = {};
+    let priceTransformed = false; // Flag to track if price was handled via price_per_ml
+
+    for (const key in data) {
+      if (Object.prototype.hasOwnProperty.call(data, key)) {
+        const value = data[key];
+        let priceValue: number | null = null;
+
+        // Check if the key is price_per_ml
+        if (key === 'price_per_ml') {
+          if (typeof value === 'number' || (typeof value === 'string' && value.trim() !== '')) {
+            priceValue = parseFloat(value as string); // Parse potential string
+            if (!isNaN(priceValue)) {
+              // console.log(`[API DEBUG] Found price_per_ml: ${value}. Transforming to pricePerML: ${priceValue * 2}`); // Removed Debug Log
+              newData['pricePerML'] = priceValue * 2; // Assign transformed value to pricePerML
+            } else {
+              // console.warn(`[API WARN] Could not parse price_per_ml value: ${value}`); // Keep or remove warning? Keeping for now.
+              console.warn(`[API WARN] Could not parse price_per_ml value: ${value}`);
+              newData['pricePerML'] = null; // Assign null if parsing failed
+            }
+          } else {
+             console.warn(`[API WARN] Unexpected type for price_per_ml: ${typeof value}, value: ${value}`);
+             newData['pricePerML'] = null; // Assign null for unexpected types
+          }
+          priceTransformed = true; // Mark price as handled (even if null)
+          // Do not copy the original 'price_per_ml' key to newData
+
+        // Check if the key is pricePerML AND price wasn't already handled by price_per_ml
+        } else if (key === 'pricePerML' && !priceTransformed) {
+           if (typeof value === 'number' || (typeof value === 'string' && value.trim() !== '')) {
+             priceValue = parseFloat(value as string); // Parse potential string
+             if (!isNaN(priceValue)) {
+               // console.log(`[API DEBUG] Found pricePerML: ${value}. Transforming: ${priceValue * 2}`); // Removed Debug Log
+               newData[key] = priceValue * 2; // Assign transformed value back to pricePerML
+             } else {
+               // console.warn(`[API WARN] Could not parse pricePerML value: ${value}`); // Keep or remove warning? Keeping for now.
+               console.warn(`[API WARN] Could not parse pricePerML value: ${value}`);
+               newData[key] = null; // Assign null if parsing failed
+             }
+           } else {
+             console.warn(`[API WARN] Unexpected type for pricePerML: ${typeof value}, value: ${value}`);
+             newData[key] = null; // Assign null for unexpected types
+           }
+          // If priceTransformed is true, it means 'price_per_ml' was already processed, so we skip this block.
+
+        } else {
+          // For all other keys, apply the transformation recursively
+          newData[key] = transformPricePerML(value);
+        }
+      }
+    }
+    // Return the new object with transformed and standardized data
+    return newData;
+  }
+  // If it's not an array or object (e.g., primitive value), return it as is
+  return data;
+};
+
+
 const handleResponse = async (response: Response) => {
   if (!response.ok) {
     let errorData;
     try {
+      // Try to parse error response as JSON
       errorData = await response.json();
     } catch (e) {
+      // Fallback if error response is not JSON
       errorData = { detail: response.statusText || 'Network response was not ok' };
     }
     console.error('API Error:', response.status, errorData);
+    // Create a structured error object
     const error = new Error(errorData?.detail || `HTTP error! status: ${response.status}`);
     (error as any).status = response.status;
-    (error as any).data = errorData;
+    (error as any).data = errorData; // Attach full error data if available
     throw error;
   }
-  if (response.status === 204) {
-    return null;
+
+  if (response.status === 204) { // No Content
+    return null; // Return null for 204 responses
   }
+
+  let jsonData;
   try {
-    return await response.json();
+    // Read response body as text first to handle potential empty bodies
+    const text = await response.text();
+    if (!text) {
+        // If the response body is empty (and status is OK, e.g., 200), return null or handle as appropriate
+        return null;
+    }
+    jsonData = JSON.parse(text); // Parse the non-empty text as JSON
   } catch (e) {
     console.error('Error parsing JSON response:', e);
-    throw new Error('Failed to parse JSON response');
+    throw new Error('Failed to parse JSON response'); // Throw specific error for parsing failure
+  }
+
+  // Apply the price transformation to the parsed JSON data
+  let transformedData;
+  try {
+      transformedData = transformPricePerML(jsonData); // Transform the data
+      // console.log('[API DEBUG] Data after transformation in handleResponse:', JSON.stringify(transformedData, null, 2)); // Removed Log transformed data
+      return transformedData;
+  } catch (transformError) {
+      console.error('Error transforming pricePerML:', transformError);
+      // Decide how to handle transformation errors:
+      // Option 1: Return original data (less safe if transformation is critical)
+      // return jsonData;
+      // Option 2: Throw an error (safer, signals a problem)
+      throw new Error('Failed to transform API response data');
   }
 };
 
@@ -423,7 +516,7 @@ export const fetchRecommendations = async (filters: PerfumeFilters = {}): Promis
 
       console.log('fetchRecommendations: Top 3 recommendations by score:');
       sortedSample.forEach((rec, i) => {
-        console.log(`  ${i+1}. Perfume ID: ${rec.perfume.id}, Name: ${rec.perfume.name}, Score: ${rec.score}`);
+        // console.log(`  ${i+1}. Perfume ID: ${rec.perfume.id}, Name: ${rec.perfume.name}, Score: ${rec.score}`);
       });
     }
 

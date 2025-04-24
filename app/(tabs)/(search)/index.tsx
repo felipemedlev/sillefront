@@ -214,7 +214,7 @@ export default function SearchScreen() {
           // Ensure brandObj has a name property, default to stringified data if not an object
           const brandObj = typeof brandData === 'object' && brandData !== null && brandData.name ? brandData : { name: String(brandData ?? 'Unknown Brand') };
 
-          const priceStr = (perfume as any).price_per_ml ?? (perfume as any).pricePerML; // Check both possible keys from API/previous state
+          const priceStr = (perfume as any).pricePerML ?? (perfume as any).pricePerML; // Check both possible keys from API/previous state
           // Attempt to parse the price string to a number, handle null explicitly
           const priceNum = priceStr === null || priceStr === undefined ? null : parseFloat(String(priceStr));
 

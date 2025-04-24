@@ -9,7 +9,6 @@ export interface BasicPerfumeInfo {
 export interface Perfume extends BasicPerfumeInfo {
   external_id: string; // Added external ID from backend
   match_percentage?: number | null; // Use snake_case, allow null
-  price_per_ml?: number | null; // Use snake_case, allow null from API/parsing
   description?: string; // Keep camelCase if it matches API
   accords?: string[]; // Keep camelCase if it matches API
   top_notes?: string[]; // Use snake_case

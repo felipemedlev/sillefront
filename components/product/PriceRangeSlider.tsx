@@ -23,7 +23,6 @@ const PriceRangeSlider: React.FC<PriceRangeSliderProps> = ({
   }, [sliderContainerRef]);
   return (
     <View style={[styles.section, styles.filterSection]}>
-      <Text style={[styles.sectionTitle, styles.filterTitle]}>Rango de Precio por mL</Text>
       <View style={styles.priceContainer}>
         <View style={styles.priceLabelsCompact}>
           <Text style={styles.priceText}>${range[0].toLocaleString()}</Text>
@@ -59,8 +58,7 @@ const PriceRangeSlider: React.FC<PriceRangeSliderProps> = ({
 const styles = StyleSheet.create({
   section: {
     padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E6E6E6',
+    marginBottom: 20
   },
   filterSection: {
     paddingVertical: 8,

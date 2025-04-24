@@ -98,7 +98,7 @@ const PerfumeModal = forwardRef<PerfumeModalRef, PerfumeModalProps>((props, ref)
               ...p,
               thumbnail_url: p.thumbnail_url || p.thumbnailUrl || '',
               full_size_url: p.full_size_url || p.fullSizeUrl || '',
-              pricePerML: p.pricePerML || p.price_per_ml, // Use pricePerML, fallback to snake_case if needed during transition
+              pricePerML: p.pricePerML, // Use standardized pricePerML
               // Handle match percentage for similar perfumes - normalize value if exists
               match_percentage: p.match_percentage !== undefined ?
                 (p.match_percentage > 1 ? p.match_percentage : p.match_percentage * 100) :
@@ -271,7 +271,7 @@ const PerfumeModal = forwardRef<PerfumeModalRef, PerfumeModalProps>((props, ref)
 
             {/* Image Header */}
             <View style={styles.imageContainer}>
-              <Image source={{ uri: currentPerfume.full_size_url }} style={[styles.perfumeImage, { width: width * 0.6, height: width * 0.6 }]} />
+              <Image source={{ uri: currentPerfume.full_size_url }} style={[styles.perfumeImage, { width: width * 0.4, height: width * 0.4 }]} />
             </View>
 
             {/* Basic Info */}

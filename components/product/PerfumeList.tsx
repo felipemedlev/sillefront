@@ -80,10 +80,10 @@ const PerfumeList: React.FC<PerfumeListProps> = ({
 
                   <View style={styles.priceContainer}>
                     <Text style={styles.perfumePrice}>
-                      ${Math.round(perfume.price_per_ml ?? 0).toLocaleString('es-CL')}/mL
+                      ${Math.round(perfume.pricePerML ?? 0).toLocaleString('es-CL')}/mL
                     </Text>
                     <Text style={styles.perfumeTotalPrice}>
-                      Total: ${Math.round((perfume.price_per_ml ?? 0) * decantSize).toLocaleString('es-CL')}
+                      Total: ${Math.round((perfume.pricePerML ?? 0) * decantSize).toLocaleString('es-CL')}
                     </Text>
                   </View>
 

@@ -6,18 +6,17 @@ import { Perfume } from '../../types/perfume';
 interface PerfumeListProps {
   selectedPerfumes: string[];
   onPerfumePress: (perfumeId: string) => void;
-  onSwapPress: (perfumeId: string) => void;
+  onRemovePerfume: (perfumeId: string) => void;
+  onReplacePerfume: (perfumeId: string) => void;
   decantSize: number;
   perfumes: Perfume[];
 }
 
-const { width } = Dimensions.get('window');
-const isSmallScreen = width < 480; // Small devices like iPhone SE
-
 const PerfumeList: React.FC<PerfumeListProps> = ({
   selectedPerfumes,
   onPerfumePress,
-  onSwapPress,
+  onRemovePerfume,
+  onReplacePerfume,
   decantSize,
   perfumes,
 }) => {
@@ -38,76 +37,84 @@ const PerfumeList: React.FC<PerfumeListProps> = ({
           if (!perfume) return null;
 
           return (
-            <Pressable
-              key={perfume.id}
-              style={styles.card}
-              onPress={() => onPerfumePress(perfume.id)}
-            >
-              <View style={styles.cardContent}>
-                <View style={styles.imageContainer}>
-                  <Image
-                    source={{ uri: perfume.thumbnail_url }}
-                    style={styles.perfumeImage}
-                    resizeMode="contain"
-                  />
-                  <Image
-                    source={require('../../assets/images/decant-general.png')}
-                    style={styles.decantIcon}
-                    resizeMode="contain"
-                  />
-                </View>
-
-                <View style={styles.infoContainer}>
-                  <View style={styles.matchBadge}>
-                    <Text style={styles.matchText}>{perfume.match_percentage}% AI Match</Text>
-                  </View>
-
-                  <Text
-                    style={styles.perfumeName}
-                    numberOfLines={1}
-                    ellipsizeMode="tail"
-                  >
-                    {perfume.name}
-                  </Text>
-
-                  <Text
-                    style={styles.perfumeBrand}
-                    numberOfLines={1}
-                    ellipsizeMode="tail"
-                  >
-                    {perfume.brand}
-                  </Text>
-
-                  <View style={styles.priceContainer}>
-                    <Text style={styles.perfumePrice}>
-                      ${Math.round(perfume.pricePerML ?? 0).toLocaleString('es-CL')}/mL
-                    </Text>
-                    <Text style={styles.perfumeTotalPrice}>
-                      Total: ${Math.round((perfume.pricePerML ?? 0) * decantSize).toLocaleString('es-CL')}
-                    </Text>
-                  </View>
-
-                  <View style={styles.buttonGroup}>
-                    <Pressable
-                      style={styles.swapButton}
-                      onPress={() => onSwapPress(perfume.id)}
-                    >
-                      <Text style={styles.swapButtonText}>Cambiar</Text>
-                    </Pressable>
-
-                    <Pressable
-                      style={styles.detailButton}
-                      onPress={() => onPerfumePress(perfume.id)}
-                    >
-                      <View style={styles.buttonInner}>
-                        <Feather name="info" size={14} color="#FFFFFF" style={styles.buttonIcon} />
-                        <Text style={styles.detailButtonText}>Detalle</Text>
-                      </View>
-                    </Pressable>
-                  </View>
-                </View>
+            <View key={perfume.id} style={styles.card}>
+              <View style={styles.actionsContainer}>
+                <Pressable
+                  style={styles.actionButton}
+                  onPress={() => onReplacePerfume(perfume.id)}
+                >
+                  <Feather name="refresh-cw" size={18} color="#809CAC" />
+                </Pressable>
+                <Pressable
+                  style={styles.actionButton}
+                  onPress={() => onRemovePerfume(perfume.id)}
+                >
+                  <Feather name="x" size={18} color="#809CAC" />
+                </Pressable>
               </View>
-            </Pressable>
+              <Pressable
+                style={{ flex: 1 }}
+                onPress={() => onPerfumePress(perfume.id)}
+              >
+                <View style={styles.cardContent}>
+                  <View style={styles.imageContainer}>
+                    <Image
+                      source={{ uri: perfume.thumbnail_url }}
+                      style={styles.perfumeImage}
+                      resizeMode="contain"
+                    />
+                    <Image
+                      source={require('../../assets/images/decant-general.png')}
+                      style={styles.decantIcon}
+                      resizeMode="contain"
+                    />
+                  </View>
+
+                  <View style={styles.infoContainer}>
+                    <View style={styles.matchBadge}>
+                      <Text style={styles.matchText}>{perfume.match_percentage}% AI Match</Text>
+                    </View>
+
+                    <Text
+                      style={styles.perfumeName}
+                      numberOfLines={1}
+                      ellipsizeMode="tail"
+                    >
+                      {perfume.name}
+                    </Text>
+
+                    <Text
+                      style={styles.perfumeBrand}
+                      numberOfLines={1}
+                      ellipsizeMode="tail"
+                    >
+                      {perfume.brand}
+                    </Text>
+
+                    <View style={styles.priceContainer}>
+                      <Text style={styles.perfumePrice}>
+                        ${Math.round(perfume.pricePerML ?? 0).toLocaleString('es-CL')}/mL
+                      </Text>
+                      <Text style={styles.perfumeTotalPrice}>
+                        Total: ${Math.round((perfume.pricePerML ?? 0) * decantSize).toLocaleString('es-CL')}
+                      </Text>
+                    </View>
+
+                    <View style={styles.buttonGroup}>
+                      <Pressable
+                        style={styles.detailButton}
+                        onPress={() => onPerfumePress(perfume.id)}
+                      >
+                        <View style={styles.buttonInner}>
+                          <Feather name="info" size={14} color="#FFFFFF" style={styles.buttonIcon} />
+                          <Text style={styles.detailButtonText}>Detalle</Text>
+                        </View>
+                      </Pressable>
+                    </View>
+                  </View>
+                </View>
+              </Pressable>
+            </View>
           );
         })}
       </View>
@@ -154,6 +161,21 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     borderWidth: 1,
     borderColor: '#F0F0F0',
+  },
+  actionsContainer: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    zIndex: 2,
+    flexDirection: 'row',
+    gap: 8,
+  },
+  actionButton: {
+    backgroundColor: '#F5F5F7',
+    borderRadius: 16,
+    padding: 4,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
   },
   cardContent: {
     padding: 16,
@@ -223,21 +245,6 @@ const styles = StyleSheet.create({
   buttonGroup: {
     flexDirection: 'row',
     gap: 8,
-  },
-  swapButton: {
-    backgroundColor: '#F5F5F7',
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  swapButtonText: {
-    color: '#809CAC',
-    fontSize: 13,
-    fontWeight: '600',
   },
   detailButton: {
     backgroundColor: '#809CAC',

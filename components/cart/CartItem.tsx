@@ -37,7 +37,7 @@ const CartItemComponent: React.FC<CartItemProps> = ({ item, onRemove }) => {
 
   const renderPerfume = (perfume: BasicPerfumeInfo, index: number) => (
     <View key={perfume.id} style={styles.perfumeItem}>
-      <Image source={{ uri: perfume.thumbnailUrl }} style={styles.perfumeThumbnail} />
+      <Image source={{ uri: perfume.thumbnail_url }} style={styles.perfumeThumbnail} />
       <View style={styles.perfumeInfo}>
         <Text style={styles.perfumeBrand}>{perfume.brand}</Text>
         <Text style={styles.perfumeName}>{perfume.name}</Text>
@@ -50,7 +50,7 @@ const CartItemComponent: React.FC<CartItemProps> = ({ item, onRemove }) => {
       <TouchableOpacity activeOpacity={0.7} onPress={toggleExpand} style={styles.touchableArea}>
         <View style={styles.container}>
           <Image
-            source={item.thumbnailUrl ? { uri: item.thumbnailUrl } : require('../../assets/images/decant-general.png')} // Fallback image
+            source={item.thumbnail_url ? { uri: item.thumbnail_url } : require('../../assets/images/decant-general.png')} // Fallback image
             style={styles.thumbnail}
             resizeMode="cover"
           />

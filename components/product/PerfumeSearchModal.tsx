@@ -83,7 +83,7 @@ const PerfumeSearchModal: React.FC<PerfumeSearchModalProps> = ({ visible, onClos
             keyExtractor={item => String(item.id)}
             renderItem={({ item }) => (
               <Pressable style={styles.resultItem} onPress={() => onSelect(item)}>
-                <Image source={{ uri: item.thumbnail_url || item.thumbnailUrl }} style={styles.resultImage} />
+                <Image source={{ uri: item.thumbnail_url || item.thumbnail_url }} style={styles.resultImage} />
                 <View style={{ flex: 1 }}>
                   <Text style={styles.resultName}>{item.name}</Text>
                   <Text style={styles.resultBrand}>{item.brand}</Text>

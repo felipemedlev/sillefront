@@ -27,10 +27,10 @@ export const MOCK_PURCHASES: Purchase[] = [
       {
         name: 'AI Box Pro (4x5ml)', quantity: 1, price: 50000, perfumes: [
           // Sample perfumes for this box (using BasicPerfumeInfo structure)
-          { id: '62615', name: 'Angels\' Share', brand: 'Kilian', thumbnailUrl: 'https://fimgs.net/mdimg/perfume/s.62615.jpg', fullSizeUrl: 'https://fimgs.net/mdimg/perfume/375x500.62615.jpg' },
-          { id: '13016', name: 'Dior Homme Intense 2011', brand: 'Dior', thumbnailUrl: 'https://fimgs.net/mdimg/perfume/s.13016.jpg', fullSizeUrl: 'https://fimgs.net/mdimg/perfume/375x500.13016.jpg' },
-          { id: '75805', name: 'Khamrah', brand: 'Lattafa Perfumes', thumbnailUrl: 'https://fimgs.net/mdimg/perfume/s.75805.jpg', fullSizeUrl: 'https://fimgs.net/mdimg/perfume/375x500.75805.jpg' },
-          { id: '81642', name: 'Le Male Elixir', brand: 'Jean Paul Gaultier', thumbnailUrl: 'https://fimgs.net/mdimg/perfume/s.81642.jpg', fullSizeUrl: 'https://fimgs.net/mdimg/perfume/375x500.81642.jpg' },
+          { id: '62615', name: 'Angels\' Share', brand: 'Kilian', thumbnail_url: 'https://fimgs.net/mdimg/perfume/s.62615.jpg', full_size_url: 'https://fimgs.net/mdimg/perfume/375x500.62615.jpg' },
+          { id: '13016', name: 'Dior Homme Intense 2011', brand: 'Dior', thumbnail_url: 'https://fimgs.net/mdimg/perfume/s.13016.jpg', full_size_url: 'https://fimgs.net/mdimg/perfume/375x500.13016.jpg' },
+          { id: '75805', name: 'Khamrah', brand: 'Lattafa Perfumes', thumbnail_url: 'https://fimgs.net/mdimg/perfume/s.75805.jpg', full_size_url: 'https://fimgs.net/mdimg/perfume/375x500.75805.jpg' },
+          { id: '81642', name: 'Le Male Elixir', brand: 'Jean Paul Gaultier', thumbnail_url: 'https://fimgs.net/mdimg/perfume/s.81642.jpg', full_size_url: 'https://fimgs.net/mdimg/perfume/375x500.81642.jpg' },
         ]
       },
     ],
@@ -43,10 +43,10 @@ export const MOCK_PURCHASES: Purchase[] = [
     items: [
       {
         name: 'Box Personalizado (4x5ml)', quantity: 1, price: 38500, perfumes: [
-          { id: '9099', name: 'Bleu de Chanel', brand: 'Chanel', thumbnailUrl: 'https://fimgs.net/mdimg/perfume/s.9099.jpg', fullSizeUrl: 'https://fimgs.net/mdimg/perfume/375x500.9099.jpg' },
-          { id: '410', name: 'Acqua di Gio', brand: 'Giorgio Armani', thumbnailUrl: 'https://fimgs.net/mdimg/perfume/s.410.jpg', fullSizeUrl: 'https://fimgs.net/mdimg/perfume/375x500.410.jpg' },
-          { id: '31861', name: 'Sauvage', brand: 'Dior', thumbnailUrl: 'https://fimgs.net/mdimg/perfume/s.31861.jpg', fullSizeUrl: 'https://fimgs.net/mdimg/perfume/375x500.31861.jpg' },
-          { id: '485', name: 'Light Blue', brand: 'Dolce & Gabbana', thumbnailUrl: 'https://fimgs.net/mdimg/perfume/s.485.jpg', fullSizeUrl: 'https://fimgs.net/mdimg/perfume/375x500.485.jpg' },
+          { id: '9099', name: 'Bleu de Chanel', brand: 'Chanel', thumbnail_url: 'https://fimgs.net/mdimg/perfume/s.9099.jpg', full_size_url: 'https://fimgs.net/mdimg/perfume/375x500.9099.jpg' },
+          { id: '410', name: 'Acqua di Gio', brand: 'Giorgio Armani', thumbnail_url: 'https://fimgs.net/mdimg/perfume/s.410.jpg', full_size_url: 'https://fimgs.net/mdimg/perfume/375x500.410.jpg' },
+          { id: '31861', name: 'Sauvage', brand: 'Dior', thumbnail_url: 'https://fimgs.net/mdimg/perfume/s.31861.jpg', full_size_url: 'https://fimgs.net/mdimg/perfume/375x500.31861.jpg' },
+          { id: '485', name: 'Light Blue', brand: 'Dolce & Gabbana', thumbnail_url: 'https://fimgs.net/mdimg/perfume/s.485.jpg', full_size_url: 'https://fimgs.net/mdimg/perfume/375x500.485.jpg' },
         ]
       },
     ],
@@ -59,10 +59,10 @@ export const MOCK_PURCHASES: Purchase[] = [
     items: [
       {
         name: 'AI Box Básico (4x3ml)', quantity: 1, price: 20000, perfumes: [
-          { id: '14982', name: 'La Vie Est Belle', brand: 'Lancôme', thumbnailUrl: 'https://fimgs.net/mdimg/perfume/s.14982.jpg', fullSizeUrl: 'https://fimgs.net/mdimg/perfume/375x500.14982.jpg' },
-          { id: '210', name: 'J\'adore', brand: 'Dior', thumbnailUrl: 'https://fimgs.net/mdimg/perfume/s.210.jpg', fullSizeUrl: 'https://fimgs.net/mdimg/perfume/375x500.210.jpg' },
-          { id: '83483', name: 'Goddess', brand: 'Burberry', thumbnailUrl: 'https://fimgs.net/mdimg/perfume/s.83483.jpg', fullSizeUrl: 'https://fimgs.net/mdimg/perfume/375x500.83483.jpg' },
-          { id: '485', name: 'Light Blue', brand: 'Dolce & Gabbana', thumbnailUrl: 'https://fimgs.net/mdimg/perfume/s.485.jpg', fullSizeUrl: 'https://fimgs.net/mdimg/perfume/375x500.485.jpg' }, // Added one more
+          { id: '14982', name: 'La Vie Est Belle', brand: 'Lancôme', thumbnail_url: 'https://fimgs.net/mdimg/perfume/s.14982.jpg', full_size_url: 'https://fimgs.net/mdimg/perfume/375x500.14982.jpg' },
+          { id: '210', name: 'J\'adore', brand: 'Dior', thumbnail_url: 'https://fimgs.net/mdimg/perfume/s.210.jpg', full_size_url: 'https://fimgs.net/mdimg/perfume/375x500.210.jpg' },
+          { id: '83483', name: 'Goddess', brand: 'Burberry', thumbnail_url: 'https://fimgs.net/mdimg/perfume/s.83483.jpg', full_size_url: 'https://fimgs.net/mdimg/perfume/375x500.83483.jpg' },
+          { id: '485', name: 'Light Blue', brand: 'Dolce & Gabbana', thumbnail_url: 'https://fimgs.net/mdimg/perfume/s.485.jpg', full_size_url: 'https://fimgs.net/mdimg/perfume/375x500.485.jpg' }, // Added one more
         ]
       },
     ],
@@ -75,10 +75,10 @@ export const MOCK_PURCHASES: Purchase[] = [
     items: [
       {
         name: 'AI Box Medio (4x5ml)', quantity: 1, price: 30000, perfumes: [
-          { id: '50757', name: 'Y Eau de Parfum', brand: 'Yves Saint Laurent', thumbnailUrl: 'https://fimgs.net/mdimg/perfume/s.50757.jpg', fullSizeUrl: 'https://fimgs.net/mdimg/perfume/375x500.50757.jpg' },
-          { id: '72158', name: 'Le Beau Le Parfum', brand: 'Jean Paul Gaultier', thumbnailUrl: 'https://fimgs.net/mdimg/perfume/s.72158.jpg', fullSizeUrl: 'https://fimgs.net/mdimg/perfume/375x500.72158.jpg' },
-          { id: '39681', name: 'Good Girl', brand: 'Carolina Herrera', thumbnailUrl: 'https://fimgs.net/mdimg/perfume/s.39681.jpg', fullSizeUrl: 'https://fimgs.net/mdimg/perfume/375x500.39681.jpg' },
-          { id: '25324', name: 'Black Opium', brand: 'Yves Saint Laurent', thumbnailUrl: 'https://fimgs.net/mdimg/perfume/s.25324.jpg', fullSizeUrl: 'https://fimgs.net/mdimg/perfume/375x500.25324.jpg' },
+          { id: '50757', name: 'Y Eau de Parfum', brand: 'Yves Saint Laurent', thumbnail_url: 'https://fimgs.net/mdimg/perfume/s.50757.jpg', full_size_url: 'https://fimgs.net/mdimg/perfume/375x500.50757.jpg' },
+          { id: '72158', name: 'Le Beau Le Parfum', brand: 'Jean Paul Gaultier', thumbnail_url: 'https://fimgs.net/mdimg/perfume/s.72158.jpg', full_size_url: 'https://fimgs.net/mdimg/perfume/375x500.72158.jpg' },
+          { id: '39681', name: 'Good Girl', brand: 'Carolina Herrera', thumbnail_url: 'https://fimgs.net/mdimg/perfume/s.39681.jpg', full_size_url: 'https://fimgs.net/mdimg/perfume/375x500.39681.jpg' },
+          { id: '25324', name: 'Black Opium', brand: 'Yves Saint Laurent', thumbnail_url: 'https://fimgs.net/mdimg/perfume/s.25324.jpg', full_size_url: 'https://fimgs.net/mdimg/perfume/375x500.25324.jpg' },
         ]
       },
     ],

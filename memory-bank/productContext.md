@@ -1,7 +1,7 @@
 # Product Context
 
 ## Project Overview
-E-commerce mobile application built with React Native (Expo) and TypeScript. Provides perfume selection and purchase functionality.
+E-commerce mobile application built with React Native (Expo) for web and TypeScript. Provides perfume selection and purchase functionality.
 
 ## Key Features
 - AI-powered perfume recommendation
@@ -22,9 +22,6 @@ E-commerce mobile application built with React Native (Expo) and TypeScript. Pro
 - TypeScript
 - NativeWind
 - React Navigation
-
-[2025-04-01 10:42:14] - Added AI Box Subscription to Key Features.
-
 - AI Box Subscription
 
 ## Architecture
@@ -39,5 +36,3 @@ E-commerce mobile application built with React Native (Expo) and TypeScript. Pro
 - TypeScript
 - NativeWind
 - React Navigation
-
-[2025-03-31 14:40:47] - Updated with project details from file structure analysis

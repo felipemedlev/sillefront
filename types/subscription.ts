@@ -21,7 +21,7 @@ export interface SubscriptionTierDetails {
   priceCLP: number; // Monthly price in Chilean Pesos
   decantSizeML: 3 | 5; // Size of decants included in this tier
   decantCount: 4; // Number of decants (fixed at 4 for all tiers as per requirement)
-  maxPricePerML?: number; // Optional upper limit for perfume price/mL for this tier
-  minPricePerML?: number; // Optional lower limit for perfume price/mL for this tier
+  maxprice_per_ml?: number; // Optional upper limit for perfume price/mL for this tier
+  minprice_per_ml?: number; // Optional lower limit for perfume price/mL for this tier
   description: string; // Short description of the tier's benefits
 }

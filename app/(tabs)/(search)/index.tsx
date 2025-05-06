@@ -196,7 +196,7 @@ export default function SearchScreen() {
 
   // --- Sort Options ---
   const sortOptions: { label: string; field: ActiveSort['field'] }[] = [
-    { label: 'Precio', field: 'pricePerML' }, // Use pricePerML to match backend model
+    { label: 'Precio', field: 'price_per_ml' }, // Use price_per_ml to match backend model
     { label: 'Match AI', field: 'match_percentage' },
     { label: 'Valoración', field: 'overall_rating' },
     { label: 'Duración', field: 'longevity_rating' },
@@ -214,7 +214,7 @@ export default function SearchScreen() {
           // Ensure brandObj has a name property, default to stringified data if not an object
           const brandObj = typeof brandData === 'object' && brandData !== null && brandData.name ? brandData : { name: String(brandData ?? 'Unknown Brand') };
 
-          const priceStr = (perfume as any).pricePerML ?? (perfume as any).pricePerML; // Check both possible keys from API/previous state
+          const priceStr = (perfume as any).price_per_ml ?? (perfume as any).price_per_ml; // Check both possible keys from API/previous state
           // Attempt to parse the price string to a number, handle null explicitly
           const priceNum = priceStr === null || priceStr === undefined ? null : parseFloat(String(priceStr));
 
@@ -230,15 +230,15 @@ export default function SearchScreen() {
               external_id: String((perfume as any).external_id ?? (perfume as any).id), // Ensure external_id is present and string
               name: perfume.name || 'Unknown Name',
               brand: brandObj.name, // Use the name string from the brand object
-              thumbnail_url: (perfume as any).thumbnail_url ?? (perfume as any).thumbnailUrl ?? '', // Keep snake_case
-              full_size_url: (perfume as any).full_size_url ?? (perfume as any).fullSizeUrl ?? '', // Keep snake_case
+              thumbnail_url: (perfume as any).thumbnail_url ?? (perfume as any).thumbnail_url ?? '', // Keep snake_case
+              full_size_url: (perfume as any).full_size_url ?? (perfume as any).full_size_url ?? '', // Keep snake_case
               // Add camelCase versions for component compatibility
-              thumbnailUrl: (perfume as any).thumbnail_url ?? (perfume as any).thumbnailUrl ?? '',
-              fullSizeUrl: (perfume as any).full_size_url ?? (perfume as any).fullSizeUrl ?? '',
+              thumbnail_url: (perfume as any).thumbnail_url ?? (perfume as any).thumbnail_url ?? '',
+              full_size_url: (perfume as any).full_size_url ?? (perfume as any).full_size_url ?? '',
 
               // --- Ratings and Numbers (use snake_case keys from Perfume type) ---
               match_percentage: formattedMatch, // Use formatted integer percentage
-              pricePerML: priceNum === null || isNaN(priceNum) ? undefined : priceNum, // Ensure null or NaN becomes undefined
+              price_per_ml: priceNum === null || isNaN(priceNum) ? undefined : priceNum, // Ensure null or NaN becomes undefined
               overall_rating: (perfume as any).overall_rating,
               price_value_rating: (perfume as any).price_value_rating,
               sillage_rating: (perfume as any).sillage_rating,
@@ -366,7 +366,7 @@ export default function SearchScreen() {
         allOccasions={allAvailableOccasions}
         minPrice={0} // Simple default
         maxPrice={Math.max(100, ...perfumesWithMatch.map(p => {
-          const price = parseFloat(String((p as any).pricePerML ?? 0));
+          const price = parseFloat(String((p as any).price_per_ml ?? 0));
           return isNaN(price) ? 0 : price;
         }))}
       />

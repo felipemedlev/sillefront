@@ -150,13 +150,13 @@ export default function AIBoxSelectionScreen() {
               external_id: perfume.external_id || String(perfume.id), // Use external_id if available or fall back to ID
               name: perfume.name,
               brand: typeof perfume.brand === 'object' ? perfume.brand.name : perfume.brand,
-              thumbnail_url: perfume.thumbnail_url || perfume.thumbnailUrl || '',
-              full_size_url: perfume.full_size_url || perfume.fullSizeUrl || '',
+              thumbnail_url: perfume.thumbnail_url || perfume.thumbnail_url || '',
+              full_size_url: perfume.full_size_url || perfume.full_size_url || '',
               // Properly format match percentage: If it's a decimal (0-1), multiply by 100
               match_percentage: perfume.match_percentage ?
                 (perfume.match_percentage <= 1 ? Math.round(perfume.match_percentage * 100) : Math.round(perfume.match_percentage)) :
                 100, // Default to 100% match for manually selected perfumes
-              pricePerML: perfume.pricePerML || 0,
+              price_per_ml: perfume.price_per_ml || 0,
               description: perfume.description || '',
               accords: perfume.accords || [],
               top_notes: perfume.top_notes || [],

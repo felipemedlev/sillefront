@@ -22,7 +22,7 @@ interface PerfumeApiResponse {
   external_id: string;
   name: string;
   brand: string;
-  thumbnailUrl: string | null;
+  thumbnail_url: string | null;
   [key: string]: any; // Allow other properties without explicitly defining them
 }
 
@@ -60,7 +60,7 @@ export default function RatingsScreen() {
             id: p.external_id || p.id.toString(), // Use external_id if available, fall back to id if not
             name: p.name,
             brand: p.brand,
-            image: p.thumbnailUrl || '', // Fallback to empty string if null
+            image: p.thumbnail_url || '', // Fallback to empty string if null
           }));
           setAllPerfumes(perfumesData);
         }
@@ -155,7 +155,7 @@ export default function RatingsScreen() {
           id: p.external_id || p.id.toString(),
           name: p.name,
           brand: p.brand,
-          image: p.thumbnailUrl || '',
+          image: p.thumbnail_url || '',
         }));
 
         setSearchResults(perfumesData);

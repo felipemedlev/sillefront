@@ -77,7 +77,7 @@ export const SUBSCRIPTION_TIERS: SubscriptionTierDetails[] = [
     priceCLP: 20000,
     decantSizeML: 3,
     decantCount: 4,
-    maxPricePerML: 2000,
+    maxprice_per_ml: 2000,
     description: '4 decants de 3mL de perfumes bajo $2.000/mL.',
   },
   {
@@ -86,7 +86,7 @@ export const SUBSCRIPTION_TIERS: SubscriptionTierDetails[] = [
     priceCLP: 30000,
     decantSizeML: 5,
     decantCount: 4,
-    maxPricePerML: 2000,
+    maxprice_per_ml: 2000,
     description: '4 decants de 5mL de perfumes bajo $2.000/mL.',
   },
   {
@@ -95,7 +95,7 @@ export const SUBSCRIPTION_TIERS: SubscriptionTierDetails[] = [
     priceCLP: 50000,
     decantSizeML: 5,
     decantCount: 4,
-    minPricePerML: 2000,
+    minprice_per_ml: 2000,
     description: '4 decants de 5mL de perfumes sobre $2.000/mL.',
   },
 ];

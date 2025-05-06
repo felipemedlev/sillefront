@@ -15,7 +15,7 @@ This document outlines the steps to integrate the predefined gift box data from 
 **Analysis:**
 
 *   The `PredefinedBox` model (`SilleBack/api/models.py`) contains the necessary fields (`id`, `title`, `description`, `icon`, `gender`, `perfumes`).
-*   The `PredefinedBoxSerializer` (`SilleBack/api/serializers.py`) currently only exposes `id`, `name` (should be `title`?), `description`, and nested `perfumes` (with `id`, `name`, `brand`, `thumbnailUrl`, `pricePerML`). It needs to be updated to include `icon` and `gender`.
+*   The `PredefinedBoxSerializer` (`SilleBack/api/serializers.py`) currently only exposes `id`, `name` (should be `title`?), `description`, and nested `perfumes` (with `id`, `name`, `brand`, `thumbnail_url`, `price_per_ml`). It needs to be updated to include `icon` and `gender`.
 *   The `PredefinedBoxViewSet` (`SilleBack/api/views.py`) currently fetches all boxes without filtering. Backend filtering by `gender` is desirable for efficiency.
 *   The frontend components (`giftbox.tsx`, `PredefinedBoxModal.tsx`) rely on mock data and need adaptation for API data fetching, state management, price calculation, and rendering.
 
@@ -54,7 +54,7 @@ This document outlines the steps to integrate the predefined gift box data from 
     *   **Data Fetching:** Use `useState` and `useEffect` to call `getPredefinedBoxes`, passing `generoSeleccionado`.
     *   **State Update:** Remove mock data imports (`PREDEFINED_BOXES`, `MOCK_PERFUMES`). Use fetched data state.
     *   **Filtering/Calculation:**
-        *   Update `calculateBoxPrice` to use `pricePerML` from fetched `perfumes`.
+        *   Update `calculateBoxPrice` to use `price_per_ml` from fetched `perfumes`.
         *   Update `useMemo` for `filteredBoxes` to filter based on price range using the calculated price. Gender filtering is now primarily backend-driven.
     *   **Rendering:** Use fields from fetched data (`box.title`, `box.icon`, etc.). Pass fetched box object to modal.
 3.  **Predefined Box Modal (`SilleFront/components/product/PredefinedBoxModal.tsx`):**

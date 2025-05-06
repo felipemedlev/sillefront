@@ -82,8 +82,8 @@ const PerfumeModal = forwardRef<PerfumeModalRef, PerfumeModalProps>((props, ref)
               id: sample.id,
               external_id: sample.external_id,
               name: sample.name,
-              thumbnail_url: sample.thumbnail_url || sample.thumbnailUrl,
-              full_size_url: sample.full_size_url || sample.fullSizeUrl,
+              thumbnail_url: sample.thumbnail_url || sample.thumbnail_url,
+              full_size_url: sample.full_size_url || sample.full_size_url,
               ratings: {
                 overall: sample.overall_rating,
                 price_value: sample.price_value_rating,
@@ -96,9 +96,9 @@ const PerfumeModal = forwardRef<PerfumeModalRef, PerfumeModalProps>((props, ref)
             // Normalize the data to ensure consistent property names
             const normalizedSimilarData = similarData.map(p => ({
               ...p,
-              thumbnail_url: p.thumbnail_url || p.thumbnailUrl || '',
-              full_size_url: p.full_size_url || p.fullSizeUrl || '',
-              pricePerML: p.pricePerML, // Use standardized pricePerML
+              thumbnail_url: p.thumbnail_url || p.thumbnail_url || '',
+              full_size_url: p.full_size_url || p.full_size_url || '',
+              price_per_ml: p.price_per_ml, // Use standardized price_per_ml
               // Handle match percentage for similar perfumes - normalize value if exists
               match_percentage: p.match_percentage !== undefined ?
                 (p.match_percentage > 1 ? p.match_percentage : p.match_percentage * 100) :
@@ -142,8 +142,8 @@ const PerfumeModal = forwardRef<PerfumeModalRef, PerfumeModalProps>((props, ref)
           id: similarPerfume.id,
           name: similarPerfume.name,
           external_id: similarPerfume.external_id,
-          thumbnail_url: similarPerfume.thumbnail_url || similarPerfume.thumbnailUrl,
-          full_size_url: similarPerfume.full_size_url || similarPerfume.fullSizeUrl,
+          thumbnail_url: similarPerfume.thumbnail_url || similarPerfume.thumbnail_url,
+          full_size_url: similarPerfume.full_size_url || similarPerfume.full_size_url,
           ratings: {
             overall: similarPerfume.overall_rating,
             price_value: similarPerfume.price_value_rating,
@@ -170,8 +170,8 @@ const PerfumeModal = forwardRef<PerfumeModalRef, PerfumeModalProps>((props, ref)
       id: perfume.id,
       name: perfume.name,
       brand: perfume.brand,
-      thumbnail_url: perfume.thumbnail_url || perfume.thumbnailUrl || '',
-      full_size_url: perfume.full_size_url || perfume.fullSizeUrl || '',
+      thumbnail_url: perfume.thumbnail_url || perfume.thumbnail_url || '',
+      full_size_url: perfume.full_size_url || perfume.full_size_url || '',
     };
   };
 
@@ -233,7 +233,7 @@ const PerfumeModal = forwardRef<PerfumeModalRef, PerfumeModalProps>((props, ref)
     season,
     best_for,
     gender,
-    pricePerML = currentPerfume.pricePerML, // Use camelCase to match standardized field
+    price_per_ml = currentPerfume.price_per_ml, // Use camelCase to match standardized field
   } = currentPerfume;
 
   return (
@@ -280,8 +280,8 @@ const PerfumeModal = forwardRef<PerfumeModalRef, PerfumeModalProps>((props, ref)
               {/* Ensure brand is an object with name before rendering */}
               <Text style={styles.perfumeBrand}>{typeof brand === 'string' ? brand : (brand as { name?: string })?.name ?? ''}</Text>
               <Text style={styles.perfumePrice}>
-                {pricePerML !== undefined && pricePerML !== null
-                  ? `$${typeof pricePerML === 'number' ? pricePerML.toFixed(2) : pricePerML}/mL`
+                {price_per_ml !== undefined && price_per_ml !== null
+                  ? `$${typeof price_per_ml === 'number' ? price_per_ml.toFixed(2) : price_per_ml}/mL`
                   : 'Precio no disponible'
                 }
               </Text>

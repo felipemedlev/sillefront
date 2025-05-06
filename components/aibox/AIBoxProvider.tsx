@@ -35,7 +35,7 @@ const normalizePerfumeData = (perfume: any): Perfume => {
     thumbnail_url: perfume.thumbnail_url || perfume.thumbnailUrl || '',
     full_size_url: perfume.full_size_url || perfume.fullSizeUrl || '',
     match_percentage: perfume.match_percentage ?? null,
-    pricePerML: perfume.pricePerML ?? null, // Assign only from pricePerML (camelCase)
+    price_per_ml: perfume.pricePerML ?? perfume.price_per_ml ?? null, // Check both camelCase and snake_case
     external_id: perfume.external_id || '',
     description: perfume.description || '',
     accords: perfume.accords || [],
@@ -58,7 +58,7 @@ const normalizePerfumeData = (perfume: any): Perfume => {
 const getPerfumePrice = (perfume: Perfume | undefined): number => {
   if (!perfume) return 0;
   // Handle cases where pricePerML might be a string
-  const price = parseFloat(perfume.pricePerML as any);
+  const price = parseFloat(perfume.price_per_ml as any);
   return isNaN(price) ? 0 : price;
 };
 

@@ -35,7 +35,7 @@ const PurchaseListItem: React.FC<{ item: Purchase }> = ({ item }) => {
   // Helper to render individual PERFUMES in the expanded view
   const renderPerfumeDetail = (perfume: BasicPerfumeInfo, index: number) => (
      <View key={perfume.id || index} style={styles.perfumeItem}>
-       <Image source={{ uri: perfume.thumbnailUrl }} style={styles.perfumeThumbnail} />
+       <Image source={{ uri: perfume.thumbnail_url }} style={styles.perfumeThumbnail} />
        <View style={styles.perfumeInfo}>
          <Text style={styles.perfumeBrand}>{perfume.brand}</Text>
          <Text style={styles.perfumeName}>{perfume.name}</Text>

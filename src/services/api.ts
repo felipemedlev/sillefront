@@ -18,8 +18,8 @@ export interface ApiPerfumeSummary {
   id: number;
   name: string;
   brand: string; // Assuming brand is stringified in the serializer
-  thumbnailUrl: string | null; // Note: Frontend type uses thumbnail_url
-  pricePerML: number | null; // Use camelCase to match backend model
+  thumbnail_url: string | null; // Note: Frontend type uses thumbnail_url
+  price_per_ml: number | null; // Use camelCase to match backend model
   external_id: string; // Add external_id property
 }
 
@@ -151,11 +151,11 @@ const createHeaders = async (includeAuth = true): Promise<HeadersInit> => {
   return headers;
 };
 
-// Helper function to recursively transform pricePerML in fetched data
-const transformPricePerML = (data: any): any => {
+// Helper function to recursively transform price_per_ml in fetched data
+const transformprice_per_ml = (data: any): any => {
   if (Array.isArray(data)) {
     // If it's an array, map over its elements and apply the transformation recursively
-    return data.map(item => transformPricePerML(item));
+    return data.map(item => transformprice_per_ml(item));
   } else if (data !== null && typeof data === 'object') {
     // If it's an object, create a new object to hold the transformed data
     const newData: { [key: string]: any } = {};
@@ -171,41 +171,41 @@ const transformPricePerML = (data: any): any => {
           if (typeof value === 'number' || (typeof value === 'string' && value.trim() !== '')) {
             priceValue = parseFloat(value as string); // Parse potential string
             if (!isNaN(priceValue)) {
-              // console.log(`[API DEBUG] Found price_per_ml: ${value}. Transforming to pricePerML: ${priceValue * 2}`); // Removed Debug Log
-              newData['pricePerML'] = priceValue * 2; // Assign transformed value to pricePerML
+              // console.log(`[API DEBUG] Found price_per_ml: ${value}. Transforming to price_per_ml: ${priceValue * 2}`); // Removed Debug Log
+              newData['price_per_ml'] = priceValue * 2; // Assign transformed value to price_per_ml
             } else {
               // console.warn(`[API WARN] Could not parse price_per_ml value: ${value}`); // Keep or remove warning? Keeping for now.
               console.warn(`[API WARN] Could not parse price_per_ml value: ${value}`);
-              newData['pricePerML'] = null; // Assign null if parsing failed
+              newData['price_per_ml'] = null; // Assign null if parsing failed
             }
           } else {
              console.warn(`[API WARN] Unexpected type for price_per_ml: ${typeof value}, value: ${value}`);
-             newData['pricePerML'] = null; // Assign null for unexpected types
+             newData['price_per_ml'] = null; // Assign null for unexpected types
           }
           priceTransformed = true; // Mark price as handled (even if null)
           // Do not copy the original 'price_per_ml' key to newData
 
-        // Check if the key is pricePerML AND price wasn't already handled by price_per_ml
-        } else if (key === 'pricePerML' && !priceTransformed) {
+        // Check if the key is price_per_ml AND price wasn't already handled by price_per_ml
+        } else if (key === 'price_per_ml' && !priceTransformed) {
            if (typeof value === 'number' || (typeof value === 'string' && value.trim() !== '')) {
              priceValue = parseFloat(value as string); // Parse potential string
              if (!isNaN(priceValue)) {
-               // console.log(`[API DEBUG] Found pricePerML: ${value}. Transforming: ${priceValue * 2}`); // Removed Debug Log
-               newData[key] = priceValue * 2; // Assign transformed value back to pricePerML
+               // console.log(`[API DEBUG] Found price_per_ml: ${value}. Transforming: ${priceValue * 2}`); // Removed Debug Log
+               newData[key] = priceValue * 2; // Assign transformed value back to price_per_ml
              } else {
-               // console.warn(`[API WARN] Could not parse pricePerML value: ${value}`); // Keep or remove warning? Keeping for now.
-               console.warn(`[API WARN] Could not parse pricePerML value: ${value}`);
+               // console.warn(`[API WARN] Could not parse price_per_ml value: ${value}`); // Keep or remove warning? Keeping for now.
+               console.warn(`[API WARN] Could not parse price_per_ml value: ${value}`);
                newData[key] = null; // Assign null if parsing failed
              }
            } else {
-             console.warn(`[API WARN] Unexpected type for pricePerML: ${typeof value}, value: ${value}`);
+             console.warn(`[API WARN] Unexpected type for price_per_ml: ${typeof value}, value: ${value}`);
              newData[key] = null; // Assign null for unexpected types
            }
           // If priceTransformed is true, it means 'price_per_ml' was already processed, so we skip this block.
 
         } else {
           // For all other keys, apply the transformation recursively
-          newData[key] = transformPricePerML(value);
+          newData[key] = transformprice_per_ml(value);
         }
       }
     }
@@ -256,11 +256,11 @@ const handleResponse = async (response: Response) => {
   // Apply the price transformation to the parsed JSON data
   let transformedData;
   try {
-      transformedData = transformPricePerML(jsonData); // Transform the data
+      transformedData = transformprice_per_ml(jsonData); // Transform the data
       // console.log('[API DEBUG] Data after transformation in handleResponse:', JSON.stringify(transformedData, null, 2)); // Removed Log transformed data
       return transformedData;
   } catch (transformError) {
-      console.error('Error transforming pricePerML:', transformError);
+      console.error('Error transforming price_per_ml:', transformError);
       // Decide how to handle transformation errors:
       // Option 1: Return original data (less safe if transformation is critical)
       // return jsonData;

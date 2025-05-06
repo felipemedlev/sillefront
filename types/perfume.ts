@@ -2,8 +2,9 @@ export interface BasicPerfumeInfo {
   id: string;
   name: string;
   brand: string;
-  thumbnail_url: string; // Use snake_case
-  full_size_url: string; // Use snake_case
+  thumbnail_url?: string;
+  full_size_url?: string;
+
 }
 
 export interface Perfume extends BasicPerfumeInfo {
@@ -23,9 +24,5 @@ export interface Perfume extends BasicPerfumeInfo {
   gender?: string; // Keep camelCase if it matches API
   best_for?: string; // Use snake_case
   season?: string;
-
-  // Add camelCase alternatives for TypeScript flexibility (backend uses these)
-  thumbnailUrl?: string;
-  fullSizeUrl?: string;
-  pricePerML?: number;
+  price_per_ml?: number;
 }

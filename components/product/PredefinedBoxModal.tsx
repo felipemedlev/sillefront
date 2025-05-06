@@ -47,20 +47,20 @@ const PredefinedBoxModal: React.FC<PredefinedBoxModalProps> = ({
   const totalPrice = useMemo(() => {
     // Calculate price based on the perfumes actually shown (ApiPerfumeSummary)
     return perfumesToShow.reduce((sum, perfume) => {
-      return sum + (perfume.pricePerML ?? 0) * 5; // Fixed 5mL size
+      return sum + (perfume.price_per_ml ?? 0) * 5; // Fixed 5mL size
     }, 0);
   }, [perfumesToShow]);
 
   // Handler for adding the predefined box to the cart
   const handleAddToCart = async () => {
     // Map ApiPerfumeSummary to BasicPerfumeInfo for cart context
-    // Note: fullSizeUrl is not available in ApiPerfumeSummary, so it will be null/undefined
+    // Note: full_size_url is not available in ApiPerfumeSummary, so it will be null/undefined
     const perfumesInBox: BasicPerfumeInfo[] = perfumesToShow.map(p => ({
       id: String(p.id), // Convert number to string for BasicPerfumeInfo
       name: p.name,
       brand: p.brand,
-      thumbnailUrl: p.thumbnailUrl ?? '', // Provide default empty string if null
-      fullSizeUrl: '', // Provide default empty string if null/not available
+      thumbnail_url: p.thumbnail_url ?? '', // Provide default empty string if null
+      full_size_url: '', // Provide default empty string if null/not available
     }));
 
     const itemData = {
@@ -72,7 +72,7 @@ const PredefinedBoxModal: React.FC<PredefinedBoxModalProps> = ({
         perfumes: perfumesInBox,
       },
       price: totalPrice,
-      thumbnailUrl: perfumesInBox[0]?.thumbnailUrl, // Use first perfume's image
+      thumbnail_url: perfumesInBox[0]?.thumbnail_url, // Use first perfume's image
     };
 
     try {
@@ -127,7 +127,7 @@ const PredefinedBoxModal: React.FC<PredefinedBoxModalProps> = ({
                 <View style={styles.imageContainer}>
                   <Image
                     // Comment removed to fix JSX syntax error
-                    source={{ uri: perfume.thumbnailUrl ?? undefined }}
+                    source={{ uri: perfume.thumbnail_url ?? undefined }}
                     style={styles.perfumeImage}
                   />
                   <Image
@@ -138,8 +138,8 @@ const PredefinedBoxModal: React.FC<PredefinedBoxModalProps> = ({
                 <View style={styles.perfumeInfo}>
                   <Text style={styles.perfumeName}>{perfume.name}</Text>
                   <Text style={styles.perfumeBrand}>{perfume.brand}</Text>
-                  <Text style={styles.perfumePrice}>${(perfume.pricePerML ?? 0).toLocaleString(undefined, {maximumFractionDigits: 0})}/mL</Text>
-                  <Text style={styles.perfumeTotalPrice}>Total: ${((perfume.pricePerML ?? 0) * 5).toLocaleString(undefined, {maximumFractionDigits: 0})}</Text>
+                  <Text style={styles.perfumePrice}>${(perfume.price_per_ml ?? 0).toLocaleString(undefined, {maximumFractionDigits: 0})}/mL</Text>
+                  <Text style={styles.perfumeTotalPrice}>Total: ${((perfume.price_per_ml ?? 0) * 5).toLocaleString(undefined, {maximumFractionDigits: 0})}</Text>
                 </View>
               </View>
             ))}

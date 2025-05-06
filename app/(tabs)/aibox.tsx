@@ -74,7 +74,7 @@ export default function AIBoxScreen() {
                 { backgroundColor: occasion.color },
                 pressed && styles.occasionCardPressed,
               ]}
-              onPress={() => router.push(`/occasion-selection?occasion=${encodeURIComponent(occasion.title)}`)} // Added navigation
+              onPress={() => router.push({ pathname: '/occasion-selection', params: { occasionIds: occasion.id } })} // Pass occasion ID
             >
               <Text style={styles.occasionTitle}>{occasion.title}</Text>
             </Pressable>

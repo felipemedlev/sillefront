@@ -21,7 +21,7 @@ export interface CartItem {
   name: string; // Display name (e.g., "AI Discovery Box", "Manual Box")
   details: BoxDetails; // Using BoxDetails for now, could be a union type later if non-box items are added
   price: number; // The calculated price for this specific item configuration
-  thumbnailUrl?: string; // Optional image for the cart item (e.g., a generic box image or first perfume)
+  thumbnail_url?: string; // Optional image for the cart item (e.g., a generic box image or first perfume)
 }
 
 // Define the shape of the Cart Context state and actions

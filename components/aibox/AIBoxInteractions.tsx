@@ -106,7 +106,7 @@ export const AIBoxInteractions: React.FC<AIBoxInteractionsProps> = ({
         perfumes: perfumesInBox,
       },
       price: totalPrice,
-      thumbnailUrl: perfumesInBox[0]?.thumbnail_url,
+      thumbnail_url: perfumesInBox[0]?.thumbnail_url,
     };
 
     try {

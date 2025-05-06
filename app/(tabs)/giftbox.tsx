@@ -70,7 +70,7 @@ export default function PantallaCajaRegalo() {
     const perfumesToConsider = box.perfumes.slice(0, count);
     let totalPrice = 0;
     perfumesToConsider.forEach(perfume => {
-      totalPrice += (perfume.pricePerML ?? 0) * 5; // Fixed 5mL size
+      totalPrice += (perfume.price_per_ml ?? 0) * 5; // Fixed 5mL size
     });
     return totalPrice;
   };

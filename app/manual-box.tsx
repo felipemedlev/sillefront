@@ -28,8 +28,8 @@ export default function ManualBoxScreen() {
   const calculateTotalPrice = useCallback(() => {
     // Add explicit types for reduce parameters
     return selectedPerfumes.reduce((total: number, perfume: Perfume) => {
-      const pricePerML = perfume.pricePerML ?? 0;
-      return total + pricePerML * decantSize;
+      const price_per_ml = perfume.price_per_ml ?? 0;
+      return total + price_per_ml * decantSize;
     }, 0);
   }, [selectedPerfumes, decantSize]);
 
@@ -51,8 +51,8 @@ export default function ManualBoxScreen() {
       id: p.id,
       name: p.name,
       brand: p.brand,
-      thumbnailUrl: p.thumbnailUrl,
-      fullSizeUrl: p.fullSizeUrl,
+      thumbnail_url: p.thumbnail_url,
+      full_size_url: p.full_size_url,
     }));
 
     const itemData = {
@@ -64,7 +64,7 @@ export default function ManualBoxScreen() {
         perfumes: perfumesInBox,
       },
       price: totalPrice,
-      thumbnailUrl: perfumesInBox[0]?.thumbnailUrl, // Use first perfume's image
+      thumbnail_url: perfumesInBox[0]?.thumbnail_url, // Use first perfume's image
     };
 
     try {
@@ -133,7 +133,7 @@ export default function ManualBoxScreen() {
           <Text style={styles.perfumeBrand}>{brandDisplay}</Text>
           <Text style={styles.perfumeName}>{perfume.name}</Text>
           <Text style={styles.perfumePrice}>
-            {((perfume.pricePerML ?? 0) * decantSize).toLocaleString('de-DE')} por {decantSize}ml
+            {((perfume.price_per_ml ?? 0) * decantSize).toLocaleString('de-DE')} por {decantSize}ml
           </Text>
         </View>
         <TouchableOpacity

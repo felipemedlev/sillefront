@@ -14,7 +14,7 @@ This document outlines the steps to implement shopping cart functionality in the
         - `name: string` (e.g., "AI Discovery Box").
         - `details: BoxDetails`.
         - `price: number`.
-        - `thumbnailUrl?: string`.
+        - `thumbnail_url?: string`.
 
 ## 2. Create Cart Context (`context/CartContext.tsx`)
 

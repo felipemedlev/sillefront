@@ -73,7 +73,7 @@ export default function OccasionSelectionScreen() { // Renamed component
 
     const filteredPerfumes = MOCK_PERFUMES.filter((perfume: Perfume) => {
       const matchesOccasion = decodedOccasion ? perfume.occasions?.includes(decodedOccasion) : true; // Filter by occasion if present
-      const matchesPrice = (perfume.pricePerML ?? 0) >= rangoPrecio[0] && (perfume.pricePerML ?? 0) <= rangoPrecio[1];
+      const matchesPrice = (perfume.price_per_ml ?? 0) >= rangoPrecio[0] && (perfume.price_per_ml ?? 0) <= rangoPrecio[1];
       return matchesOccasion && matchesPrice;
     });
 
@@ -113,7 +113,7 @@ export default function OccasionSelectionScreen() { // Renamed component
   const calculateTotalPrice = useCallback(() => {
     return selectedPerfumeIds.reduce((total, perfumeId) => {
       const perfume = MOCK_PERFUMES.find(p => p.id === perfumeId);
-      return total + (perfume?.pricePerML || 0) * decantSize;
+      return total + (perfume?.price_per_ml || 0) * decantSize;
     }, 0);
   }, [decantSize, selectedPerfumeIds]);
 
@@ -126,8 +126,8 @@ export default function OccasionSelectionScreen() { // Renamed component
         id: p.id,
         name: p.name,
         brand: p.brand,
-        thumbnailUrl: p.thumbnailUrl,
-        fullSizeUrl: p.fullSizeUrl,
+        thumbnailUrl: p.thumbnail_url,
+        fullSizeUrl: p.full_size_url,
       }));
 
     const itemData = {
@@ -139,7 +139,7 @@ export default function OccasionSelectionScreen() { // Renamed component
         perfumes: perfumesInBox,
       },
       price: totalPrice,
-      thumbnailUrl: perfumesInBox[0]?.thumbnailUrl, // Use first perfume's image as thumbnail
+      thumbnailUrl: perfumesInBox[0]?.thumbnail_url, // Use first perfume's image as thumbnail
     };
 
     try {

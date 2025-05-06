@@ -47,7 +47,7 @@ export default function PerfumeCard({ perfume, matchPercentage, onPress, isDeskt
       removePerfume(perfume.id);
       showSnackbar('Perfume removido del Box Personalizado', 'info'); // Normal notification
     } else if (canAddMorePerfumes()) {
-      if ('brand' in perfume && 'name' in perfume && 'thumbnailUrl' in perfume) {
+      if ('brand' in perfume && 'name' in perfume && 'thumbnail_url' in perfume) {
         addPerfume(perfume as Perfume);
         showSnackbar('Perfume añadido al Box Personalizado', 'info'); // Normal notification
       } else {
@@ -82,7 +82,7 @@ export default function PerfumeCard({ perfume, matchPercentage, onPress, isDeskt
 
       <TouchableOpacity style={styles.cardTouchableArea} onPress={onPress}>
         <View style={[styles.imageContainer, { height: cardWidth * 0.7 }]}>
-          <Image source={{ uri: perfume.thumbnailUrl }} style={styles.image} />
+          <Image source={{ uri: perfume.thumbnail_url }} style={styles.image} />
         </View>
         <View style={styles.infoContainer}>
           <Text style={styles.brand} numberOfLines={1}>

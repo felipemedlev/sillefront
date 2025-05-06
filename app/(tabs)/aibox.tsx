@@ -4,16 +4,14 @@ import { router } from 'expo-router';
 import { COLORS, SPACING, FONTS, FONT_SIZES } from '../../types/constants';
 
 const OCCASIONS = [
-  { id: 1, title: 'Romántica', color: '#F5E6E6' },
+  { id: 1, title: 'Sexy', color: '#F5E6E6' },
   { id: 2, title: 'Casual', color: '#E6F0F5' },
   { id: 3, title: 'Formal', color: '#E6E6E6' },
-  { id: 4, title: 'Noche', color: '#E6E6F5' },
-  { id: 5, title: 'Deportiva', color: '#E6F5E6' },
-  { id: 6, title: 'Viaje', color: '#F5E6F5' },
-  { id: 7, title: 'Oficina', color: '#E6F5F5' },
-  { id: 8, title: 'Fiesta', color: '#F5F5E6' },
-  { id: 9, title: 'Relax', color: '#E6F5E6' },
-  { id: 10, title: 'Especial', color: '#F5E6E6' },
+  { id: 4, title: 'Deporte', color: '#E6F5E6' },
+  { id: 5, title: 'Viaje', color: '#F5E6F5' },
+  { id: 6, title: 'Oficina', color: '#E6F5F5' },
+  { id: 7, title: 'Fiesta', color: '#F5F5E6' },
+  { id: 8, title: 'Especial', color: '#F5E6E6' },
 ];
 
 const DESKTOP_BREAKPOINT = 768;
@@ -74,7 +72,7 @@ export default function AIBoxScreen() {
                 { backgroundColor: occasion.color },
                 pressed && styles.occasionCardPressed,
               ]}
-              onPress={() => router.push({ pathname: '/occasion-selection', params: { occasionIds: occasion.id } })} // Pass occasion ID
+              onPress={() => router.push({ pathname: '/occasion-selection', params: { occasionNames: occasion.title } })} // Pass occasion name
             >
               <Text style={styles.occasionTitle}>{occasion.title}</Text>
             </Pressable>

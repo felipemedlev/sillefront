@@ -273,7 +273,7 @@ const handleResponse = async (response: Response) => {
 
 type PerfumeFilters = {
   brands?: number[]; // Expect brand IDs
-  occasions?: number[]; // Expect Occasion IDs
+  occasions?: string[]; // Expect Occasion Names
   priceRange?: { min?: number | null; max?: number | null } | null; // Make min/max optional or nullable within the object
   genders?: string[]; // Expect keys: 'male', 'female', 'unisex'
   dayNights?: string[]; // Expect keys: 'day', 'night'
@@ -465,7 +465,7 @@ export const fetchRecommendations = async (filters: PerfumeFilters = {}): Promis
     if (filters.priceRange?.max != null) params.append('price_max', String(filters.priceRange.max));
 
     // Add occasion filters
-    if (filters.occasions?.length) params.append('occasions', filters.occasions.map(String).join(','));
+    if (filters.occasions?.length) params.append('occasions', filters.occasions.join(',')); // Send names directly
 
     const url = `${API_BASE_URL}/recommendations/?${params.toString()}`;
     console.log(`fetchRecommendations: Calling API: ${url}`);

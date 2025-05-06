@@ -1,96 +1,94 @@
-# Plan: Refactor `app/occasion-selection.tsx`
+# Plan: Refactor `app/occasion-selection.tsx` to Filter by Occasion Name
 
 **Project:** Sillefront
-**Task:** Implement `app/occasion-selection.tsx` using backend data and reusing `aibox-selection.tsx` components.
+**Task:** Modify the occasion filtering mechanism to use occasion names instead of IDs, and update the refactor plan for `app/occasion-selection.tsx` accordingly.
 
-**Goal:** Refactor `app/occasion-selection.tsx` to fetch perfumes from the backend using the occasion filter, similar to how `app/aibox-selection.tsx` fetches recommendations, while reusing components and maintaining the remove/replace functionality. The product type for the cart item should be `OCCASION_BOX`.
+**Goal:** Refactor `app/occasion-selection.tsx` to fetch perfumes from the backend using occasion *names* passed via navigation, integrate reusable components, and update the overall plan document. The product type for the cart item remains `OCCASION_BOX`.
 
-**Steps:**
+**Overall Changes Required:**
 
-1.  **Update `app/(tabs)/aibox.tsx`:**
-    *   **Goal:** Modify the navigation action that leads to `app/occasion-selection.tsx` to pass the selected occasion's ID(s) instead of its name.
+1.  **Backend:** Modify filters to accept names, look up IDs.
+2.  **Frontend:** Update API service, context provider, and eventually screens to use names.
+3.  **Plan Document:** Update this document to reflect the name-based approach.
+
+**Detailed Steps:**
+
+1.  **Update Backend Filters (`SilleBack/api/filters.py`)**
+    *   **Goal:** Update filter methods to accept occasion names, query their IDs, and filter the queryset.
+    *   **`filter_occasions` (in `PerfumeFilter`):**
+        *   Modify to process names: `occasion_names = [name.strip() for name in value.split(',') if name.strip()]`
+        *   Query `Occasion` model: `occasions = Occasion.objects.filter(name__in=occasion_names)`
+        *   Get IDs: `occasion_ids = [o.id for o in occasions]`
+        *   Filter queryset: `return queryset.filter(occasions__id__in=occasion_ids).distinct()`
+        *   Consider adding error handling/logging if `len(occasion_ids) != len(occasion_names)`.
+    *   **`filter_perfume_occasions` (in `UserPerfumeMatchFilter`):**
+        *   Apply the same logic as above, filtering the `UserPerfumeMatch` queryset: `return queryset.filter(perfume__occasions__id__in=occasion_ids).distinct()`
+
+2.  **Update Frontend API Service (`SilleFront/src/services/api.ts`)**
+    *   **Goal:** Update type definitions and API call logic to use occasion names.
+    *   **`PerfumeFilters` Type:** Change `occasions?: number[];` to `occasions?: string[];`.
+    *   **`fetchRecommendations` Function:** Modify parameter appending: `if (filters.occasions?.length) params.append('occasions', filters.occasions.join(','));`
+
+3.  **Update Frontend Context Provider (`SilleFront/components/aibox/AIBoxProvider.tsx`)**
+    *   **Goal:** Refactor state and functions to use occasion names.
+    *   **State:** Rename `selectedOccasionIds` to `selectedOccasionNames` (type `string[]`).
+    *   **State Setter:** Rename `setSelectedOccasionIds` to `setSelectedOccasionNames`.
+    *   **Props Type (`AIBoxProviderProps`):** Update to use `selectedOccasionNames: string[]` and `setSelectedOccasionNames`.
+    *   **`loadRecommendations` Function:** Update signature (`occasions?: string[]`) and ensure it passes names to `fetchRecommendations`.
+    *   **`handleMaxPriceChange` Function:** Update call to `loadRecommendations` to pass `selectedOccasionNames`.
+    *   **Initial Load Effect:** Update call to `loadRecommendations` to pass `selectedOccasionNames`.
+    *   **Returned Props:** Return `selectedOccasionNames` and `setSelectedOccasionNames`.
+
+4.  **Update This Refactor Plan Document (`SilleFront/memory-bank/occasion-selection-refactor-plan.md`)**
+    *   **(This step is being done now by writing this file).**
+
+5.  **Update `app/(tabs)/aibox.tsx` (Future Implementation)**
+    *   **Goal:** Modify the navigation action to pass selected occasion *names*.
     *   **Details:**
-        *   Identify the `Pressable` or equivalent component in `app/(tabs)/aibox.tsx` that triggers navigation to `app/occasion-selection.tsx`.
-        *   Ensure that the data structure representing the selected occasion at this point includes its ID. If not, the occasion data might need to be fetched or structured differently in `app/(tabs)/aibox.tsx`.
-        *   Update the `router.push` call to include the occasion ID(s) in the URL parameters (e.g., as a comma-separated string: `occasionIds=1,5`).
+        *   Identify the `Pressable` triggering navigation.
+        *   Ensure the selected occasion data includes its name.
+        *   Update `router.push` to include `occasionNames` (e.g., `occasionNames=Work,Date%20Night`).
     *   **Files Affected:** `app/(tabs)/aibox.tsx`
 
-2.  **Refactor `app/occasion-selection.tsx`:**
-    *   **Goal:** Replace mock data usage with API calls, integrate reusable components from `aibox-selection.tsx`, and implement remove/replace logic.
+6.  **Refactor `app/occasion-selection.tsx` (Future Implementation)**
+    *   **Goal:** Replace mock data with API calls using occasion names, integrate reusable components, implement remove/replace logic.
     *   **Details:**
-        *   Update `useLocalSearchParams` to receive and parse the `occasionIds` parameter.
-        *   Remove `MOCK_PERFUMES` import and related filtering logic.
-        *   Import necessary components and context: `AIBoxProvider`, `AIBoxInteractions`, `AIBoxLoadingState`, `AIBoxErrorState`, `PerfumeSearchModal`.
-        *   Wrap the main content with `AIBoxProvider` (or a similar dedicated context).
-        *   Adapt/Configure the Provider to:
-            *   Fetch data using `fetchRecommendations` from `src/services/api.ts`, passing `occasionIds` and `priceRange` in the `filters`.
-            *   Manage loading, error, and `recommendedPerfumes` state.
-            *   Manage `selectedPerfumeIds` state.
-            *   Implement `handleRemovePerfume` and `handleReplacePerfume` logic.
-            *   Provide necessary state and functions via context.
-        *   Replace existing state management with context-provided state/functions.
-        *   Integrate `AIBoxLoadingState` and `AIBoxErrorState`.
-        *   Integrate `AIBoxInteractions` for user actions.
-        *   Ensure reusable components (`BoxVisualizer`, `DecantSelector`, `PriceRangeSlider`, `PerfumeList`, `BottomBar`) receive props from the context.
-        *   Integrate `PerfumeSearchModal` for replacement functionality.
-        *   Verify `handleAddToCart` uses `'OCCASION_BOX'` product type.
-    *   **Files Affected:** `app/occasion-selection.tsx`, potentially `components/aibox/AIBoxProvider.tsx`.
+        *   Update `useLocalSearchParams` to receive and parse the `occasionNames` parameter.
+        *   Remove `MOCK_PERFUMES` import.
+        *   Import necessary components and the updated context (`AIBoxProvider`).
+        *   Wrap content with `AIBoxProvider`.
+        *   Configure Provider to:
+            *   Fetch data using `fetchRecommendations`, passing `occasionNames` and `priceRange`.
+            *   Manage state via context (`isLoading`, `error`, `recommendedPerfumes`, `selectedPerfumeIds`).
+            *   Implement `handleRemovePerfume`, `handleReplacePerfume`.
+        *   Integrate context state/functions, loading/error states, interactions, reusable components, and search modal.
+        *   Verify `handleAddToCart` uses `'OCCASION_BOX'`.
+    *   **Files Affected:** `app/occasion-selection.tsx`, `components/aibox/AIBoxProvider.tsx`.
 
-3.  **Review `src/services/api.ts`:**
-    *   **Goal:** Ensure `fetchRecommendations` correctly handles the `occasions` filter.
-    *   **Details:** Confirm the function appends the `occasions` parameter correctly. (Likely no changes needed).
-    *   **Files Affected:** `src/services/api.ts` (Review only)
-
-4.  **Review `types/cart.ts`:**
-    *   **Goal:** Confirm `OCCASION_BOX` product type exists.
-    *   **Details:** Verify `OCCASION_BOX` is in the `ProductType` union. (Likely no changes needed).
-    *   **Files Affected:** `types/cart.ts` (Review only)
-
-**Mermaid Diagram:**
+**Conceptual Mermaid Diagram:**
 
 ```mermaid
 graph TD
-    A[app/(tabs)/aibox.tsx] --> B{User Selects Occasion};
-    B --> C[Pass Occasion ID(s) via Navigation Params];
-    C --> D[app/occasion-selection.tsx];
-    D --> E[Wrap with AIBoxProvider/Occasion Context];
-    E --> F[Context: Call API.fetchRecommendations];
-    F --> G[src/services/api.ts];
-    G --> F;
-    F --> H{Context State Update};
-    H -- Loading --> I[Display AIBoxLoadingState];
-    H -- Error --> J[Display AIBoxErrorState];
-    H -- Success --> K[Display PerfumeList via AIBoxInteractions];
-    K --> L{User Interaction (Remove/Replace)};
-    L -- Remove --> M[Context: Update Selected Perfumes];
-    L -- Replace --> N[Context: Open PerfumeSearchModal];
-    N --> O[PerfumeSearchModal];
-    O --> P{User Selects Replacement};
-    P --> M;
-    M --> Q[Context: Update UI State];
-    Q --> K;
-    Q --> R[BottomBar (Calculate Total Price)];
-    R --> S{Add to Cart};
-    S --> T[Call useCart().addItemToCart];
-    T --> U[CartContext (Add OCCASION_BOX item)];
-    U --> V[types/cart.ts];
-
-    subgraph Reused Components
-        K --> PerfumeList;
-        R --> BottomBar;
-        D --> BoxVisualizer;
-        D --> DecantSelector;
-        D --> PriceRangeSlider;
-        O --> PerfumeSearchModal;
-        I --> AIBoxLoadingState;
-        J --> AIBoxErrorState;
-        K --> AIBoxInteractions;
+    subgraph Backend Changes
+        B1[api/filters.py] --> B2(Modify filter_occasions: Name -> ID Lookup -> Filter);
+        B1 --> B3(Modify filter_perfume_occasions: Name -> ID Lookup -> Filter);
     end
 
-    subgraph New/Modified Logic
-        A, C --> app/(tabs)/aibox.tsx;
-        D, E, F, H, M, Q --> app/occasion-selection.tsx / AIBoxProvider;
-        G --> src/services/api.ts;
-        S, T, U --> context/CartContext.tsx;
-        V --> types/cart.ts;
+    subgraph Frontend Changes
+        F1[api.ts] --> F2(Update PerfumeFilters type: occasions: string[]);
+        F1 --> F3(Modify fetchRecommendations: send names);
+        F4[AIBoxProvider.tsx] --> F5(Rename state/props: ID -> Name);
+        F4 --> F6(Update loadRecommendations call: pass names);
+        F7[aibox.tsx] -- Future --> F8(Pass Occasion Names via Nav);
+        F9[occasion-selection.tsx] -- Future --> F10(Use updated Context);
+        F10 --> F6;
     end
+
+    subgraph Plan Update
+        P1[This Document] --> P2(Reflects Name-Based Approach);
+    end
+
+    B1 --> F1;
+    F4 --> F9;
+    P1 -- Guides --> F7;
+    P1 -- Guides --> F9;

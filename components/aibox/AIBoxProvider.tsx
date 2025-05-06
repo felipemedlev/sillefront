@@ -13,16 +13,16 @@ export type AIBoxProviderProps = {
     decantCount: 4 | 8;
     decantSize: 3 | 5 | 10;
     rangoPrecio: [number, number];
-    selectedOccasionIds: number[]; // Add state for selected occasion IDs
+    selectedOccasionNames: string[]; // Use state for selected occasion names
     calculateTotalPrice: () => number;
     setDecantCount: (count: 4 | 8) => void;
     setDecantSize: (size: 3 | 5 | 10) => void;
     setRangoPrecio: (range: [number, number]) => void;
     setSelectedPerfumeIds: (ids: string[] | ((prev: string[]) => string[])) => void;
-    setSelectedOccasionIds: (ids: number[] | ((prev: number[]) => number[])) => void; // Add setter for occasion IDs
+    setSelectedOccasionNames: (names: string[] | ((prev: string[]) => string[])) => void; // Add setter for occasion names
     findPerfumeById: (id: string) => Perfume | undefined;
-    handleMaxPriceChange: (values: number[]) => void;
-    loadRecommendations: (filters?: { priceRange?: { min: number; max: number } | null; occasions?: number[] }) => Promise<void>; // Update loadRecommendations signature
+    handlePriceChangeFinish: (values: number[]) => void; // Renamed: Triggers reload on finish
+    loadRecommendations: (filters?: { priceRange?: { min: number; max: number } | null; occasions?: string[] }) => Promise<void>; // Update loadRecommendations signature for occasion names
   }) => React.ReactNode;
 };
 
@@ -67,7 +67,7 @@ export const AIBoxProvider: React.FC<AIBoxProviderProps> = ({ children }) => {
   const [decantCount, setDecantCount] = useState<4 | 8>(4);
   const [decantSize, setDecantSize] = useState<3 | 5 | 10>(5);
   const [rangoPrecio, setRangoPrecio] = useState<[number, number]>([0, 5000]);
-  const [selectedOccasionIds, setSelectedOccasionIds] = useState<number[]>([]); // Add state for selected occasion IDs
+  const [selectedOccasionNames, setSelectedOccasionNames] = useState<string[]>([]); // Use state for selected occasion names
   const [selectedPerfumeIds, setSelectedPerfumeIds] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [recommendedPerfumes, setRecommendedPerfumes] = useState<Perfume[]>([]);
@@ -83,7 +83,7 @@ export const AIBoxProvider: React.FC<AIBoxProviderProps> = ({ children }) => {
   );
 
   // Data Fetching Function
-  const loadRecommendations = useCallback(async (filters?: { priceRange?: { min: number; max: number } | null; occasions?: number[] }) => {
+  const loadRecommendations = useCallback(async (filters?: { priceRange?: { min: number; max: number } | null; occasions?: string[] }) => {
     setIsLoading(true);
     setError(null);
 
@@ -177,12 +177,13 @@ export const AIBoxProvider: React.FC<AIBoxProviderProps> = ({ children }) => {
     }
   }, []); // Removed submitSurveyIfAuthenticated dependency, relies on SurveyContext logic
 
-  const handleMaxPriceChange = useCallback(async (values: number[]) => {
+  // Renamed: This function now handles the *completion* of the price range change
+  const handlePriceChangeFinish = useCallback(async (values: number[]) => {
     const newPriceRange = values as [number, number];
-    setRangoPrecio(newPriceRange);
-    // Trigger a new recommendation load with the updated price range and current occasions
-    await loadRecommendations({ priceRange: { min: newPriceRange[0], max: newPriceRange[1] }, occasions: selectedOccasionIds });
-  }, [loadRecommendations, selectedOccasionIds]); // Add dependencies
+    // Note: setRangoPrecio is already called by the slider's onValuesChange prop
+    // This function only triggers the data reload
+    await loadRecommendations({ priceRange: { min: newPriceRange[0], max: newPriceRange[1] }, occasions: selectedOccasionNames });
+  }, [loadRecommendations, selectedOccasionNames]); // Add dependencies
 
   const calculateTotalPrice = useCallback(() => {
     const finalTotal = selectedPerfumeIds.reduce((total, perfumeId) => {
@@ -238,7 +239,7 @@ export const AIBoxProvider: React.FC<AIBoxProviderProps> = ({ children }) => {
         console.error('AIBox: Failed to select any valid perfumes');
       }
     }
-  }, [decantCount, rangoPrecio, recommendedPerfumes]);
+  }, [decantCount, recommendedPerfumes]); // Removed rangoPrecio dependency
 
   // Update loading message based on status
   useEffect(() => {
@@ -266,7 +267,7 @@ export const AIBoxProvider: React.FC<AIBoxProviderProps> = ({ children }) => {
     // Load recommendations once when the provider mounts.
     // Assumes AuthContext initializes first and SurveyContext handles
     // survey submission based on auth state if needed.
-    loadRecommendations({ priceRange: { min: rangoPrecio[0], max: rangoPrecio[1] }, occasions: selectedOccasionIds });
+    loadRecommendations({ priceRange: { min: rangoPrecio[0], max: rangoPrecio[1] }, occasions: selectedOccasionNames });
   }, [loadRecommendations]); // Add loadRecommendations as dependency
 
   return children({
@@ -278,15 +279,15 @@ export const AIBoxProvider: React.FC<AIBoxProviderProps> = ({ children }) => {
     decantCount,
     decantSize,
     rangoPrecio,
-    selectedOccasionIds, // Include selectedOccasionIds
+    selectedOccasionNames, // Include selectedOccasionNames
     calculateTotalPrice,
     setDecantCount,
     setDecantSize,
     setRangoPrecio,
     setSelectedPerfumeIds,
-    setSelectedOccasionIds, // Include setSelectedOccasionIds
+    setSelectedOccasionNames, // Include setSelectedOccasionNames
     findPerfumeById,
-    handleMaxPriceChange,
+    handlePriceChangeFinish, // Pass renamed function
     loadRecommendations
   });
 };

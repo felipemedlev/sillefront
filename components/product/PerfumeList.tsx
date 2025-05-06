@@ -96,7 +96,7 @@ const PerfumeList: React.FC<PerfumeListProps> = ({
                         ${Math.round(perfume.price_per_ml ?? 0).toLocaleString('es-CL')}/mL
                       </Text>
                       <Text style={styles.perfumeTotalPrice}>
-                        Total: ${Math.round((perfume.price_per_ml ?? 0) * decantSize).toLocaleString('es-CL')}
+                        Total ({decantSize}ml): ${Math.round((perfume.price_per_ml ?? 0) * decantSize).toLocaleString('es-CL')}
                       </Text>
                     </View>
 

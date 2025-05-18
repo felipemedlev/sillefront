@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react'; // Import useCallback
-import { View, Text, StyleSheet, FlatList, ActivityIndicator, TouchableOpacity, TextInput, Platform, useWindowDimensions } from 'react-native'; // Import TextInput and useWindowDimensions
+import { View, Text, StyleSheet, FlatList, ActivityIndicator, TouchableOpacity, TextInput, useWindowDimensions } from 'react-native'; // Import TextInput and useWindowDimensions
 import { useCart } from '../../../context/CartContext';
 import { useAuth } from '../../../src/context/AuthContext'; // Updated import after deleting duplicate
 import { CartItem } from '../../../types/cart';
@@ -192,7 +192,6 @@ const isDesktop = width >= DESKTOP_BREAKPOINT;
     </View>
   ), [totalCartItems, clearCart]); // Add dependencies
 
-  // Show loading indicator if cart is loading
   if (isCartLoading) {
     return (
       <View style={[styles.container, styles.centerContent]}>
@@ -202,7 +201,6 @@ const isDesktop = width >= DESKTOP_BREAKPOINT;
     );
   }
 
-  // Display general cart error if present
   if (cartError) {
     return (
       <View style={[styles.container, styles.centerContent]}>
@@ -223,7 +221,6 @@ const isDesktop = width >= DESKTOP_BREAKPOINT;
             data={cartItems}
             renderItem={renderCartItem}
             keyExtractor={(item) => item.id}
-            // Use the memoized CartFooter component
             ListFooterComponent={
               <CartFooter
                 totalCartItems={totalCartItems}
@@ -390,13 +387,13 @@ const styles = StyleSheet.create({
   },
   appliedCouponLabel: {
     fontSize: FONT_SIZES.SMALL,
-    color: '#2E7D32', // Dark green text
+    color: '#2E7D32',
     fontFamily: FONTS.INSTRUMENT_SANS,
     marginBottom: SPACING.XSMALL,
   },
   appliedCouponCode: {
     fontSize: FONT_SIZES.REGULAR,
-    color: '#1B5E20', // Darker green text
+    color: '#1B5E20',
     fontWeight: '700',
     fontFamily: FONTS.INSTRUMENT_SANS,
     marginBottom: SPACING.XSMALL,

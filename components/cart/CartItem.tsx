@@ -49,11 +49,11 @@ const CartItemComponent: React.FC<CartItemProps> = ({ item, onRemove }) => {
     <View style={styles.outerContainer}>
       <TouchableOpacity activeOpacity={0.7} onPress={toggleExpand} style={styles.touchableArea}>
         <View style={styles.container}>
-          <Image
+          {/* <Image
             source={item.thumbnail_url ? { uri: item.thumbnail_url } : require('../../assets/images/decant-general.png')} // Fallback image
             style={styles.thumbnail}
             resizeMode="cover"
-          />
+          /> */}
           <View style={styles.detailsContainer}>
             <Text style={styles.productType}>{getProductTypeName(item.productType)}</Text>
             <Text style={styles.name}>{item.name}</Text>

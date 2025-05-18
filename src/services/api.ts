@@ -108,7 +108,7 @@ export const submitSurveyResponse = async (answers: ApiSurveyAnswer): Promise<an
 };
 
 
-const API_BASE_URL = Constants.expoConfig?.extra?.apiBaseUrl || 'http://127.0.0.1:8000/api';
+export const API_BASE_URL = Constants.expoConfig?.extra?.apiBaseUrl || 'http://127.0.0.1:8000/api';
 const AUTH_TOKEN_KEY = 'authToken';
 
 // --- Helper Functions ---

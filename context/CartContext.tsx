@@ -3,8 +3,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { v4 as uuidv4 } from 'uuid'; // Import uuid
 import { CartItem, CartContextType } from '../types/cart';
 import { Coupon } from '../types/coupon'; // Import Coupon type
-import { MOCK_COUPONS } from '../data/MOCK_COUPONS'; // Import mock coupons
+// import { MOCK_COUPONS } from '../data/MOCK_COUPONS'; // Mock coupons removed
 import { STORAGE_KEYS } from '../types/constants';
+import { API_BASE_URL } from '../src/services/api'; // Import API_BASE_URL
 import { handleError } from '../types/error';
 
 // Create the context with an undefined initial value
@@ -124,33 +125,52 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
   // --- Coupon Logic ---
 
   const applyCoupon = useCallback(async (couponCode: string) => {
-    setCouponError(null); // Clear previous coupon errors
-    const codeUpper = couponCode.toUpperCase(); // Case-insensitive comparison
-    const coupon = MOCK_COUPONS.find(c => c.code === codeUpper);
+    setCouponError(null);
+    setIsLoading(true); // Indicate loading state during API call
+    const codeUpper = couponCode.toUpperCase();
 
-    if (!coupon) {
-      setCouponError("Código de cupón inválido.");
+    try {
+      const response = await fetch(`${API_BASE_URL}/coupons/validate/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ code: codeUpper, cart_total: totalCartPrice }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        // API returned an error (e.g., 400, 404)
+        setCouponError(data.detail || "Error al validar el cupón.");
+        setAppliedCoupon(null);
+        return;
+      }
+
+      // Coupon is valid, data is the coupon object from backend
+      // Ensure the backend response matches the Coupon type structure
+      const validatedCoupon: Coupon = {
+        id: data.id, // Assuming backend sends id
+        code: data.code,
+        discountType: data.discount_type, // Map backend field name
+        value: parseFloat(data.value), // Ensure value is a number
+        description: data.description,
+        minPurchaseAmount: data.min_purchase_amount ? parseFloat(data.min_purchase_amount) : undefined,
+        expiryDate: data.expiry_date ? new Date(data.expiry_date).getTime() : undefined,
+        // Map other fields if necessary
+      };
+      setAppliedCoupon(validatedCoupon);
+      console.log('Coupon applied:', validatedCoupon);
+
+    } catch (err) {
+      const appError = handleError(err);
+      console.error('Error applying coupon:', appError);
+      setCouponError(`Error al aplicar cupón: ${appError.message}`);
       setAppliedCoupon(null);
-      return;
+    } finally {
+      setIsLoading(false);
     }
-
-    if (coupon.expiryDate && coupon.expiryDate < Date.now()) {
-      setCouponError("Este cupón ha expirado.");
-      setAppliedCoupon(null);
-      return;
-    }
-
-    if (coupon.minPurchaseAmount && totalCartPrice < coupon.minPurchaseAmount) {
-      setCouponError(`Se requiere una compra mínima de $${coupon.minPurchaseAmount.toLocaleString('de-DE')} para usar este cupón.`);
-      setAppliedCoupon(null);
-      return;
-    }
-
-    // Coupon is valid
-    setAppliedCoupon(coupon);
-    console.log('Coupon applied:', coupon);
-
-  }, [totalCartPrice]); // Dependency on totalCartPrice for min purchase check
+  }, [totalCartPrice]);
 
   const removeCoupon = useCallback(async () => {
     setAppliedCoupon(null);

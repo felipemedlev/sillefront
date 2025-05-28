@@ -44,21 +44,21 @@ const getAccordTranslation = (accord?: string): string => {
 
 // Map images using lowercase accord names as keys
 const imageMap: { [key: string]: any } = { // Added type annotation
-  'sweet': require('../../assets/images/survey1.png'),
-  'citrus': require('../../assets/images/survey2.png'),
-  'woody': require('../../assets/images/survey3.png'),
-  'floral': require('../../assets/images/survey4.png'),
-  'vanilla': require('../../assets/images/survey5.png'),
-  // 'smoky': require('...'), // No image for 7?
-  'lavender': require('../../assets/images/survey7.png'),
-  'fruity': require('../../assets/images/survey8.png'),
-  'cinnamon': require('../../assets/images/survey9.png'),
-  'spicy': require('../../assets/images/survey11.png'),
-  'leather': require('../../assets/images/survey10.png'),
-  // 'honey': require('...'), // No image for 13?
-  // 'coffee': require('...'), // No image for 14?
-  // 'earthy': require('...'), // No image for 15?
-  'powdery': require('../../assets/images/survey6.png'),
+  'sweet': require('../../assets/images/survey_sweet.png'),
+  'citrus': require('../../assets/images/survey_citrus.png'),
+  'woody': require('../../assets/images/survey_woody.png'),
+  'floral': require('../../assets/images/survey_floral.png'),
+  'vanilla': require('../../assets/images/survey_vanilla.png'),
+  'smoky': require('../../assets/images/survey_smoky.png'),
+  'lavender': require('../../assets/images/survey_lavender.png'),
+  'fruity': require('../../assets/images/survey_fruity.png'),
+  'cinnamon': require('../../assets/images/survey_cinnamon.png'),
+  'warm spicy': require('../../assets/images/survey_spicy.png'),
+  'leather': require('../../assets/images/survey_leather.png'),
+  'honey': require('../../assets/images/survey_honey.png'),
+  'coffee': require('../../assets/images/survey_coffee.png'),
+  'earthy': require('../../assets/images/survey_earthy.png'),
+  'powdery': require('../../assets/images/survey_powdery.png'),
 };
 
 const emojiRatings = ['😖', '😒', '😐', '🙂', '😍'];
@@ -187,7 +187,7 @@ export default function SurveyQuestion() {
 
   return (
     // Main container View with dynamic background
-    <View style={[styles.container, currentIndex >= 0 ? { backgroundColor: `#F${currentIndex}EECF` } : { backgroundColor: '#FFFFFF' }]}>
+    <View style={[styles.container, currentIndex >= 0 ? { backgroundColor: `#F${currentIndex % 10}EECF` } : { backgroundColor: '#FFFFFF' }]}>
 
       {/* Header Section */}
       <View style={styles.header}>
@@ -197,9 +197,9 @@ export default function SurveyQuestion() {
             const currentIdx = questions.findIndex(q => q.id === questionId);
             if (currentIdx > 0) {
               const prevQuestionId = questions[currentIdx - 1].id;
-              router.push(`/survey/${prevQuestionId}`);
+              router.back();
             } else {
-              router.back(); // Go back from the first question
+              router.replace('/'); // Navigate to landing page
             }
           }}
           style={styles.backButton}

@@ -67,9 +67,8 @@ export default function CheckoutScreen() {
           <Text style={styles.sectionTitle}>Dirección de Envío</Text>
           <TextInput style={styles.input} placeholder="Nombre Completo" placeholderTextColor={COLORS.TEXT_SECONDARY} />
           <TextInput style={styles.input} placeholder="Dirección Línea 1" placeholderTextColor={COLORS.TEXT_SECONDARY} />
+          <TextInput style={styles.input} placeholder="Comuna" placeholderTextColor={COLORS.TEXT_SECONDARY} />
           <TextInput style={styles.input} placeholder="Ciudad" placeholderTextColor={COLORS.TEXT_SECONDARY} />
-          <TextInput style={styles.input} placeholder="Código Postal" placeholderTextColor={COLORS.TEXT_SECONDARY} keyboardType="numeric" />
-          <TextInput style={styles.input} placeholder="País" placeholderTextColor={COLORS.TEXT_SECONDARY} />
         </View>
 
         {/* Payment Method Section */}

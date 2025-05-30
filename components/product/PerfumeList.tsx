@@ -33,7 +33,7 @@ const PerfumeList: React.FC<PerfumeListProps> = ({
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       <View style={styles.cardsContainer}>
         {selectedPerfumes.map((perfumeId) => {
-          const perfume = perfumes.find(p => p.id === perfumeId);
+          const perfume = perfumes.find(p => String(p.id) === String(perfumeId));
           if (!perfume) return null;
 
           return (

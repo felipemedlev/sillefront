@@ -41,7 +41,7 @@ const PerfumeSearchModal: React.FC<PerfumeSearchModalProps> = ({ visible, onClos
         let perfumes: Perfume[] = Array.isArray(data.results) ? data.results : data;
         if (!Array.isArray(perfumes)) perfumes = [];
         // Exclude already selected
-        perfumes = perfumes.filter(p => !excludeIds.includes(String(p.id)));
+        perfumes = perfumes.filter(p => !excludeIds.map(String).includes(String(p.id)));
         if (!cancelled) setResults(perfumes);
       })
       .catch(() => {

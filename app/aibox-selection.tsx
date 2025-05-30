@@ -50,7 +50,7 @@ export default function AIBoxSelectionScreen() {
         setRangoPrecio,
         setSelectedPerfumeIds,
         findPerfumeById,
-        handleMaxPriceChange,
+        handlePriceChangeFinish,
         loadRecommendations
       }) => {
         // Track initial recommended perfumes to prevent removed ones from reappearing
@@ -267,7 +267,7 @@ export default function AIBoxSelectionScreen() {
                     <PriceRangeSlider
                       range={rangoPrecio}
                       onRangeChange={handleSliderValueChange} // Use wrapper for type safety
-                      onRangeChangeFinish={handleMaxPriceChange} // Fetch data on release
+                      onRangeChangeFinish={handlePriceChangeFinish} // Fetch data on release
                       sliderContainerRef={sliderContainerRef}
                     />
 

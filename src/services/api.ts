@@ -94,9 +94,10 @@ export interface ApiOrderCreatePayload {
 // --- Cart API Types ---
 export interface ApiCartItem {
   id: number;
-  product_type: 'perfume' | 'box'; // Assuming these are the only types
+  product_type: 'perfume' | 'box'; // Backend sends this
+  name?: string; // Name of the cart item (e.g., box name), should be provided by backend CartItemSerializer
   perfume: ApiPerfumeSummary | null; // perfume_id will be used for adding
-  quantity: number;
+  quantity: 1; // Quantity is always 1 for cart items as per new logic
   decant_size: number | null;
   price_at_addition: string; // Decimal as string
   box_configuration: any | null; // JSON
@@ -113,13 +114,23 @@ export interface ApiCart {
 }
 
 export interface ApiCartItemAddPayload {
-  product_type: 'perfume' | 'box';
-  perfume_id?: number | null; // Required if product_type is 'perfume'
-  quantity: number;
-  decant_size?: number | null; // Required if product_type is 'perfume'
-  box_configuration?: any | null; // Required if product_type is 'box'
-  name?: string; // Required if product_type is 'box' (e.g., "AI Box (4 x 5ml)")
-  price?: number; // Required if product_type is 'box'
+  product_type: 'box'; // Now only 'box' is allowed
+  name: string; // Name of the box, e.g., "AI Discovery Box (4x5ml)" -  Required
+  price: number; // Price of the box - Required
+  quantity: 1; // Quantity of this box type is always 1
+  box_configuration: { // Required
+    perfumes: Array<{
+      external_id?: string; // external_id of the perfume from BasicPerfumeInfo.id
+      perfume_id_backend?: number; // or backend primary key if available
+      name?: string; // Optional: name for display/logging
+      brand?: string; // Optional: brand for display/logging
+      thumbnail_url?: string; // Optional: thumbnail URL for the perfume
+    }>;
+    decant_size: number; // snake_case, e.g., 3, 5, 10
+    decant_count: number; // snake_case, e.g., 4
+  };
+  // perfume_id is removed from top level
+  // decant_size is removed from top level (it's inside box_configuration)
 }
 // --- Survey API Functions ---
 
@@ -192,6 +203,64 @@ export const addItemToBackendCart = async (payload: ApiCartItemAddPayload): Prom
         body: JSON.stringify(payload),
     });
     return handleResponse(response); // Expects the updated cart as response
+};
+
+/**
+ * Removes a specific item from the user's cart on the backend.
+ * @param cartItemBackendId The backend ID of the cart item to remove.
+ */
+export const removeItemFromBackendCart = async (cartItemBackendId: number): Promise<ApiCart> => {
+    const headers = await createHeaders(true); // Requires auth
+    // Assuming the endpoint is something like /api/cart/items/{id}/
+    const url = `${API_BASE_URL}/cart/items/${cartItemBackendId}/`;
+    const response = await fetch(url, {
+        method: 'DELETE',
+        headers,
+    });
+    // Typically, a DELETE might return 204 No Content, or the updated cart.
+    // Adjust handleResponse or logic here if 204 is expected and returns null.
+    // For now, assuming it returns the updated ApiCart.
+    return handleResponse(response);
+};
+
+/**
+ * Clears all items from the user's cart on the backend.
+ */
+export const clearBackendCart = async (): Promise<ApiCart | null> => { // Can return null if API sends 204
+    const headers = await createHeaders(true); // Requires auth
+    // Assuming the endpoint is /api/cart/ or /api/cart/clear/
+    // A common pattern is DELETE on the main cart resource /api/cart/
+    const url = `${API_BASE_URL}/cart/clear/`; // Or just /cart/ with DELETE method
+    const response = await fetch(url, {
+        method: 'DELETE', // Or 'POST' if it's a custom action like /clear/
+        headers,
+    });
+    // If DELETE returns 204 No Content, handleResponse will return null.
+    // If it returns the (now empty) cart, it will be an ApiCart object.
+    return handleResponse(response);
+};
+
+/**
+ * Fetches the current user's cart from the backend.
+ */
+export const fetchUserCart = async (): Promise<ApiCart | null> => {
+    const headers = await createHeaders(true); // Requires auth
+    const url = `${API_BASE_URL}/cart/`; // Standard endpoint for fetching the cart
+    try {
+        const response = await fetch(url, {
+            method: 'GET',
+            headers,
+        });
+        if (response.status === 404) { // Handle case where cart might not exist yet
+            return null;
+        }
+        return handleResponse(response);
+    } catch (error) {
+        console.error("Error fetching user cart:", error);
+        // Depending on how you want to handle errors, you might throw or return null
+        // For now, let's rethrow to be handled by the caller
+        throw error;
+    }
 };
 
 export const API_BASE_URL = Constants.expoConfig?.extra?.apiBaseUrl || 'http://127.0.0.1:8000/api';

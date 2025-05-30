@@ -5,7 +5,7 @@ import { CartItem, CartContextType } from '../types/cart';
 import { Coupon } from '../types/coupon'; // Import Coupon type
 // import { MOCK_COUPONS } from '../data/MOCK_COUPONS'; // Mock coupons removed
 import { STORAGE_KEYS } from '../types/constants';
-import { API_BASE_URL } from '../src/services/api'; // Import API_BASE_URL
+import { API_BASE_URL, addItemToBackendCart, ApiCartItemAddPayload, ApiCart, fetchPerfumesByExternalIds, ApiPerfumeSummary } from '../src/services/api'; // Import API_BASE_URL and cart functions/types
 import { handleError } from '../types/error';
 
 // Create the context with an undefined initial value
@@ -70,20 +70,65 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
   }, [cartItems, isLoading]);
 
   // Function to add an item to the cart
-  const addItemToCart = useCallback(async (itemData: Omit<CartItem, 'id'>) => {
+  const addItemToCart = useCallback(async (itemData: Omit<CartItem, 'id'> & { perfume_id_backend?: number }) => {
     setError(null); // Clear previous errors
     setCouponError(null); // Clear coupon error when cart changes
-    try {
-      const newItem: CartItem = {
-        ...itemData,
-        id: uuidv4(), // Generate a unique ID for the new item
+    setIsLoading(true); // Set loading state
+
+    // Check if productType is 'PERFUME' and perfume_id_backend is present
+    if (itemData.productType === 'PERFUME' && typeof itemData.perfume_id_backend === 'number') {
+      const payload: ApiCartItemAddPayload = {
+        product_type: 'perfume', // Added product_type
+        perfume_id: itemData.perfume_id_backend,
+        quantity: itemData.quantity || 1,
+        decant_size: itemData.decantSize,
       };
-      setCartItems((prevItems) => [...prevItems, newItem]);
-      // Optionally add success feedback here (e.g., toast message)
-    } catch (err) {
-      const appError = handleError(err);
-      setError(`Error adding item to cart: ${appError.message}`);
-      // Re-throw or handle the error appropriately
+      try {
+        console.log('Attempting to add PERFUME to backend cart:', payload);
+        const backendCart: ApiCart = await addItemToBackendCart(payload);
+        console.log('PERFUME added to backend cart successfully, response:', backendCart);
+        // Add item to local state
+        const newItem: CartItem = { ...itemData, id: uuidv4() };
+        setCartItems((prevItems) => [...prevItems, newItem]);
+      } catch (err) {
+        const appError = handleError(err);
+        console.error('Error adding PERFUME to backend cart:', appError);
+        setError(`Error adding item: ${appError.message}`);
+      } finally {
+        setIsLoading(false);
+      }
+    } else if (itemData.productType === 'AI_BOX' ||
+               itemData.productType === 'BOX_PERSONALIZADO' ||
+               itemData.productType === 'GIFT_BOX' ||
+               itemData.productType === 'OCCASION_BOX' ||
+               itemData.productType === 'PREDEFINED_BOX') {
+      // For all box types, send as a single 'box' item to backend
+      const payload: ApiCartItemAddPayload = {
+        product_type: 'box', // Set product_type to 'box'
+        name: itemData.name,
+        price: itemData.price,
+        quantity: 1, // Boxes are typically quantity 1
+        box_configuration: itemData.details, // Send the whole details object as box_configuration
+        // perfume_id and decant_size are not applicable here for the main box item
+      };
+      try {
+        console.log(`Attempting to add ${itemData.productType} as BOX to backend cart:`, payload);
+        const backendCart: ApiCart = await addItemToBackendCart(payload);
+        console.log(`${itemData.productType} added as BOX to backend cart successfully, response:`, backendCart);
+        // Add item to local state
+        const newItem: CartItem = { ...itemData, id: uuidv4() };
+        setCartItems((prevItems) => [...prevItems, newItem]);
+      } catch (err) {
+        const appError = handleError(err);
+        console.error(`Error adding ${itemData.productType} as BOX to backend cart:`, appError);
+        setError(`Error adding box: ${appError.message}`);
+      } finally {
+        setIsLoading(false);
+      }
+    } else {
+      console.warn('addItemToCart: Unsupported productType or missing perfume_id_backend for PERFUME type.', itemData);
+      setError('This item cannot be added to the cart at this time.');
+      setIsLoading(false);
     }
   }, []);
 

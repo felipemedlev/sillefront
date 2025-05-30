@@ -62,7 +62,65 @@ export type ApiSurveyQuestion = {
 };
 
 export type ApiSurveyAnswer = { [key: string]: number | string };
+// --- Order API Types ---
+export interface ApiOrderItem {
+  id: number;
+  perfume: ApiPerfumeSummary | null; // Perfume can be null if it was a box item not directly linked
+  product_type: string; // 'perfume' or 'box'
+  quantity: number;
+  decant_size: number | null;
+  price_at_purchase: string; // Comes as string from backend DecimalField
+  box_configuration: any | null; // JSON field
+  item_name: string | null;
+  item_description: string | null;
+}
 
+export interface ApiOrder {
+  id: number;
+  user_email: string | null;
+  order_date: string; // DateTimeField as string
+  total_price: string; // DecimalField as string
+  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+  shipping_address: string | null;
+  items: ApiOrderItem[];
+  updated_at: string; // DateTimeField as string
+}
+
+export interface ApiOrderCreatePayload {
+  shipping_address: string;
+  // Add other fields if your OrderCreateSerializer requires them (e.g., payment_method_id later)
+}
+
+// --- Cart API Types ---
+export interface ApiCartItem {
+  id: number;
+  product_type: 'perfume' | 'box'; // Assuming these are the only types
+  perfume: ApiPerfumeSummary | null; // perfume_id will be used for adding
+  quantity: number;
+  decant_size: number | null;
+  price_at_addition: string; // Decimal as string
+  box_configuration: any | null; // JSON
+  added_at: string; // DateTime as string
+}
+
+export interface ApiCart {
+  id: number;
+  user: { id: number; email: string; username?: string }; // Simplified user, adjust as needed
+  items: ApiCartItem[];
+  created_at: string;
+  updated_at: string;
+  // cart_total might be a method field, check serializer if needed
+}
+
+export interface ApiCartItemAddPayload {
+  product_type: 'perfume' | 'box';
+  perfume_id?: number | null; // Required if product_type is 'perfume'
+  quantity: number;
+  decant_size?: number | null; // Required if product_type is 'perfume'
+  box_configuration?: any | null; // Required if product_type is 'box'
+  name?: string; // Required if product_type is 'box' (e.g., "AI Box (4 x 5ml)")
+  price?: number; // Required if product_type is 'box'
+}
 // --- Survey API Functions ---
 
 /**
@@ -107,6 +165,34 @@ export const submitSurveyResponse = async (answers: ApiSurveyAnswer): Promise<an
     return handleResponse(response);
 };
 
+/**
+ * Place an order using the items currently in the user's cart.
+ * @param payload The order creation payload (e.g., shipping address)
+ */
+export const placeOrder = async (payload: ApiOrderCreatePayload): Promise<ApiOrder> => {
+    const headers = await createHeaders(true); // Requires auth
+    const url = `${API_BASE_URL}/orders/`; // Endpoint for creating orders
+    const response = await fetch(url, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(payload),
+    });
+    return handleResponse(response);
+};
+/**
+ * Adds an item to the user's cart on the backend.
+ * @param payload The item details to add.
+ */
+export const addItemToBackendCart = async (payload: ApiCartItemAddPayload): Promise<ApiCart> => {
+    const headers = await createHeaders(true); // Requires auth
+    const url = `${API_BASE_URL}/cart/items/`; // Endpoint for adding cart items
+    const response = await fetch(url, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(payload),
+    });
+    return handleResponse(response); // Expects the updated cart as response
+};
 
 export const API_BASE_URL = Constants.expoConfig?.extra?.apiBaseUrl || 'http://127.0.0.1:8000/api';
 const AUTH_TOKEN_KEY = 'authToken';

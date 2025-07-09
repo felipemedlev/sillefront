@@ -1,27 +1,27 @@
-import React, { useState } from 'react'; // Added useState
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, Platform, Alert } from 'react-native'; // Added Alert
-import { useRouter, useLocalSearchParams } from 'expo-router'; // Import useLocalSearchParams
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, Platform, Alert, Modal } from 'react-native';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
-// import { LinearGradient } from 'expo-linear-gradient'; // No longer needed
-import { COLORS, FONT_SIZES, SPACING, FONTS } from '../types/constants'; // Added FONTS
+import { COLORS, FONT_SIZES, SPACING, FONTS, STORAGE_KEYS } from '../types/constants';
 import { useAuth } from '../src/context/AuthContext';
+import { useCart } from '../context/CartContext';
 import { ActivityIndicator } from 'react-native';
-import { placeOrder, ApiOrderCreatePayload } from '../src/services/api'; // Added import for placeOrder
+import { placeOrder, ApiOrderCreatePayload, ApiOrder } from '../src/services/api';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function CheckoutScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  // Retrieve the finalPrice parameter passed from the cart screen
   const { finalPrice } = useLocalSearchParams<{ finalPrice?: string }>();
   const { user, isLoading: isAuthLoading } = useAuth();
-  const [isPlacingOrder, setIsPlacingOrder] = useState(false); // Added state for order placement loading
-  const [orderError, setOrderError] = useState<string | null>(null); // Added state for order error
+  const { handleSuccessfulOrder } = useCart();
+  const [isPlacingOrder, setIsPlacingOrder] = useState(false);
+  const [orderError, setOrderError] = useState<string | null>(null);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
-  // Convert finalPrice string to number, default to 0 if undefined or invalid
   const finalPriceValue = finalPrice ? parseFloat(finalPrice) : 0;
 
-  // If still loading auth state, show a loading indicator
   if (isAuthLoading) {
     return (
       <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
@@ -31,13 +31,11 @@ export default function CheckoutScreen() {
     );
   }
 
-  // If not authenticated, redirect to login (you could also use the useEffect approach)
   if (!user) {
     router.replace('/login');
     return null;
   }
 
-  // TODO: Add checkout logic (address, payment, order summary using finalPriceValue)
 
   const handlePlaceOrder = async () => {
     if (!user) {
@@ -46,7 +44,6 @@ export default function CheckoutScreen() {
       return;
     }
 
-    // For testing, use a hardcoded address
     const testShippingAddress = "Test Address 123, Test Commune, Test City";
 
     setIsPlacingOrder(true);
@@ -57,12 +54,44 @@ export default function CheckoutScreen() {
     };
 
     try {
-      const order = await placeOrder(payload);
+      const order: ApiOrder = await placeOrder(payload);
       console.log('Order placed successfully:', order);
-      Alert.alert("Pedido Realizado", "¡Tu pedido ha sido realizado con éxito! (TEST)");
-      // TODO: Navigate to an order confirmation screen or clear cart
-      // For now, navigate back or to home
-      router.replace('/home');
+
+      // Store perfume IDs for rating
+      if (order && order.items) {
+        const perfumeExternalIds = new Set<string>();
+        order.items.forEach(orderItem => {
+          if (orderItem.box_configuration?.perfumes && Array.isArray(orderItem.box_configuration.perfumes)) {
+            orderItem.box_configuration.perfumes.forEach((p: any) => {
+              if (p.external_id) {
+                perfumeExternalIds.add(p.external_id);
+              }
+            });
+          } else if (orderItem.perfume?.external_id) {
+            perfumeExternalIds.add(orderItem.perfume.external_id);
+          }
+        });
+
+        if (perfumeExternalIds.size > 0) {
+          try {
+            const existingIdsJson = await AsyncStorage.getItem(STORAGE_KEYS.ORDERED_PERFUMES_FOR_RATING);
+            if (existingIdsJson) {
+              const existingIdsArray = JSON.parse(existingIdsJson);
+              if (Array.isArray(existingIdsArray)) {
+                existingIdsArray.forEach(id => perfumeExternalIds.add(id));
+              }
+            }
+            await AsyncStorage.setItem(STORAGE_KEYS.ORDERED_PERFUMES_FOR_RATING, JSON.stringify(Array.from(perfumeExternalIds)));
+            console.log('Stored perfume IDs for rating:', Array.from(perfumeExternalIds));
+          } catch (e) {
+            console.error("Error storing ordered perfume IDs for rating:", e);
+          }
+        }
+      }
+
+      handleSuccessfulOrder();
+      setShowSuccessModal(true);
+      // router.replace('/home'); // Navigation will be handled by the modal's close button
     } catch (error: any) {
       console.error('Error placing order:', error);
       const errorMessage = error.data?.detail || error.message || "Ocurrió un error al realizar el pedido. Por favor, inténtalo de nuevo.";
@@ -75,7 +104,6 @@ export default function CheckoutScreen() {
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
-      {/* Header */}
       <View style={styles.header}>
          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
            <Feather name="arrow-left" size={24} color={COLORS.TEXT_PRIMARY} />
@@ -92,9 +120,7 @@ export default function CheckoutScreen() {
         <Feather name="arrow-right-circle" size={28} color={COLORS.BACKGROUND} />
       </TouchableOpacity>
 
-      {/* Main Content */}
       <ScrollView style={styles.contentScrollView} contentContainerStyle={styles.contentContainer}>
-        {/* Shipping Address Section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Dirección de Envío</Text>
           <View style={styles.inputWrapper}>
@@ -115,16 +141,13 @@ export default function CheckoutScreen() {
           </View>
         </View>
 
-        {/* Payment Method Section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Método de Pago</Text>
           <TouchableOpacity style={styles.paymentButton}>
              <Text style={styles.paymentButtonText}>Agregar Método de Pago</Text>
           </TouchableOpacity>
-          {/* TODO: Implement actual payment integration (e.g., Stripe, MercadoPago) */}
         </View>
 
-        {/* Order Summary Section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Resumen del Pedido</Text>
           <View style={styles.summaryRow}>
@@ -142,7 +165,6 @@ export default function CheckoutScreen() {
         </View>
       </ScrollView>
 
-      {/* Place Order Button Footer */}
       <View style={styles.footer}>
         <TouchableOpacity onPress={handlePlaceOrder} activeOpacity={0.8} style={styles.placeOrderButton} disabled={isPlacingOrder}>
           {isPlacingOrder ? (
@@ -153,6 +175,34 @@ export default function CheckoutScreen() {
         </TouchableOpacity>
         {orderError && <Text style={styles.errorText}>{orderError}</Text>}
       </View>
+
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={showSuccessModal}
+        onRequestClose={() => {
+          setShowSuccessModal(!showSuccessModal);
+          router.replace('/home');
+        }}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalView}>
+            <Feather name="check-circle" size={60} color={COLORS.SUCCESS} style={{ marginBottom: SPACING.MEDIUM }} />
+            <Text style={styles.modalTitle}>¡Pedido Realizado!</Text>
+            <Text style={styles.modalText}>Tu pedido ha sido procesado con éxito.</Text>
+            <Text style={styles.modalText}>Recibirás una confirmación por correo electrónico en breve.</Text>
+            <TouchableOpacity
+              style={styles.modalButton}
+              onPress={() => {
+                setShowSuccessModal(!showSuccessModal);
+                router.replace('/home');
+              }}
+            >
+              <Text style={styles.modalButtonText}>Continuar Comprando</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -160,7 +210,7 @@ export default function CheckoutScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF', // Set to white as per user request
+    backgroundColor: '#FFFFFF',
   },
   header: {
     flexDirection: 'row',
@@ -168,34 +218,34 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: SPACING.MEDIUM,
     paddingVertical: SPACING.MEDIUM,
-    backgroundColor: COLORS.BACKGROUND, // White or light background for header
+    backgroundColor: COLORS.BACKGROUND,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.BORDER, // Softer border
+    borderBottomColor: COLORS.BORDER,
   },
   backButton: {
     padding: SPACING.SMALL,
-    marginRight: SPACING.SMALL, // Ensure space if title is long
+    marginRight: SPACING.SMALL,
   },
   headerTitle: {
-    fontSize: FONT_SIZES.XLARGE, // Slightly larger
-    fontWeight: 'bold', // Bolder
+    fontSize: FONT_SIZES.XLARGE,
+    fontWeight: 'bold',
     color: COLORS.TEXT_PRIMARY,
     textAlign: 'center',
-    flex: 1, // Allow title to take space and center correctly
+    flex: 1,
   },
   subscriptionBanner: {
-    backgroundColor: '#4A4A4A', // Dark gray background
+    backgroundColor: '#4A4A4A',
     paddingVertical: SPACING.LARGE,
     paddingHorizontal: SPACING.LARGE,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    borderRadius: SPACING.MEDIUM, // More rounded
+    borderRadius: SPACING.MEDIUM,
     marginHorizontal: SPACING.MEDIUM,
     marginTop: SPACING.LARGE,
-    marginBottom: SPACING.MEDIUM, // Added margin bottom
-    elevation: 2, // Subtle shadow for depth
-    shadowColor: '#000', // Shadow for dark gray button
+    marginBottom: SPACING.MEDIUM,
+    elevation: 2,
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.2,
     shadowRadius: 2,
@@ -203,16 +253,16 @@ const styles = StyleSheet.create({
   bannerTextContainer: {
     flex: 1,
     marginRight: SPACING.MEDIUM,
-    alignItems: 'center', // Center text content horizontally
+    alignItems: 'center',
   },
   bannerHeadline: {
-    color: '#FFFFFF', // Explicit white for visibility
-    fontSize: FONT_SIZES.LARGE, // Larger headline
+    color: '#FFFFFF',
+    fontSize: FONT_SIZES.LARGE,
     fontWeight: 'bold',
     marginBottom: SPACING.XSMALL,
   },
-  bannerSubHeadline: { // New style for the sub-headline
-    color: '#FFFFFF', // Explicit white for visibility (was WHITE_TRANSLUCENT)
+  bannerSubHeadline: {
+    color: '#FFFFFF',
     fontSize: FONT_SIZES.REGULAR,
     fontFamily: FONTS.INSTRUMENT_SANS,
   },
@@ -220,15 +270,15 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   contentContainer: {
-    paddingHorizontal: SPACING.MEDIUM, // Consistent horizontal padding
+    paddingHorizontal: SPACING.MEDIUM,
     paddingVertical: SPACING.LARGE,
   },
   section: {
-    backgroundColor: COLORS.BACKGROUND_ALT || '#F5F5F5', // Light gray for contrast with white screen
-    borderRadius: SPACING.MEDIUM, // More rounded corners for cards
+    backgroundColor: COLORS.BACKGROUND_ALT || '#F5F5F5',
+    borderRadius: SPACING.MEDIUM,
     padding: SPACING.LARGE,
-    marginBottom: SPACING.LARGE, // Space between sections
-    ...Platform.select({ // Platform-specific shadow for card effect
+    marginBottom: SPACING.LARGE,
+    ...Platform.select({
       ios: {
         shadowColor: '#000000',
         shadowOffset: { width: 0, height: 2 },
@@ -241,25 +291,25 @@ const styles = StyleSheet.create({
     }),
   },
   sectionTitle: {
-    fontSize: FONT_SIZES.LARGE, // Adjusted for better hierarchy
-    fontWeight: '600', // Semi-bold
+    fontSize: FONT_SIZES.LARGE,
+    fontWeight: '600',
     color: COLORS.TEXT_PRIMARY,
-    marginBottom: SPACING.LARGE, // More space below title
+    marginBottom: SPACING.LARGE,
   },
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.BACKGROUND_ALT, // Light grey background for input area
+    backgroundColor: COLORS.BACKGROUND_ALT,
     borderWidth: 1,
-    borderColor: COLORS.BORDER, // Softer border
+    borderColor: COLORS.BORDER,
     borderRadius: SPACING.SMALL,
     paddingHorizontal: SPACING.MEDIUM,
     marginBottom: SPACING.MEDIUM,
   },
-  inputIconStyle: { // New style for input icons
+  inputIconStyle: {
     marginRight: SPACING.MEDIUM,
   },
-  textInputStyle: { // New style for the TextInput itself
+  textInputStyle: {
     flex: 1,
     paddingVertical: SPACING.MEDIUM,
     fontSize: FONT_SIZES.REGULAR,
@@ -268,7 +318,7 @@ const styles = StyleSheet.create({
   },
   paymentButton: {
     borderColor: COLORS.PRIMARY,
-    borderWidth: 1.5, // Slightly thicker border for secondary button
+    borderWidth: 1.5,
     paddingVertical: SPACING.MEDIUM,
     paddingHorizontal: SPACING.LARGE,
     borderRadius: SPACING.SMALL,
@@ -278,12 +328,12 @@ const styles = StyleSheet.create({
   paymentButtonText: {
     color: COLORS.PRIMARY,
     fontSize: FONT_SIZES.REGULAR,
-    fontWeight: '600', // Semi-bold
+    fontWeight: '600',
   },
   summaryRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: SPACING.MEDIUM, // Increased margin
+    marginBottom: SPACING.MEDIUM,
     alignItems: 'center',
   },
   summaryLabel: {
@@ -298,43 +348,43 @@ const styles = StyleSheet.create({
   },
   summaryTotalRow: {
     borderTopWidth: 1,
-    borderTopColor: COLORS.BORDER, // Softer border
-    marginTop: SPACING.SMALL, // More margin
-    paddingTop: SPACING.LARGE, // More padding
+    borderTopColor: COLORS.BORDER,
+    marginTop: SPACING.SMALL,
+    paddingTop: SPACING.LARGE,
   },
   summaryTotalLabel: {
-    fontSize: FONT_SIZES.LARGE, // Larger
+    fontSize: FONT_SIZES.LARGE,
     color: COLORS.TEXT_PRIMARY,
-    fontWeight: 'bold', // Bold
+    fontWeight: 'bold',
   },
   summaryTotalValue: {
-    fontSize: FONT_SIZES.LARGE, // Larger
-    color: COLORS.PRIMARY, // Emphasize with primary color
+    fontSize: FONT_SIZES.LARGE,
+    color: COLORS.PRIMARY,
     fontWeight: 'bold',
   },
   footer: {
     paddingHorizontal: SPACING.MEDIUM,
     paddingTop: SPACING.MEDIUM,
-    paddingBottom: Platform.OS === 'ios' ? SPACING.XLARGE : SPACING.LARGE, // Adjust for safe area notch
+    paddingBottom: Platform.OS === 'ios' ? SPACING.XLARGE : SPACING.LARGE,
     borderTopWidth: 1,
     borderTopColor: COLORS.BORDER,
-    backgroundColor: COLORS.BACKGROUND, // Consistent background
+    backgroundColor: COLORS.BACKGROUND,
   },
   placeOrderButton: {
-    backgroundColor: '#000000', // Solid black background
-    paddingVertical: SPACING.LARGE, // Taller button
+    backgroundColor: '#000000',
+    paddingVertical: SPACING.LARGE,
     paddingHorizontal: SPACING.LARGE,
-    borderRadius: SPACING.MEDIUM, // More rounded
+    borderRadius: SPACING.MEDIUM,
     alignItems: 'center',
     justifyContent: 'center',
-    elevation: 2, // Subtle shadow for depth
-    shadowColor: '#000', // Shadow for black button
+    elevation: 2,
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.2,
     shadowRadius: 2,
   },
   placeOrderButtonText: {
-    color: '#FFFFFF', // Explicit white for visibility
+    color: '#FFFFFF',
     fontSize: FONT_SIZES.LARGE,
     fontWeight: 'bold',
   },
@@ -344,11 +394,61 @@ const styles = StyleSheet.create({
     marginTop: SPACING.MEDIUM,
     fontFamily: FONTS.INSTRUMENT_SANS,
   },
-  errorText: { // Added error text style
+  errorText: {
     color: COLORS.ERROR,
     textAlign: 'center',
     marginTop: SPACING.MEDIUM,
     fontSize: FONT_SIZES.REGULAR,
     fontFamily: FONTS.INSTRUMENT_SANS,
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalView: {
+    margin: SPACING.MEDIUM,
+    backgroundColor: COLORS.BACKGROUND,
+    borderRadius: SPACING.LARGE,
+    padding: SPACING.XLARGE,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+    width: '85%',
+  },
+  modalTitle: {
+    fontSize: FONT_SIZES.XLARGE,
+    fontWeight: 'bold',
+    color: COLORS.TEXT_PRIMARY,
+    marginBottom: SPACING.MEDIUM,
+    textAlign: 'center',
+  },
+  modalText: {
+    fontSize: FONT_SIZES.REGULAR,
+    color: COLORS.TEXT_SECONDARY,
+    marginBottom: SPACING.SMALL,
+    textAlign: 'center',
+    fontFamily: FONTS.INSTRUMENT_SANS,
+  },
+  modalButton: {
+    backgroundColor: COLORS.PRIMARY,
+    borderRadius: SPACING.MEDIUM,
+    paddingVertical: SPACING.MEDIUM,
+    paddingHorizontal: SPACING.XLARGE,
+    elevation: 2,
+    marginTop: SPACING.LARGE,
+  },
+  modalButtonText: {
+    color: COLORS.BACKGROUND,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    fontSize: FONT_SIZES.LARGE,
   }
 });

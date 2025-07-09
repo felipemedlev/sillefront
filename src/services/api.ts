@@ -10,17 +10,16 @@ interface LoginCredentials {
 interface RegisterData {
   email: string;
   password: string;
-  // Add other fields if your UserCreateSerializer requires them
 }
 
 // --- API Type Definitions (Add new types here) ---
 export interface ApiPerfumeSummary {
   id: number;
   name: string;
-  brand: string; // Assuming brand is stringified in the serializer
-  thumbnail_url: string | null; // Note: Frontend type uses thumbnail_url
-  price_per_ml: number | null; // Use camelCase to match backend model
-  external_id: string; // Add external_id property
+  brand: string;
+  thumbnail_url: string | null;
+  price_per_ml: number | null;
+  external_id: string;
 }
 
 // Rating API Types
@@ -43,7 +42,7 @@ export interface ApiPredefinedBox {
 // --- Recommendation API Types ---
 export interface ApiRecommendation {
   perfume: ApiPerfumeSummary;
-  score: number; // Assuming score is a number (DecimalField maps to number)
+  score: number;
   last_updated: string;
 }
 
@@ -65,12 +64,12 @@ export type ApiSurveyAnswer = { [key: string]: number | string };
 // --- Order API Types ---
 export interface ApiOrderItem {
   id: number;
-  perfume: ApiPerfumeSummary | null; // Perfume can be null if it was a box item not directly linked
-  product_type: string; // 'perfume' or 'box'
+  perfume: ApiPerfumeSummary | null;
+  product_type: string;
   quantity: number;
   decant_size: number | null;
-  price_at_purchase: string; // Comes as string from backend DecimalField
-  box_configuration: any | null; // JSON field
+  price_at_purchase: string;
+  box_configuration: any | null;
   item_name: string | null;
   item_description: string | null;
 }
@@ -78,67 +77,60 @@ export interface ApiOrderItem {
 export interface ApiOrder {
   id: number;
   user_email: string | null;
-  order_date: string; // DateTimeField as string
-  total_price: string; // DecimalField as string
+  order_date: string;
+  total_price: string;
   status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
   shipping_address: string | null;
   items: ApiOrderItem[];
-  updated_at: string; // DateTimeField as string
+  updated_at: string;
 }
 
 export interface ApiOrderCreatePayload {
   shipping_address: string;
-  // Add other fields if your OrderCreateSerializer requires them (e.g., payment_method_id later)
 }
 
 // --- Cart API Types ---
 export interface ApiCartItem {
   id: number;
-  product_type: 'perfume' | 'box'; // Backend sends this
-  name?: string; // Name of the cart item (e.g., box name), should be provided by backend CartItemSerializer
-  perfume: ApiPerfumeSummary | null; // perfume_id will be used for adding
-  quantity: 1; // Quantity is always 1 for cart items as per new logic
+  product_type: 'perfume' | 'box';
+  name?: string;
+  perfume: ApiPerfumeSummary | null;
+  quantity: 1;
   decant_size: number | null;
-  price_at_addition: string; // Decimal as string
-  box_configuration: any | null; // JSON
-  added_at: string; // DateTime as string
+  price_at_addition: string;
+  box_configuration: any | null;
+  added_at: string;
 }
 
 export interface ApiCart {
   id: number;
-  user: { id: number; email: string; username?: string }; // Simplified user, adjust as needed
+  user: { id: number; email: string; username?: string };
   items: ApiCartItem[];
   created_at: string;
   updated_at: string;
-  // cart_total might be a method field, check serializer if needed
 }
 
 export interface ApiCartItemAddPayload {
-  product_type: 'box'; // Now only 'box' is allowed
-  name: string; // Name of the box, e.g., "AI Discovery Box (4x5ml)" -  Required
-  price: number; // Price of the box - Required
-  quantity: 1; // Quantity of this box type is always 1
-  box_configuration: { // Required
+  product_type: 'box';
+  name: string;
+  price: number;
+  quantity: 1;
+  box_configuration: {
     perfumes: Array<{
-      external_id?: string; // external_id of the perfume from BasicPerfumeInfo.id
-      perfume_id_backend?: number; // or backend primary key if available
-      name?: string; // Optional: name for display/logging
-      brand?: string; // Optional: brand for display/logging
-      thumbnail_url?: string; // Optional: thumbnail URL for the perfume
+      external_id?: string;
+      perfume_id_backend?: number;
+      name?: string;
+      brand?: string;
+      thumbnail_url?: string;
     }>;
-    decant_size: number; // snake_case, e.g., 3, 5, 10
-    decant_count: number; // snake_case, e.g., 4
+    decant_size: number;
+    decant_count: number;
   };
-  // perfume_id is removed from top level
-  // decant_size is removed from top level (it's inside box_configuration)
 }
 // --- Survey API Functions ---
 
-/**
- * Fetch the list of survey questions (gender + selected accords).
- */
 export const fetchSurveyQuestions = async (): Promise<ApiSurveyQuestion[]> => {
-    const headers = await createHeaders(false); // Public endpoint
+    const headers = await createHeaders(false);
     const url = `${API_BASE_URL}/survey/questions/`;
     const response = await fetch(url, {
         method: 'GET',
@@ -147,12 +139,8 @@ export const fetchSurveyQuestions = async (): Promise<ApiSurveyQuestion[]> => {
     return handleResponse(response);
 };
 
-/**
- * Fetch a specific survey question by ID.
- * @param questionId The ID of the question to fetch
- */
 export const fetchSurveyQuestion = async (questionId: string): Promise<ApiSurveyQuestion> => {
-    const headers = await createHeaders(false); // Public endpoint
+    const headers = await createHeaders(false);
     const url = `${API_BASE_URL}/survey/questions/${questionId}/`;
     const response = await fetch(url, {
         method: 'GET',
@@ -161,12 +149,8 @@ export const fetchSurveyQuestion = async (questionId: string): Promise<ApiSurvey
     return handleResponse(response);
 };
 
-/**
- * Submit or update the user's survey response.
- * @param answers The full answers object (keyed by accord or 'gender')
- */
 export const submitSurveyResponse = async (answers: ApiSurveyAnswer): Promise<any> => {
-    const headers = await createHeaders(true); // Requires auth
+    const headers = await createHeaders(true);
     const url = `${API_BASE_URL}/survey/`;
     const response = await fetch(url, {
         method: 'POST',
@@ -176,13 +160,9 @@ export const submitSurveyResponse = async (answers: ApiSurveyAnswer): Promise<an
     return handleResponse(response);
 };
 
-/**
- * Place an order using the items currently in the user's cart.
- * @param payload The order creation payload (e.g., shipping address)
- */
 export const placeOrder = async (payload: ApiOrderCreatePayload): Promise<ApiOrder> => {
-    const headers = await createHeaders(true); // Requires auth
-    const url = `${API_BASE_URL}/orders/`; // Endpoint for creating orders
+    const headers = await createHeaders(true);
+    const url = `${API_BASE_URL}/orders/`;
     const response = await fetch(url, {
         method: 'POST',
         headers,
@@ -190,75 +170,51 @@ export const placeOrder = async (payload: ApiOrderCreatePayload): Promise<ApiOrd
     });
     return handleResponse(response);
 };
-/**
- * Adds an item to the user's cart on the backend.
- * @param payload The item details to add.
- */
 export const addItemToBackendCart = async (payload: ApiCartItemAddPayload): Promise<ApiCart> => {
-    const headers = await createHeaders(true); // Requires auth
-    const url = `${API_BASE_URL}/cart/items/`; // Endpoint for adding cart items
+    const headers = await createHeaders(true);
+    const url = `${API_BASE_URL}/cart/items/`;
     const response = await fetch(url, {
         method: 'POST',
         headers,
         body: JSON.stringify(payload),
     });
-    return handleResponse(response); // Expects the updated cart as response
+    return handleResponse(response);
 };
 
-/**
- * Removes a specific item from the user's cart on the backend.
- * @param cartItemBackendId The backend ID of the cart item to remove.
- */
 export const removeItemFromBackendCart = async (cartItemBackendId: number): Promise<ApiCart> => {
-    const headers = await createHeaders(true); // Requires auth
-    // Assuming the endpoint is something like /api/cart/items/{id}/
+    const headers = await createHeaders(true);
     const url = `${API_BASE_URL}/cart/items/${cartItemBackendId}/`;
     const response = await fetch(url, {
         method: 'DELETE',
         headers,
     });
-    // Typically, a DELETE might return 204 No Content, or the updated cart.
-    // Adjust handleResponse or logic here if 204 is expected and returns null.
-    // For now, assuming it returns the updated ApiCart.
     return handleResponse(response);
 };
 
-/**
- * Clears all items from the user's cart on the backend.
- */
-export const clearBackendCart = async (): Promise<ApiCart | null> => { // Can return null if API sends 204
-    const headers = await createHeaders(true); // Requires auth
-    // Assuming the endpoint is /api/cart/ or /api/cart/clear/
-    // A common pattern is DELETE on the main cart resource /api/cart/
-    const url = `${API_BASE_URL}/cart/clear/`; // Or just /cart/ with DELETE method
+export const clearBackendCart = async (): Promise<ApiCart | null> => {
+    const headers = await createHeaders(true);
+    const url = `${API_BASE_URL}/cart/clear/`;
     const response = await fetch(url, {
-        method: 'DELETE', // Or 'POST' if it's a custom action like /clear/
+        method: 'DELETE',
         headers,
     });
-    // If DELETE returns 204 No Content, handleResponse will return null.
-    // If it returns the (now empty) cart, it will be an ApiCart object.
     return handleResponse(response);
 };
 
-/**
- * Fetches the current user's cart from the backend.
- */
 export const fetchUserCart = async (): Promise<ApiCart | null> => {
-    const headers = await createHeaders(true); // Requires auth
-    const url = `${API_BASE_URL}/cart/`; // Standard endpoint for fetching the cart
+    const headers = await createHeaders(true);
+    const url = `${API_BASE_URL}/cart/`;
     try {
         const response = await fetch(url, {
             method: 'GET',
             headers,
         });
-        if (response.status === 404) { // Handle case where cart might not exist yet
+        if (response.status === 404) {
             return null;
         }
         return handleResponse(response);
     } catch (error) {
         console.error("Error fetching user cart:", error);
-        // Depending on how you want to handle errors, you might throw or return null
-        // For now, let's rethrow to be handled by the caller
         throw error;
     }
 };
@@ -306,68 +262,54 @@ const createHeaders = async (includeAuth = true): Promise<HeadersInit> => {
   return headers;
 };
 
-// Helper function to recursively transform price_per_ml in fetched data
 const transformprice_per_ml = (data: any): any => {
   if (Array.isArray(data)) {
-    // If it's an array, map over its elements and apply the transformation recursively
     return data.map(item => transformprice_per_ml(item));
   } else if (data !== null && typeof data === 'object') {
-    // If it's an object, create a new object to hold the transformed data
     const newData: { [key: string]: any } = {};
-    let priceTransformed = false; // Flag to track if price was handled via price_per_ml
+    let priceTransformed = false;
 
     for (const key in data) {
       if (Object.prototype.hasOwnProperty.call(data, key)) {
         const value = data[key];
         let priceValue: number | null = null;
 
-        // Check if the key is price_per_ml
         if (key === 'price_per_ml') {
           if (typeof value === 'number' || (typeof value === 'string' && value.trim() !== '')) {
-            priceValue = parseFloat(value as string); // Parse potential string
+            priceValue = parseFloat(value as string);
             if (!isNaN(priceValue)) {
-              // console.log(`[API DEBUG] Found price_per_ml: ${value}. Transforming to price_per_ml: ${priceValue * 2}`); // Removed Debug Log
-              newData['price_per_ml'] = priceValue * 2; // Assign transformed value to price_per_ml
+              newData['price_per_ml'] = priceValue * 2;
             } else {
-              // console.warn(`[API WARN] Could not parse price_per_ml value: ${value}`); // Keep or remove warning? Keeping for now.
               console.warn(`[API WARN] Could not parse price_per_ml value: ${value}`);
-              newData['price_per_ml'] = null; // Assign null if parsing failed
+              newData['price_per_ml'] = null;
             }
           } else {
              console.warn(`[API WARN] Unexpected type for price_per_ml: ${typeof value}, value: ${value}`);
-             newData['price_per_ml'] = null; // Assign null for unexpected types
+             newData['price_per_ml'] = null;
           }
-          priceTransformed = true; // Mark price as handled (even if null)
-          // Do not copy the original 'price_per_ml' key to newData
+          priceTransformed = true;
 
-        // Check if the key is price_per_ml AND price wasn't already handled by price_per_ml
         } else if (key === 'price_per_ml' && !priceTransformed) {
            if (typeof value === 'number' || (typeof value === 'string' && value.trim() !== '')) {
-             priceValue = parseFloat(value as string); // Parse potential string
+             priceValue = parseFloat(value as string);
              if (!isNaN(priceValue)) {
-               // console.log(`[API DEBUG] Found price_per_ml: ${value}. Transforming: ${priceValue * 2}`); // Removed Debug Log
-               newData[key] = priceValue * 2; // Assign transformed value back to price_per_ml
+               newData[key] = priceValue * 2;
              } else {
-               // console.warn(`[API WARN] Could not parse price_per_ml value: ${value}`); // Keep or remove warning? Keeping for now.
                console.warn(`[API WARN] Could not parse price_per_ml value: ${value}`);
-               newData[key] = null; // Assign null if parsing failed
+               newData[key] = null;
              }
            } else {
              console.warn(`[API WARN] Unexpected type for price_per_ml: ${typeof value}, value: ${value}`);
-             newData[key] = null; // Assign null for unexpected types
+             newData[key] = null;
            }
-          // If priceTransformed is true, it means 'price_per_ml' was already processed, so we skip this block.
 
         } else {
-          // For all other keys, apply the transformation recursively
           newData[key] = transformprice_per_ml(value);
         }
       }
     }
-    // Return the new object with transformed and standardized data
     return newData;
   }
-  // If it's not an array or object (e.g., primitive value), return it as is
   return data;
 };
 
@@ -376,50 +318,39 @@ const handleResponse = async (response: Response) => {
   if (!response.ok) {
     let errorData;
     try {
-      // Try to parse error response as JSON
       errorData = await response.json();
     } catch (e) {
-      // Fallback if error response is not JSON
       errorData = { detail: response.statusText || 'Network response was not ok' };
     }
     console.error('API Error:', response.status, errorData);
-    // Create a structured error object
     const error = new Error(errorData?.detail || `HTTP error! status: ${response.status}`);
     (error as any).status = response.status;
-    (error as any).data = errorData; // Attach full error data if available
+    (error as any).data = errorData;
     throw error;
   }
 
-  if (response.status === 204) { // No Content
-    return null; // Return null for 204 responses
+  if (response.status === 204) {
+    return null;
   }
 
   let jsonData;
   try {
-    // Read response body as text first to handle potential empty bodies
     const text = await response.text();
     if (!text) {
-        // If the response body is empty (and status is OK, e.g., 200), return null or handle as appropriate
         return null;
     }
-    jsonData = JSON.parse(text); // Parse the non-empty text as JSON
+    jsonData = JSON.parse(text);
   } catch (e) {
     console.error('Error parsing JSON response:', e);
-    throw new Error('Failed to parse JSON response'); // Throw specific error for parsing failure
+    throw new Error('Failed to parse JSON response');
   }
 
-  // Apply the price transformation to the parsed JSON data
   let transformedData;
   try {
-      transformedData = transformprice_per_ml(jsonData); // Transform the data
-      // console.log('[API DEBUG] Data after transformation in handleResponse:', JSON.stringify(transformedData, null, 2)); // Removed Log transformed data
+      transformedData = transformprice_per_ml(jsonData);
       return transformedData;
   } catch (transformError) {
       console.error('Error transforming price_per_ml:', transformError);
-      // Decide how to handle transformation errors:
-      // Option 1: Return original data (less safe if transformation is critical)
-      // return jsonData;
-      // Option 2: Throw an error (safer, signals a problem)
       throw new Error('Failed to transform API response data');
   }
 };
@@ -427,13 +358,13 @@ const handleResponse = async (response: Response) => {
 // --- API Functions ---
 
 type PerfumeFilters = {
-  brands?: number[]; // Expect brand IDs
-  occasions?: string[]; // Expect Occasion Names
-  priceRange?: { min?: number | null; max?: number | null } | null; // Make min/max optional or nullable within the object
-  genders?: string[]; // Expect keys: 'male', 'female', 'unisex'
-  dayNights?: string[]; // Expect keys: 'day', 'night'
-  seasons?: string[]; // Expect keys: 'winter', 'summer', etc.
-  ids?: number[]; // Added for filtering by specific IDs
+  brands?: number[];
+  occasions?: string[];
+  priceRange?: { min?: number | null; max?: number | null } | null;
+  genders?: string[];
+  dayNights?: string[];
+  seasons?: string[];
+  ids?: number[];
 };
 
 export const fetchPerfumes = async (
@@ -442,31 +373,26 @@ export const fetchPerfumes = async (
   searchQuery = '',
   filters: PerfumeFilters = {}
 ) => {
-  const headers = await createHeaders(); // Auth might be needed if recommendations influence results
+  const headers = await createHeaders();
   const params = new URLSearchParams({
     page: String(page),
     page_size: String(pageSize),
   });
 
   if (searchQuery) params.append('search', searchQuery);
-  // Send IDs as comma-separated strings
   if (filters.brands?.length) params.append('brand', filters.brands.map(String).join(','));
-  if (filters.occasions?.length) params.append('occasions', filters.occasions.map(String).join(',')); // Using 'occasions' (plural) as required by backend
+  if (filters.occasions?.length) params.append('occasions', filters.occasions.map(String).join(','));
 
-  // Send keys as comma-separated strings
   if (filters.genders?.length) params.append('gender', filters.genders.join(','));
   if (filters.seasons?.length) params.append('season', filters.seasons.join(','));
-  if (filters.dayNights?.length) params.append('best_for', filters.dayNights.join(',')); // Use 'best_for' parameter
+  if (filters.dayNights?.length) params.append('best_for', filters.dayNights.join(','));
 
-  // Add price range filters (using explicit filter names from filters.py)
   if (filters.priceRange?.min != null) params.append('price_min', String(filters.priceRange.min));
   if (filters.priceRange?.max != null) params.append('price_max', String(filters.priceRange.max));
 
-  // Add ID filter (assuming backend supports 'id__in')
   if (filters.ids?.length) params.append('id__in', filters.ids.map(String).join(','));
 
   const url = `${API_BASE_URL}/perfumes/?${params.toString()}`;
-  // console.log('Fetching perfumes with URL:', url);
 
   const response = await fetch(url, {
     method: 'GET',
@@ -476,28 +402,25 @@ export const fetchPerfumes = async (
 };
 
 export const fetchBrands = async () => {
-  const headers = await createHeaders(false); // No auth needed usually for public list
-  const url = `${API_BASE_URL}/brands/`; // Assuming endpoint exists
-  // console.log('Fetching brands with URL:', url);
+  const headers = await createHeaders(false);
+  const url = `${API_BASE_URL}/brands/`;
   const response = await fetch(url, {
     method: 'GET',
     headers,
   });
-  // Assuming API returns { results: [{ id: number, name: string }] } or just [{ id: number, name: string }]
   const data = await handleResponse(response);
-  return data.results ?? data; // Handle potential pagination wrapper
+  return data.results ?? data;
 };
 
 export const fetchOccasions = async () => {
-  const headers = await createHeaders(false); // No auth needed usually
-  const url = `${API_BASE_URL}/occasions/`; // Assuming endpoint exists
-  // console.log('Fetching occasions with URL:', url);
+  const headers = await createHeaders(false);
+  const url = `${API_BASE_URL}/occasions/`;
   const response = await fetch(url, {
     method: 'GET',
     headers,
   });
   const data = await handleResponse(response);
-  return data.results ?? data; // Handle potential pagination wrapper
+  return data.results ?? data;
 };
 
 export const login = async ({ email, password }: LoginCredentials) => {
@@ -521,7 +444,6 @@ export const logout = async () => {
     });
     await handleResponse(response);
   } catch (error) {
-    // console.error('Logout failed:', error);
   } finally {
     await removeToken();
   }
@@ -575,6 +497,17 @@ export const fetchPerfumesByExternalIds = async (externalIds: string[]): Promise
     }
 
     console.log(`fetchPerfumesByExternalIds: Successfully fetched ${data.length} perfumes`);
+    console.log("fetchPerfumesByExternalIds: Returned perfumes:", data.map(p => ({ external_id: p.external_id, name: p.name, brand: p.brand })));
+
+    // Log which external_ids were requested vs which were found
+    const requestedIds = validIds;
+    const foundIds = data.map(p => p.external_id);
+    const missingIds = requestedIds.filter(id => !foundIds.includes(id));
+
+    if (missingIds.length > 0) {
+      console.warn("fetchPerfumesByExternalIds: Missing perfumes with external_ids:", missingIds);
+    }
+
     return data;
   } catch (error) {
     console.error("fetchPerfumesByExternalIds: Error:", error);
@@ -583,44 +516,36 @@ export const fetchPerfumesByExternalIds = async (externalIds: string[]): Promise
 };
 
 export const getPredefinedBoxes = async (gender?: 'masculino' | 'femenino'): Promise<ApiPredefinedBox[]> => {
-  const headers = await createHeaders(false); // Assuming public access
+  const headers = await createHeaders(false);
   const params = new URLSearchParams();
   if (gender) {
     params.append('gender', gender);
   }
-  // Corrected endpoint based on SilleBack/api/urls.py registration
   const url = `${API_BASE_URL}/boxes/predefined/?${params.toString()}`;
-  // console.log('Fetching predefined boxes with URL:', url);
 
   const response = await fetch(url, {
     method: 'GET',
     headers,
   });
-  // Handle potential pagination wrapper from DRF ViewSets
   const data = await handleResponse(response);
   if (Array.isArray(data)) {
-    return data as ApiPredefinedBox[]; // Return data if it's already an array
+    return data as ApiPredefinedBox[];
   } else if (data && Array.isArray(data.results)) {
-    return data.results as ApiPredefinedBox[]; // Return the results array if paginated
+    return data.results as ApiPredefinedBox[];
   }
   console.warn("Unexpected response structure for predefined boxes:", data);
-  return []; // Return empty array as fallback
+  return [];
 };
 
-/**
- * Fetch personalized recommendations for the authenticated user.
- */
 export const fetchRecommendations = async (filters: PerfumeFilters = {}): Promise<ApiRecommendation[]> => {
   try {
-    const headers = await createHeaders(true); // Requires auth
+    const headers = await createHeaders(true);
     const params = new URLSearchParams();
 
-    // Add price range filters
     if (filters.priceRange?.min != null) params.append('price_min', String(filters.priceRange.min));
     if (filters.priceRange?.max != null) params.append('price_max', String(filters.priceRange.max));
 
-    // Add occasion filters
-    if (filters.occasions?.length) params.append('occasions', filters.occasions.join(',')); // Send names directly
+    if (filters.occasions?.length) params.append('occasions', filters.occasions.join(','));
 
     const url = `${API_BASE_URL}/recommendations/?${params.toString()}`;
     console.log(`fetchRecommendations: Calling API: ${url}`);
@@ -638,23 +563,20 @@ export const fetchRecommendations = async (filters: PerfumeFilters = {}): Promis
     const data = await handleResponse(response);
     console.log(`fetchRecommendations: Response received, type: ${Array.isArray(data) ? 'array' : typeof data}`);
 
-    // Handle potential pagination wrapper from DRF ViewSets
     let results: ApiRecommendation[];
 
     if (Array.isArray(data)) {
-      results = data as ApiRecommendation[]; // Return data if it's already an array
+      results = data as ApiRecommendation[];
     } else if (data && Array.isArray(data.results)) {
-      results = data.results as ApiRecommendation[]; // Return the results array if paginated
+      results = data.results as ApiRecommendation[];
     } else {
       console.warn("fetchRecommendations: Unexpected response structure:", data);
       return [];
     }
 
-    // Log the number of recommendations and a sample
     console.log(`fetchRecommendations: Retrieved ${results.length} recommendations`);
 
     if (results.length > 0) {
-      // Log the first recommendation structure and types
       const sample = results[0];
       console.log('fetchRecommendations: Sample recommendation:', {
         perfumeId: sample.perfume.id,
@@ -664,14 +586,12 @@ export const fetchRecommendations = async (filters: PerfumeFilters = {}): Promis
         scoreType: typeof sample.score
       });
 
-      // Log first 3 recommendations sorted by score
       const sortedSample = [...results]
         .sort((a, b) => b.score - a.score)
         .slice(0, 3);
 
       console.log('fetchRecommendations: Top 3 recommendations by score:');
       sortedSample.forEach((rec, i) => {
-        // console.log(`  ${i+1}. Perfume ID: ${rec.perfume.id}, Name: ${rec.perfume.name}, Score: ${rec.score}`);
       });
     }
 
@@ -739,18 +659,11 @@ export const authUtils = {
 
 // --- Rating API Functions ---
 
-/**
- * Get all ratings for the current authenticated user
- * @returns Array of rating objects or empty array if none exist
- */
 export const getAllUserRatings = async (): Promise<ApiRating[]> => {
   try {
-    const headers = await createHeaders(true); // Requires auth
-    // The backend doesn't have a dedicated /ratings/ endpoint
-    // Instead, we need to use the user-specific ratings endpoint
+    const headers = await createHeaders(true);
     const url = `${API_BASE_URL}/users/ratings/`;
 
-    // Handle potential 404s gracefully - backend may not have implemented this yet
     try {
       const response = await fetch(url, {
         method: 'GET',
@@ -774,18 +687,11 @@ export const getAllUserRatings = async (): Promise<ApiRating[]> => {
   }
 };
 
-/**
- * Get the current user's rating for a specific perfume using external_id
- * @param externalId The external_id of the perfume
- * @returns The rating data or null if not found
- */
 export const getRating = async (externalId: string): Promise<ApiRating | null> => {
   try {
-    const headers = await createHeaders(true); // Requires auth
+    const headers = await createHeaders(true);
 
-    // Get perfume by external_id first, then get rating
     const url = `${API_BASE_URL}/perfumes/by_external_ids/?external_ids=${externalId}`;
-    // console.log(`API Call to get perfume: GET ${url}`);
 
     const perfumesResponse = await fetch(url, {
       method: 'GET',
@@ -795,30 +701,25 @@ export const getRating = async (externalId: string): Promise<ApiRating | null> =
     const perfumes = await handleResponse(perfumesResponse);
 
     if (!perfumes || !Array.isArray(perfumes) || perfumes.length === 0) {
-      // console.log(`No perfume found with external_id: ${externalId}`);
       return null;
     }
 
-    // Use the database ID from the first result to get the rating
     const perfumeId = perfumes[0].id;
     const ratingUrl = `${API_BASE_URL}/perfumes/${perfumeId}/rating/`;
-    // console.log(`API Call for rating: GET ${ratingUrl}`);
 
     const ratingResponse = await fetch(ratingUrl, {
       method: 'GET',
       headers,
     });
 
-    // console.log(`API Response status: ${ratingResponse.status}`);
     if (ratingResponse.status === 404) {
       console.log('API: No rating found (404)');
-      return null; // No rating found is a normal case
+      return null;
     }
 
     return handleResponse(ratingResponse);
   } catch (error) {
     console.error('API Error in getRating:', error);
-    // Return null rather than throwing for 404s
     if ((error as any).status === 404) {
       return null;
     }
@@ -826,19 +727,11 @@ export const getRating = async (externalId: string): Promise<ApiRating | null> =
   }
 };
 
-/**
- * Submit or update a rating for a perfume using external_id
- * @param externalId The external_id of the perfume to rate
- * @param rating Rating value (1-5)
- * @returns The saved rating data
- */
 export const submitRating = async (externalId: string, rating: number): Promise<ApiRating> => {
   try {
-    const headers = await createHeaders(true); // Requires auth
+    const headers = await createHeaders(true);
 
-    // Get perfume by external_id first, then submit rating
     const url = `${API_BASE_URL}/perfumes/by_external_ids/?external_ids=${externalId}`;
-    // console.log(`API Call to get perfume: GET ${url}`);
 
     const perfumesResponse = await fetch(url, {
       method: 'GET',
@@ -851,10 +744,8 @@ export const submitRating = async (externalId: string, rating: number): Promise<
       throw new Error(`No perfume found with external_id: ${externalId}`);
     }
 
-    // Use the database ID from the first result to submit the rating
     const perfumeId = perfumes[0].id;
     const ratingUrl = `${API_BASE_URL}/perfumes/${perfumeId}/rating/`;
-    // console.log(`API Call for rating: POST ${ratingUrl}`, { rating });
 
     const ratingResponse = await fetch(ratingUrl, {
       method: 'POST',
@@ -862,7 +753,6 @@ export const submitRating = async (externalId: string, rating: number): Promise<
       body: JSON.stringify({ rating }),
     });
 
-    // console.log(`API Response status: ${ratingResponse.status}`);
     if (!ratingResponse.ok) {
       const errorText = await ratingResponse.text();
       console.error(`API Error submitting rating: ${ratingResponse.status} ${errorText}`);
@@ -871,6 +761,55 @@ export const submitRating = async (externalId: string, rating: number): Promise<
     return handleResponse(ratingResponse);
   } catch (error) {
     console.error('API Error in submitRating:', error);
-    throw error; // Re-throw the error after logging
+    throw error;
+  }
+};
+
+// --- Order API Functions ---
+
+export const getUserOrders = async (): Promise<ApiOrder[]> => {
+  try {
+    const headers = await createHeaders(true);
+    const url = `${API_BASE_URL}/orders/`;
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers,
+    });
+
+    if (!response.ok) {
+      console.error(`Error fetching user orders: ${response.status}`);
+      return [];
+    }
+
+    const data = await handleResponse(response);
+    return data.results || data || [];
+  } catch (error) {
+    console.error('Error in getUserOrders:', error);
+    return [];
+  }
+};
+
+export const getPerfumesFromUserOrders = async (): Promise<string[]> => {
+  try {
+    const orders = await getUserOrders();
+    const perfumeIds = new Set<string>();
+
+    orders.forEach(order => {
+      order.items.forEach(item => {
+        if (item.box_configuration && item.box_configuration.perfumes) {
+          item.box_configuration.perfumes.forEach((perfume: any) => {
+            if (perfume.external_id) {
+              perfumeIds.add(perfume.external_id);
+            }
+          });
+        }
+      });
+    });
+
+    return Array.from(perfumeIds);
+  } catch (error) {
+    console.error('Error in getPerfumesFromUserOrders:', error);
+    return [];
   }
 };

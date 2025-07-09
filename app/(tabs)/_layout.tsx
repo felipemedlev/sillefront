@@ -1,4 +1,3 @@
-// app/(tabs)/_layout.tsx
 import React from 'react';
 import { View, StyleSheet, Platform, Dimensions } from 'react-native';
 import { Tabs } from 'expo-router';
@@ -130,7 +129,6 @@ return (
                 ),
               }}
             />
-            {/* Hidden screens */}
             <Tabs.Screen name="aibox" options={{ href: null, tabBarItemStyle: { display: 'none' } }} />
             <Tabs.Screen name="giftbox" options={{ href: null, tabBarItemStyle: { display: 'none' } }} />
           </Tabs>

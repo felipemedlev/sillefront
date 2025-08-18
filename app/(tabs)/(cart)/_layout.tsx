@@ -1,12 +1,5 @@
-import { Stack } from 'expo-router';
+import { Slot } from 'expo-router';
 
 export default function CartLayout() {
-  return (
-    <Stack
-      screenOptions={{
-        headerShown: false,
-        contentStyle: { backgroundColor: '#FFFEFC' }
-      }}
-    />
-  );
+  return <Slot />;
 }

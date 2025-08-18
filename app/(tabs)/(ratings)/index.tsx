@@ -1,11 +1,12 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { View, Text, useWindowDimensions, StyleSheet, TextInput, TouchableOpacity, ScrollView, Image, SafeAreaView, ActivityIndicator, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect } from 'expo-router';
 import RatingModal from '../../../components/RatingModal';
 import { useRatings } from '../../../context/RatingsContext';
 import { useAuth } from '../../../src/context/AuthContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { COLORS, FONT_SIZES, SPACING, FONTS } from '../../../types/constants';
+import { COLORS, FONT_SIZES, SPACING, FONTS, STORAGE_KEYS } from '../../../types/constants';
 import * as api from '../../../src/services/api';
 
 // Define the simplified perfume type needed for this screen
@@ -43,48 +44,109 @@ export default function RatingsScreen() {
   const [searchResults, setSearchResults] = useState<DisplayPerfume[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [searchTimeout, setSearchTimeout] = useState<NodeJS.Timeout | null>(null);
+  const [orderedPerfumeIdsFromOrders, setOrderedPerfumeIdsFromOrders] = useState<string[]>([]);
+  const [isLoadingOrderedPerfumeIds, setIsLoadingOrderedPerfumeIds] = useState(true);
 
-  // Fetch all perfumes from the backend when component mounts
+  const loadOrderedIdsFromOrders = useCallback(async () => {
+    setIsLoadingOrderedPerfumeIds(true);
+    try {
+      if (isAuthenticated) {
+        // Fetch perfume IDs from user orders
+        const perfumeIds = await api.getPerfumesFromUserOrders();
+        setOrderedPerfumeIdsFromOrders(perfumeIds);
+        console.log("RatingsScreen: Loaded ordered perfume IDs from orders:", perfumeIds);
+      } else {
+        // Fallback to AsyncStorage for non-authenticated users
+        const idsJson = await AsyncStorage.getItem(STORAGE_KEYS.ORDERED_PERFUMES_FOR_RATING);
+        if (idsJson) {
+          const idsArray = JSON.parse(idsJson);
+          if (Array.isArray(idsArray)) {
+            setOrderedPerfumeIdsFromOrders(idsArray);
+            console.log("RatingsScreen: Loaded ordered perfume IDs from storage:", idsArray);
+          } else {
+            setOrderedPerfumeIdsFromOrders([]);
+          }
+        } else {
+          setOrderedPerfumeIdsFromOrders([]);
+        }
+      }
+    } catch (error) {
+      console.error('RatingsScreen: Error loading ordered perfume IDs:', error);
+      setOrderedPerfumeIdsFromOrders([]);
+    } finally {
+      setIsLoadingOrderedPerfumeIds(false);
+    }
+  }, [isAuthenticated]);
+
+  useFocusEffect(
+    useCallback(() => {
+      console.log("RatingsScreen focused. Refreshing ordered IDs and user ratings.");
+      loadOrderedIdsFromOrders();
+      if (isAuthenticated) {
+        fetchUserRatings(); // From useRatings context
+      }
+    }, [loadOrderedIdsFromOrders, isAuthenticated, fetchUserRatings])
+  );
+
+  // Effect to fetch initial perfumes and supplement with ordered perfume details
   useEffect(() => {
-    const fetchPerfumes = async () => {
-      try {
-        setIsLoadingPerfumes(true);
-        // Get a large number of perfumes to ensure we have a comprehensive list
-        // Use a large page size to minimize API calls
-        const response = await api.fetchPerfumes(1, 20);
+    const fetchAndCombinePerfumes = async () => {
+      if (isLoadingOrderedPerfumeIds) {
+        // Wait until ordered IDs are loaded
+        return;
+      }
 
-        if (response && Array.isArray(response.results)) {
-          // Map API response to the DisplayPerfume type
-          // Use the external_id instead of database ID for rating endpoints
-          const perfumesData = response.results.map((p: PerfumeApiResponse) => ({
-            id: p.external_id || p.id.toString(), // Use external_id if available, fall back to id if not
+      setIsLoadingPerfumes(true);
+      try {
+        // 1. Fetch initial list of perfumes
+        const initialResponse = await api.fetchPerfumes(1, 40); // Fetch a slightly larger initial list
+        let combinedPerfumes: DisplayPerfume[] = [];
+
+        if (initialResponse && Array.isArray(initialResponse.results)) {
+          combinedPerfumes = initialResponse.results.map((p: PerfumeApiResponse) => ({
+            id: p.external_id || p.id.toString(),
             name: p.name,
             brand: p.brand,
-            image: p.thumbnail_url || '', // Fallback to empty string if null
+            image: p.thumbnail_url || '',
           }));
-          setAllPerfumes(perfumesData);
         }
+
+        // 2. Identify missing perfume IDs from ordered list
+        const existingPerfumeIds = new Set(combinedPerfumes.map(p => p.id));
+        const missingOrderedIds = orderedPerfumeIdsFromOrders.filter((id: string) => !existingPerfumeIds.has(id));
+
+        // 3. Fetch details for missing ordered perfumes
+        if (missingOrderedIds.length > 0) {
+          console.log("Fetching details for missing ordered perfume IDs:", missingOrderedIds);
+          const additionalPerfumesResponse = await api.fetchPerfumesByExternalIds(missingOrderedIds);
+          if (additionalPerfumesResponse && Array.isArray(additionalPerfumesResponse)) {
+            const additionalPerfumesData = additionalPerfumesResponse.map((p: PerfumeApiResponse) => ({
+              id: p.external_id || p.id.toString(),
+              name: p.name,
+              brand: p.brand,
+              image: p.thumbnail_url || '',
+            }));
+            // Add to combined list, ensuring uniqueness by ID
+            additionalPerfumesData.forEach(newPerfume => {
+              if (!existingPerfumeIds.has(newPerfume.id)) {
+                combinedPerfumes.push(newPerfume);
+                existingPerfumeIds.add(newPerfume.id); // Add to set to track
+              }
+            });
+          }
+        }
+        setAllPerfumes(combinedPerfumes);
+        console.log("Final combined 'allPerfumes':", combinedPerfumes.length);
+
       } catch (error) {
-        console.error('Error fetching perfumes:', error);
+        console.error('Error fetching and combining perfumes:', error);
       } finally {
         setIsLoadingPerfumes(false);
       }
     };
 
-    fetchPerfumes();
-  }, []);
-
-  // Effect to refresh ratings data when the component mounts or auth state changes
-  useEffect(() => {
-    const refreshRatingsData = async () => {
-      if (isAuthenticated) {
-        // Fetch ratings from backend if user is authenticated
-        await fetchUserRatings();
-      }
-    };
-
-    refreshRatingsData();
-  }, [isAuthenticated, fetchUserRatings]);
+    fetchAndCombinePerfumes();
+  }, [isLoadingOrderedPerfumeIds, orderedPerfumeIdsFromOrders]); // Rerun if ordered IDs change
 
   // Effect to attempt submitting local ratings when user becomes authenticated
   // Will only run once when user becomes authenticated
@@ -180,13 +242,18 @@ export default function RatingsScreen() {
     return allPerfumes.filter(perfume => ratedIds.has(perfume.id));
   }, [ratings, allPerfumes, isLoadingPerfumes]);
 
-  // Get perfumes to be rated (initially all perfumes not yet rated)
+  // Get perfumes to be rated:
+  // These are perfumes from storage (ordered by the user) that are not yet rated.
   const porCalificarPerfumes = useMemo(() => {
-    if (isLoadingPerfumes || !allPerfumes.length) return [];
+    if (isLoadingPerfumes || isLoadingRatings || isLoadingOrderedPerfumeIds || !allPerfumes.length) return [];
 
-    const ratedIds = new Set(ratings.map(r => r.perfumeId)); // Correctly map array to set of IDs
-    return allPerfumes.filter(perfume => !ratedIds.has(perfume.id));
-  }, [ratings, allPerfumes, isLoadingPerfumes]);
+    const ratedIds = new Set(ratings.map(r => r.perfumeId));
+    const orderedSet = new Set(orderedPerfumeIdsFromOrders);
+
+    return allPerfumes.filter(perfume =>
+      orderedSet.has(perfume.id) && !ratedIds.has(perfume.id)
+    );
+  }, [ratings, allPerfumes, orderedPerfumeIdsFromOrders, isLoadingPerfumes, isLoadingRatings, isLoadingOrderedPerfumeIds]);
 
   // Determine which list to display based on search query and active tab
   const perfumesToDisplay = useMemo(() => {
@@ -264,7 +331,7 @@ export default function RatingsScreen() {
 
   // --- Loading State ---
 
-  if (isLoadingRatings || isLoadingPerfumes) { // Check both loading states
+  if (isLoadingRatings || isLoadingPerfumes || isLoadingOrderedPerfumeIds) { // Check all relevant loading states
     return (
       <SafeAreaView style={[styles.container, styles.loadingContainer]}>
         <ActivityIndicator size="large" color={COLORS.PRIMARY} />

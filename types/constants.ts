@@ -4,10 +4,11 @@ export const STORAGE_KEYS = {
   RATINGS: 'perfume_ratings',
   FAVORITES: 'perfume_favorites',
   MANUAL_BOX: 'manual_box_data',
-  AUTH_USER_EMAIL: 'auth_user_email', // Added for current logged-in user
-  USER_DATA_PREFIX: 'user_', // Added prefix for storing individual user data
-  CART: 'cart_data', // Added for shopping cart persistence
-  SUBSCRIPTION_STATUS: 'subscription_status', // Added for subscription status persistence
+  AUTH_USER_EMAIL: 'auth_user_email',
+  USER_DATA_PREFIX: 'user_',
+  CART: 'cart_data',
+  SUBSCRIPTION_STATUS: 'subscription_status',
+  ORDERED_PERFUMES_FOR_RATING: 'ordered_perfumes_for_rating',
 } as const;
 
 export const FONTS = {
@@ -17,18 +18,17 @@ export const FONTS = {
 } as const;
 
 export const COLORS = {
-  PRIMARY: '#000', // Main text, buttons, icons (Black)
-  SECONDARY: '#22222', // Secondary elements (Dark Grey) - Added
-  ACCENT: '#809CAC', // Accent color (Blue) - Added
-  BACKGROUND: '#FFFFFF', // Main background (White)
-  BACKGROUND_ALT: '#F5F5F7', // Alternative background (Light Grey) - Added
-  TEXT_PRIMARY: '#1C1C1E', // Primary text (Near Black) - Added
-  TEXT_SECONDARY: '#666', // Secondary text (Grey)
-  BORDER: '#E0E0E0', // Border color (Light Grey) - Added
-  ERROR: '#a31818', // Error messages (Red)
-  SUCCESS: '#34C759', // Success indicators (Green) - Added
+  PRIMARY: '#000',
+  SECONDARY: '#22222',
+  ACCENT: '#809CAC',
+  BACKGROUND: '#FFFFFF',
+  BACKGROUND_ALT: '#F5F5F7',
+  TEXT_PRIMARY: '#1C1C1E',
+  TEXT_SECONDARY: '#666',
+  BORDER: '#E0E0E0',
+  ERROR: '#a31818',
+  SUCCESS: '#34C759',
 
-  // Giftbox colors
   GIFTBOX: {
     BACKGROUND: '#f8f9fa',
     BACKGROUND_ALT: '#ffffff',
@@ -54,22 +54,21 @@ export const COLORS = {
 } as const;
 
 export const FONT_SIZES = {
-  XLARGE: 24, // Added
-  LARGE: 18, // Added
+  XLARGE: 24,
+  LARGE: 18,
   REGULAR: 16,
   SMALL: 14,
-  XSMALL: 12, // Added
+  XSMALL: 12,
 } as const;
 
 export const SPACING = {
-  XLARGE: 32, // Added
+  XLARGE: 32,
   LARGE: 20,
   MEDIUM: 12,
   SMALL: 8,
-  XSMALL: 4, // Added
+  XSMALL: 4,
 } as const;
 
-// Define the details for each subscription tier
 export const SUBSCRIPTION_TIERS: SubscriptionTierDetails[] = [
   {
     id: 'basic',

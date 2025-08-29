@@ -117,10 +117,12 @@ function ProtectedRoutes() {
 
     console.log("Root layout auth check:", {
       isLoggedIn: !!user,
+      "Auth state": user ? 'authenticated' : 'null',
       segments,
       inAuthGroup,
       inProfileSection,
-      inRatingsSection
+      inRatingsSection,
+      isAuthLoading
     });
 
     // Redirection logic

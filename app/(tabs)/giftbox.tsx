@@ -7,7 +7,7 @@ import {
   ScrollView,
   ActivityIndicator,
 } from 'react-native';
-import { SPACING, FONT_SIZES, COLORS } from '../../types/constants';
+import { SPACING, FONT_SIZES, COLORS, FONTS } from '../../types/constants';
 import PredefinedBoxModal from '@/components/product/PredefinedBoxModal';
 import { getPredefinedBoxes, ApiPredefinedBox } from '../../src/services/api';
 import GenderSelector, { type Genero } from '@/components/product/GenderSelector';
@@ -57,7 +57,15 @@ export default function PantallaCajaRegalo() {
   }, [generoSeleccionado]);
 
   const getGenderColors = (gender: 'masculino' | 'femenino') => {
-    return gender === 'masculino' ? COLORS.GIFTBOX.MALE : COLORS.GIFTBOX.FEMALE;
+    return gender === 'masculino' ? {
+      PRIMARY: COLORS.ACCENT,
+      LIGHT: '#A8C0D1',
+      BG: COLORS.BACKGROUND_ALT,
+    } : {
+      PRIMARY: '#D4A5A5',
+      LIGHT: '#E8BFB0',
+      BG: COLORS.BACKGROUND_ALT,
+    };
   };
 
   const handleBoxPress = (box: ApiPredefinedBox) => {
@@ -113,21 +121,26 @@ export default function PantallaCajaRegalo() {
         <Text style={styles.pageTitle}>Cajas de Regalo</Text>
         <Text style={styles.pageSubtitle}>Selecciona tu caja ideal según tus preferencias</Text>
 
-        {/* Gender Selection */}
-        <GenderSelector
-          selectedGender={generoSeleccionado}
-          onSelectGender={setGeneroSeleccionado}
-        />
-
-        {/* Decant Selection */}
-        <Text style={styles.sectionTitle}>Tamaño de Muestra</Text>
-        <DecantSelector
-          decantCount={decantCount}
-          onSelectDecant={setDecantCount}
-          genderColors={currentGenderColors}
-        />
-
         <View style={styles.filtersContainer}>
+          {/* Gender Selection */}
+          <View style={styles.filterSection}>
+            <Text style={styles.sectionTitle}>Género</Text>
+            <GenderSelector
+              selectedGender={generoSeleccionado}
+              onSelectGender={setGeneroSeleccionado}
+            />
+          </View>
+
+          {/* Decant Selection */}
+          <View style={styles.filterSection}>
+            <Text style={styles.sectionTitle}>Tamaño de Muestra</Text>
+            <DecantSelector
+              decantCount={decantCount}
+              onSelectDecant={setDecantCount}
+              genderColors={currentGenderColors}
+            />
+          </View>
+
           {/* Price Range Selection */}
           <View style={styles.filterSection}>
             <Text style={styles.sectionTitle}>Rango de Precio</Text>
@@ -141,9 +154,14 @@ export default function PantallaCajaRegalo() {
 
         {/* Results Display */}
         {isLoading ? (
-          <ActivityIndicator size="large" color={COLORS.ACCENT} style={{ marginTop: SPACING.MEDIUM }} />
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={COLORS.ACCENT} />
+            <Text style={styles.loadingText}>Cargando cajas de regalo...</Text>
+          </View>
         ) : error ? (
-          <Text style={styles.errorText}>{error}</Text>
+          <View style={styles.errorContainer}>
+            <Text style={styles.errorText}>{error}</Text>
+          </View>
         ) : (
           <View style={styles.cardsContainer}>
             {filteredBoxes.length === 0 && !isLoading && (
@@ -182,10 +200,10 @@ export default function PantallaCajaRegalo() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.GIFTBOX.BACKGROUND_ALT,
+    backgroundColor: '#FFFEFC',
   },
   scrollContentContainer: {
-    paddingBottom: SPACING.LARGE,
+    paddingBottom: SPACING.XLARGE,
   },
   content: {
     paddingHorizontal: SPACING.LARGE,
@@ -195,58 +213,85 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   pageTitle: {
-    fontSize: FONT_SIZES.XLARGE,
-    fontWeight: '800',
-    color: COLORS.GIFTBOX.TEXT_PRIMARY,
+    fontSize: FONT_SIZES.XLARGE + 2,
+    fontWeight: '700',
+    color: COLORS.TEXT_PRIMARY,
     marginBottom: SPACING.XSMALL,
     textAlign: 'center',
+    fontFamily: FONTS.INSTRUMENT_SANS,
   },
   pageSubtitle: {
-    fontSize: FONT_SIZES.SMALL,
-    color: COLORS.GIFTBOX.TEXT_SECONDARY,
-    marginBottom: SPACING.LARGE,
+    fontSize: FONT_SIZES.REGULAR,
+    color: COLORS.TEXT_SECONDARY,
+    marginBottom: SPACING.XLARGE,
     textAlign: 'center',
+    fontFamily: FONTS.INSTRUMENT_SANS,
+    lineHeight: 22,
   },
   filtersContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    marginBottom: SPACING.SMALL,
-    width: '100%',
+    backgroundColor: COLORS.BACKGROUND,
+    borderRadius: 16,
+    padding: SPACING.LARGE,
+    marginBottom: SPACING.LARGE,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
   },
   filterSection: {
-    width: '48%',
-    minWidth: 140,
-    marginBottom: SPACING.SMALL,
-    flex: 1,
+    marginBottom: SPACING.MEDIUM,
   },
   sectionTitle: {
-    fontSize: FONT_SIZES.SMALL,
+    fontSize: FONT_SIZES.REGULAR,
     fontWeight: '600',
-    color: COLORS.GIFTBOX.TEXT_PRIMARY,
-    marginBottom: SPACING.SMALL,
+    color: COLORS.TEXT_PRIMARY,
+    marginBottom: SPACING.MEDIUM,
     textAlign: 'center',
-    marginTop: SPACING.SMALL,
+    fontFamily: FONTS.INSTRUMENT_SANS,
   },
   cardsContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: SPACING.MEDIUM,
-    marginTop: SPACING.MEDIUM,
     justifyContent: 'center',
     width: '100%',
   },
-  errorText: {
+  loadingContainer: {
+    alignItems: 'center',
+    paddingVertical: SPACING.XLARGE,
+  },
+  loadingText: {
     marginTop: SPACING.MEDIUM,
-    color: COLORS.GIFTBOX.ERROR,
+    fontSize: FONT_SIZES.REGULAR,
+    color: COLORS.TEXT_SECONDARY,
+    fontFamily: FONTS.INSTRUMENT_SANS,
+  },
+  errorContainer: {
+    alignItems: 'center',
+    paddingVertical: SPACING.XLARGE,
+    backgroundColor: COLORS.BACKGROUND,
+    borderRadius: 12,
+    marginTop: SPACING.MEDIUM,
+  },
+  errorText: {
+    color: COLORS.ERROR,
     textAlign: 'center',
     fontSize: FONT_SIZES.REGULAR,
+    fontFamily: FONTS.INSTRUMENT_SANS,
   },
   noResultsText: {
-    marginTop: SPACING.MEDIUM,
-    color: COLORS.GIFTBOX.TEXT_SECONDARY,
+    marginTop: SPACING.LARGE,
+    color: COLORS.TEXT_SECONDARY,
     textAlign: 'center',
     fontSize: FONT_SIZES.REGULAR,
     width: '100%',
+    fontFamily: FONTS.INSTRUMENT_SANS,
+    backgroundColor: COLORS.BACKGROUND,
+    padding: SPACING.LARGE,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: COLORS.BORDER,
+    borderStyle: 'dashed',
   },
 });

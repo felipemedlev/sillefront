@@ -31,16 +31,39 @@ export default function CheckoutScreen() {
     );
   }
 
-  if (!user) {
-    router.replace('/login');
+  if (!user && !isAuthLoading) {
+    // If user is not authenticated and not loading, redirect to login with checkout return intent
+    router.replace({
+      pathname: '/login',
+      params: { 
+        returnUrl: 'checkout',
+        finalPrice: finalPrice || '0'
+      }
+    });
     return null;
+  }
+
+  // Show loading while user context is loading after authentication
+  if (!user && isAuthLoading) {
+    return (
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <ActivityIndicator size="large" color={COLORS.PRIMARY} />
+        <Text style={styles.loadingText}>Cargando...</Text>
+      </View>
+    );
   }
 
 
   const handlePlaceOrder = async () => {
     if (!user) {
       Alert.alert("Error", "Debes iniciar sesión para realizar un pedido.");
-      router.push('/login');
+      router.push({
+        pathname: '/login',
+        params: { 
+          returnUrl: 'checkout',
+          finalPrice: finalPrice || '0'
+        }
+      });
       return;
     }
 

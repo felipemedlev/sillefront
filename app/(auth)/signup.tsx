@@ -11,7 +11,7 @@ import {
   Dimensions,
   ActivityIndicator,
 } from 'react-native';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '../../src/context/AuthContext';
@@ -23,6 +23,7 @@ import { COLORS, FONTS, SPACING, FONT_SIZES } from '../../types/constants';
 const { width } = Dimensions.get('window');
 
 export default function SignUpScreen() {
+  const { returnUrl, finalPrice } = useLocalSearchParams<{ returnUrl?: string, finalPrice?: string }>();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -50,8 +51,6 @@ export default function SignUpScreen() {
       const result = await register({ email: email.trim(), password });
 
       if (result.success) {
-        // Log authentication state for debugging using context value already obtained
-        console.log("Registration successful, user state:", { authenticated: !!user });
 
         // After successful registration, attempt to submit any pending survey responses
         try {
@@ -71,9 +70,17 @@ export default function SignUpScreen() {
           // Don't fail the registration process if ratings submission fails
         }
 
-        // Navigate immediately - the root layout will handle redirection properly
-        // if auth state isn't ready yet
-        router.replace('/(tabs)');
+        // Handle navigation based on returnUrl
+        if (returnUrl === 'checkout' && finalPrice) {
+          // Redirect back to checkout with the original price
+          router.replace({
+            pathname: '/checkout',
+            params: { finalPrice: finalPrice }
+          });
+        } else {
+          // Default navigation to tabs
+          router.replace('/(tabs)');
+        }
       } else {
         setError(result.error || 'Ocurrió un error durante el registro.');
       }
@@ -130,7 +137,10 @@ export default function SignUpScreen() {
 
               <TouchableOpacity
                 style={styles.authToggleOption}
-                onPress={() => router.push('/login')}
+                onPress={() => router.push({
+                  pathname: '/login',
+                  params: { returnUrl, finalPrice }
+                })}
                 activeOpacity={0.7}
                 disabled={isLoading}
               >

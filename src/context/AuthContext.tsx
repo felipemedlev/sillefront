@@ -138,11 +138,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           const isValid = await verifyToken(storedToken);
 
           if (isValid) {
-            console.log('Valid token found, setting authenticated state');
             setToken(storedToken);
-            await fetchUserProfile();
+            await fetchUserProfile(storedToken);
           } else {
-            console.log('Invalid token found, clearing auth state');
             await storeToken(null);
           }
         }
@@ -156,8 +154,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     initAuth();
   }, []);
 
-  const fetchUserProfile = async () => {
-    if (!token) return;
+  const fetchUserProfile = async (tokenToUse?: string) => {
+    const activeToken = tokenToUse || token;
+    if (!activeToken) {
+      return;
+    }
 
     try {
       setError(null);
@@ -186,10 +187,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if (response?.auth_token) {
         // Store the new token
         await storeToken(response.auth_token);
-        console.log('Login successful, token stored');
 
-        // Fetch user profile
-        await fetchUserProfile();
+        // Fetch user profile with the new token
+        await fetchUserProfile(response.auth_token);
       } else {
         throw new Error('Login failed: No auth token received');
       }
@@ -220,8 +220,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // Clear local auth state
       setUser(null);
       await storeToken(null);
-
-      console.log('Logout complete');
     } finally {
       setIsLoading(false);
     }
@@ -253,8 +251,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             username: '' // Will be updated by fetchUserProfile
           });
 
-          // Fetch full profile in background
-          fetchUserProfile().catch(err => {
+          // Fetch full profile in background with the new token
+          fetchUserProfile(loginResponse.auth_token).catch(err => {
             console.error('Profile fetch after registration failed:', err);
           });
 
@@ -319,7 +317,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const value: AuthContextType = {
     token,
     user,
-    isAuthenticated: !!token,
+    isAuthenticated: !!token && !!user,
     isLoading,
     error,
     login: handleLogin,

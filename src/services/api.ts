@@ -188,6 +188,25 @@ export const removeItemFromBackendCart = async (cartItemBackendId: number): Prom
         method: 'DELETE',
         headers,
     });
+    
+    // Handle the DELETE response - it might return 204 No Content
+    if (response.status === 204) {
+        // Item was deleted successfully, now fetch the updated cart
+        const updatedCart = await fetchUserCart();
+        if (updatedCart) {
+            return updatedCart;
+        } else {
+            // Cart is now empty - return a minimal ApiCart structure
+            return { 
+                id: 0, 
+                user: { id: 0, email: '' }, 
+                items: [], 
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString() 
+            };
+        }
+    }
+    
     return handleResponse(response);
 };
 

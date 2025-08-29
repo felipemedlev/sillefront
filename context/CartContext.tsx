@@ -21,7 +21,8 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
   const [couponError, setCouponError] = useState<string | null>(null);
 
   const mapApiItemsToLocalState = useCallback((apiItems: ApiCartItem[], existingLocalItems: CartItem[] = []): CartItem[] => {
-    return apiItems.map(apiItem => {
+    
+    const mappedItems = apiItems.map(apiItem => {
       const existingItem = existingLocalItems.find(local => local.backendId === apiItem.id);
       const localId = existingItem?.id || uuidv4();
 
@@ -55,6 +56,8 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
         thumbnail_url: apiItem.perfume?.thumbnail_url || existingItem?.thumbnail_url || undefined,
       };
     });
+    
+    return mappedItems;
   }, []);
 
 
@@ -63,22 +66,17 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
     setError(null);
     setCouponError(null);
     try {
-      console.log("Attempting to fetch user cart from backend (refreshCart)...");
       const backendCartData = await fetchUserCart();
       if (backendCartData && backendCartData.items) {
-        console.log("Cart fetched from backend (refreshCart):", JSON.stringify(backendCartData, null, 2));
         setCartItems(currentCartItems => {
           const newCartItems = mapApiItemsToLocalState(backendCartData.items, currentCartItems);
-          console.log("Mapped local cart items (refreshCart):", JSON.stringify(newCartItems, null, 2));
           return newCartItems;
         });
       } else {
-        console.log("No cart data (or no items in cart) received from backend (refreshCart). Setting local cart to empty.");
         setCartItems([]);
       }
     } catch (err) {
       const appError = handleError(err);
-      console.error('Error loading cart from backend (refreshCart):', appError);
       if ((err as any).status !== 404) {
         setError(`Error loading cart: ${appError.message}`);
       } else {
@@ -123,7 +121,6 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
     const frontendBoxDetails = itemData.details;
 
     if (!frontendBoxDetails || !frontendBoxDetails.perfumes || !frontendBoxDetails.decantSize || !frontendBoxDetails.decantCount) {
-        console.error('addItemToCart: Invalid BoxDetails in itemData.details. Missing perfumes, decantSize, or decantCount.', itemData);
         setError('Item details are incomplete for adding to cart.');
         setIsLoading(false);
         return;
@@ -152,20 +149,16 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
     };
 
     try {
-        console.log(`Attempting to add ${itemData.productType} (as BOX) to backend cart:`, payload);
         const backendCartResponse: ApiCart = await addItemToBackendCart(payload);
-        console.log(`${itemData.productType} (as BOX) added to backend cart successfully, response:`, backendCartResponse);
 
         if (backendCartResponse && backendCartResponse.items) {
           setCartItems(currentCartItems => mapApiItemsToLocalState(backendCartResponse.items, currentCartItems));
         } else {
-          console.error("addItemToCart: Backend did not return updated cart items as expected.");
           setError("Failed to confirm item addition with the server. Please try again.");
         }
 
     } catch (err) {
         const appError = handleError(err);
-        console.error(`Error adding ${itemData.productType} (as BOX) to backend cart:`, appError);
         setError(`Error adding box: ${appError.message}`);
     } finally {
         setIsLoading(false);
@@ -173,6 +166,7 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
   }, [mapApiItemsToLocalState]);
 
   const removeItemFromCart = useCallback(async (localItemId: string) => {
+    
     setError(null);
     setCouponError(null);
     setIsLoading(true);
@@ -180,7 +174,6 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
     const itemToRemove = cartItems.find(item => item.id === localItemId);
 
     if (!itemToRemove) {
-      console.warn(`removeItemFromCart: Item with local ID ${localItemId} not found.`);
       setError("Item not found in cart.");
       setIsLoading(false);
       return;
@@ -188,28 +181,25 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
 
     if (itemToRemove.backendId) {
       try {
-        console.log(`Attempting to remove item with backendId ${itemToRemove.backendId} from backend cart.`);
         const updatedBackendCart = await removeItemFromBackendCart(itemToRemove.backendId);
-        console.log('Item removed from backend cart successfully. Response:', updatedBackendCart);
-        if (updatedBackendCart && updatedBackendCart.items) {
-          setCartItems(currentCartItems => mapApiItemsToLocalState(updatedBackendCart.items, currentCartItems));
-        } else if (updatedBackendCart && updatedBackendCart.items && updatedBackendCart.items.length === 0) {
+        
+        
+        if (updatedBackendCart) {
+          if (updatedBackendCart.items && updatedBackendCart.items.length > 0) {
+            setCartItems(currentCartItems => mapApiItemsToLocalState(updatedBackendCart.items, currentCartItems));
+          } else {
             setCartItems([]);
-        } else if (!updatedBackendCart) {
-            setCartItems([]);
+          }
         } else {
-          console.warn("removeItemFromCart: Backend response was not the full cart or null. Removing item locally.");
-          setCartItems((prevItems) => prevItems.filter((item) => item.id !== localItemId));
+          setCartItems([]);
         }
       } catch (err) {
         const appError = handleError(err);
-        console.error(`Error removing item (backendId: ${itemToRemove.backendId}) from backend cart:`, appError);
         setError(`Error removing item: ${appError.message}`);
       } finally {
         setIsLoading(false);
       }
     } else {
-      console.warn(`Item with local ID ${localItemId} has no backendId. Removing locally only.`);
       setCartItems((prevItems) => prevItems.filter((item) => item.id !== localItemId));
       setIsLoading(false);
     }
@@ -221,13 +211,10 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
     setAppliedCoupon(null);
     setIsLoading(true);
     try {
-      console.log('Attempting to clear backend cart.');
       await clearBackendCart();
-      console.log('Backend cart cleared successfully.');
       setCartItems([]);
     } catch (err) {
       const appError = handleError(err);
-      console.error('Error clearing backend cart:', appError);
       setError(`Error clearing cart: ${appError.message}`);
     } finally {
       setIsLoading(false);
@@ -235,7 +222,6 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
   }, []);
 
   const handleSuccessfulOrder = useCallback(() => {
-    console.log("Order successful, clearing local cart state.");
     setCartItems([]);
     setAppliedCoupon(null);
     setError(null);
@@ -283,11 +269,9 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
         expiryDate: data.expiry_date ? new Date(data.expiry_date).getTime() : undefined,
       };
       setAppliedCoupon(validatedCoupon);
-      console.log('Coupon applied:', validatedCoupon);
 
     } catch (err) {
       const appError = handleError(err);
-      console.error('Error applying coupon:', appError);
       setCouponError(`Error al aplicar cupón: ${appError.message}`);
       setAppliedCoupon(null);
     } finally {

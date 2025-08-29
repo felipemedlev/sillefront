@@ -1,12 +1,14 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { fetchSurveyQuestions, ApiSurveyQuestion, submitSurveyResponse, authUtils } from '../src/services/api';
+import { useAuth } from '../src/context/AuthContext';
 import Constants from 'expo-constants';
 
 // Define API_BASE_URL
 const API_BASE_URL = Constants.expoConfig?.extra?.apiBaseUrl || 'http://127.0.0.1:8000/api';
 const AUTH_STATE_EVENT = 'auth.changed';
 const SURVEY_ANSWERS_KEY = 'survey.answers';
+const SURVEY_PROGRESS_KEY = 'survey.progress';
 // Minimum time between survey submissions (in milliseconds)
 const MIN_SUBMISSION_INTERVAL = 5000; // 5 seconds
 
@@ -31,18 +33,21 @@ type SurveyContextType = {
   questions: ApiSurveyQuestion[];
   isLoadingQuestions: boolean;
   questionError: string | null;
+  getCurrentQuestionIndex: () => number;
+  saveProgress: (currentQuestionId: string) => Promise<void>;
+  getLastQuestionId: () => Promise<string | null>;
 };
 
 const SurveyContext = createContext<SurveyContextType | undefined>(undefined);
 
 export const SurveyProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { isAuthenticated, user } = useAuth();
   const [answers, setAnswers] = useState<SurveyAnswers>({});
   const [questions, setQuestions] = useState<ApiSurveyQuestion[]>([]);
   const [isLoadingQuestions, setIsLoadingQuestions] = useState(true);
   const [questionError, setQuestionError] = useState<string | null>(null);
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [pendingUpload, setPendingUpload] = useState<boolean>(false);
-  const [authInitialized, setAuthInitialized] = useState<boolean>(false);
+  const [wasAuthenticated, setWasAuthenticated] = useState<boolean>(false);
   // Add a submission lock to prevent multiple submissions
   const isSubmitting = useRef<boolean>(false);
 
@@ -62,69 +67,46 @@ export const SurveyProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const resetSurvey = async () => {
     setAnswers({});
     await AsyncStorage.removeItem(SURVEY_ANSWERS_KEY);
+    await AsyncStorage.removeItem(SURVEY_PROGRESS_KEY);
+    // Also clear from localStorage for web
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem(SURVEY_ANSWERS_KEY);
+      localStorage.removeItem(SURVEY_PROGRESS_KEY);
+    }
   };
 
-  // Listen for standard auth events
+  // Listen for authentication state changes from AuthContext
   useEffect(() => {
-    // Function to check auth status and handle accordingly
-    const checkAuthState = async () => {
-      try {
-        console.log('Checking auth state in SurveyContext');
-        const token = await authUtils.getToken();
-        const isValid = !!(token && token.trim() !== '');
+    console.log('SurveyContext: Auth state check -', { isAuthenticated, user: !!user, wasAuthenticated });
+    
+    // Handle transition to authenticated state
+    if (isAuthenticated && !wasAuthenticated && Object.keys(answers).length > 0) {
+      // Check if we've recently submitted
+      const now = Date.now();
+      const timeSinceLastSubmission = now - lastSubmissionTime.current;
 
-        // If auth state changed, update and take appropriate actions
-        if (isValid !== isAuthenticated || !authInitialized) {
-          console.log(`Auth state changed: ${isAuthenticated} → ${isValid}`);
-          setIsAuthenticated(isValid);
-          setAuthInitialized(true);
-
-          // Handle transition to authenticated state
-          if (isValid && !isAuthenticated && Object.keys(answers).length > 0) {
-            // Check if we've recently submitted
-            const now = Date.now();
-            const timeSinceLastSubmission = now - lastSubmissionTime.current;
-
-            if (timeSinceLastSubmission > MIN_SUBMISSION_INTERVAL) {
-              console.log('User authenticated with pending survey data - attempting submission');
-              // Use setTimeout to ensure state updates are processed first
-              setTimeout(() => {
-                // Only attempt submission if not already submitting
-                if (!isSubmitting.current) {
-                  submitSurveyIfAuthenticated();
-                }
-              }, 300);
-              setPendingUpload(false);
-            } else {
-              console.log(`Skipping auth-triggered submission (last submission was ${Math.round(timeSinceLastSubmission/1000)}s ago)`);
-            }
+      if (timeSinceLastSubmission > MIN_SUBMISSION_INTERVAL) {
+        console.log('User authenticated with pending survey data - attempting submission');
+        setTimeout(() => {
+          if (!isSubmitting.current) {
+            submitSurveyIfAuthenticated();
           }
-
-          // Handle transition to unauthenticated state
-          if (!isValid && isAuthenticated && Object.keys(answers).length > 0) {
-            console.log('User logged out with survey data - marking as pending');
-            setPendingUpload(true);
-          }
-        }
-      } catch (error) {
-        console.error('Error checking auth state:', error);
+        }, 300);
+        setPendingUpload(false);
+      } else {
+        console.log(`Skipping auth-triggered submission (last submission was ${Math.round(timeSinceLastSubmission/1000)}s ago)`);
       }
-    };
+    }
 
-    // Initial check
-    checkAuthState();
+    // Handle transition to unauthenticated state
+    if (!isAuthenticated && wasAuthenticated && Object.keys(answers).length > 0) {
+      console.log('User logged out with survey data - marking as pending');
+      setPendingUpload(true);
+    }
 
-    // Listen for the standardized auth event
-    const handleAuthEvent = () => {
-      checkAuthState();
-    };
-
-    window.addEventListener(AUTH_STATE_EVENT, handleAuthEvent);
-
-    return () => {
-      window.removeEventListener(AUTH_STATE_EVENT, handleAuthEvent);
-    };
-  }, [isAuthenticated, answers]);
+    // Update the previous auth state
+    setWasAuthenticated(isAuthenticated);
+  }, [isAuthenticated, user, answers]);
 
   // Fetch questions from API on mount
   useEffect(() => {
@@ -278,6 +260,61 @@ export const SurveyProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
   };
 
+  // Progress persistence functions
+  const getCurrentQuestionIndex = () => {
+    if (!questions || questions.length === 0) return 0;
+    const answeredCount = Object.keys(answers).length;
+    return Math.min(answeredCount, questions.length - 1);
+  };
+
+  const saveProgress = async (currentQuestionId: string) => {
+    try {
+      const progressData = {
+        currentQuestionId,
+        timestamp: Date.now(),
+        totalQuestions: questions.length,
+        answeredCount: Object.keys(answers).length
+      };
+      
+      // Save to AsyncStorage
+      await AsyncStorage.setItem(SURVEY_PROGRESS_KEY, JSON.stringify(progressData));
+      
+      // Save to localStorage for web
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(SURVEY_PROGRESS_KEY, JSON.stringify(progressData));
+      }
+    } catch (error) {
+      console.error('Error saving survey progress:', error);
+    }
+  };
+
+  const getLastQuestionId = async (): Promise<string | null> => {
+    try {
+      // Try localStorage first (for web)
+      let storedProgress = null;
+      if (typeof window !== 'undefined') {
+        storedProgress = localStorage.getItem(SURVEY_PROGRESS_KEY);
+      }
+      
+      // Fall back to AsyncStorage
+      if (!storedProgress) {
+        storedProgress = await AsyncStorage.getItem(SURVEY_PROGRESS_KEY);
+      }
+      
+      if (storedProgress) {
+        const progressData = JSON.parse(storedProgress);
+        // Check if progress is recent (within 7 days)
+        const sevenDaysAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
+        if (progressData.timestamp > sevenDaysAgo) {
+          return progressData.currentQuestionId;
+        }
+      }
+    } catch (error) {
+      console.error('Error loading survey progress:', error);
+    }
+    return null;
+  };
+
   return (
     <SurveyContext.Provider
       value={{
@@ -291,6 +328,9 @@ export const SurveyProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         questions,
         isLoadingQuestions,
         questionError,
+        getCurrentQuestionIndex,
+        saveProgress,
+        getLastQuestionId,
       }}
     >
       {children}

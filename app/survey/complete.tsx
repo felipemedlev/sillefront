@@ -1,19 +1,21 @@
 import React, { useEffect, useRef } from 'react';
-import { Dimensions, StyleSheet, Animated } from 'react-native';
+import { Dimensions, StyleSheet, Animated, View, Text, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import Logo from '../../assets/images/Logo.svg';
 import { useSurveyContext } from '../../context/SurveyContext';
+import { useAuth } from '../../src/context/AuthContext';
 
 export default function CompleteScreen() {
   const router = useRouter();
-  const { submitSurveyIfAuthenticated } = useSurveyContext(); // Get submission function
+  const { submitSurveyIfAuthenticated } = useSurveyContext();
+  const { isAuthenticated } = useAuth();
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.8)).current;
   const { width } = Dimensions.get('window');
   const isDesktop = width >= 768;
 
   useEffect(() => {
-    // Attempt survey submission on mount
+    // Always attempt survey submission (will handle authentication internally)
     submitSurveyIfAuthenticated();
 
     // Entrance animation
@@ -31,19 +33,23 @@ export default function CompleteScreen() {
       }),
     ]).start();
 
-
-    // Exit animation after delay
+    // Exit animation after delay - redirect to auth gate for recommendations
     setTimeout(() => {
       Animated.timing(fadeAnim, {
         toValue: 0,
         duration: 1000,
         useNativeDriver: true,
       }).start(() => {
-        // Redirect to home after survey completion
-        router.replace('/home');
+        if (isAuthenticated) {
+          // Authenticated users go straight to home
+          router.replace('/home');
+        } else {
+          // Anonymous users see auth prompt to access recommendations
+          router.replace('/survey-auth-gate');
+        }
       });
     }, 2000);
-  }, [fadeAnim, scaleAnim, router, submitSurveyIfAuthenticated]); // Add submitSurveyIfAuthenticated to dependencies
+  }, [fadeAnim, scaleAnim, router, submitSurveyIfAuthenticated, isAuthenticated]);
 
   return (
     <Animated.View style={[styles.container, { opacity: fadeAnim }]}>

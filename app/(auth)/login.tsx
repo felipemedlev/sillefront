@@ -11,7 +11,7 @@ import {
   Dimensions,
   ActivityIndicator,
 } from 'react-native';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '../../src/context/AuthContext';
@@ -24,6 +24,7 @@ import { COLORS, FONTS, SPACING, FONT_SIZES } from '../../types/constants';
 const { width } = Dimensions.get('window');
 
 export default function LoginScreen() {
+  const { returnUrl, finalPrice } = useLocalSearchParams<{ returnUrl?: string, finalPrice?: string }>();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -67,8 +68,17 @@ export default function LoginScreen() {
         // Don't fail the login process if ratings submission fails
       }
 
-      // Navigate immediately - the root layout will handle redirection properly
-      router.replace('/(tabs)');
+      // Handle navigation based on returnUrl
+      if (returnUrl === 'checkout' && finalPrice) {
+        // Redirect back to checkout with the original price
+        router.replace({
+          pathname: '/checkout',
+          params: { finalPrice: finalPrice }
+        });
+      } else {
+        // Default navigation to tabs
+        router.replace('/(tabs)');
+      }
     } catch (err: any) {
       setError(err.message || 'Ocurrió un error al iniciar sesión.');
     } finally {
@@ -113,7 +123,10 @@ export default function LoginScreen() {
             <View style={styles.authToggle}>
               <TouchableOpacity
                 style={styles.authToggleOption}
-                onPress={() => router.push('/signup')}
+                onPress={() => router.push({
+                  pathname: '/signup',
+                  params: { returnUrl, finalPrice }
+                })}
                 activeOpacity={0.7}
                 disabled={isLoading}
               >

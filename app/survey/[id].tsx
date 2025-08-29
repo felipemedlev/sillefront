@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState, useMemo } from 'react'; // Added us
 import { View, Dimensions, Text, StyleSheet, TouchableOpacity, Image, Animated, useWindowDimensions } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSurveyContext } from '../../context/SurveyContext';
+import { SkeletonSurveyQuestion } from '../../components/ui/SkeletonLoader';
 import Logo from '../../assets/images/Logo.svg';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -62,6 +63,14 @@ const imageMap: { [key: string]: any } = { // Added type annotation
 };
 
 const emojiRatings = ['😖', '😒', '😐', '🙂', '😍'];
+const ratingLabels = ['Odio', 'No me gusta', 'Neutral', 'Me gusta', 'Amo'];
+const ratingDescriptions = [
+  'Evito completamente este aroma',
+  'No es para mí, prefiero otros',
+  'Está bien, no me molesta',
+  'Me gusta bastante este aroma',
+  'Me encanta, es perfecto para mí'
+];
 const screenHeight = Dimensions.get('window').height;
 const DESKTOP_BREAKPOINT = 768;
 
@@ -75,6 +84,7 @@ export default function SurveyQuestion() {
     questions,
     isLoadingQuestions: isLoading,
     questionError: error,
+    saveProgress,
   } = useSurveyContext();
 
   // Removed local useEffect for fetching questions - now handled by context
@@ -98,6 +108,7 @@ export default function SurveyQuestion() {
   const animatedScales = useRef(emojiRatings.map(() => new Animated.Value(1))).current;
   const { width } = useWindowDimensions();
   const isDesktop = width >= DESKTOP_BREAKPOINT;
+  const [hoveredRating, setHoveredRating] = useState<number | null>(null);
 
   const [fadeAnim] = useState(new Animated.Value(0));
   const [slideAnim] = useState(new Animated.Value(50));
@@ -126,6 +137,14 @@ export default function SurveyQuestion() {
     const updatedAnswers = { ...answers, [key]: value };
     // Removed the immediate API call. Submission will happen post-login/signup.
     setAnswer(key, value);
+    
+    // Save progress
+    try {
+      await saveProgress(questionId);
+    } catch (error) {
+      console.error('Error saving progress:', error);
+    }
+    
     if (nextQuestionId <= questions.length) {
       router.push({
         pathname: '/survey/[id]',
@@ -153,17 +172,29 @@ export default function SurveyQuestion() {
   };
 
   const handlePressIn = (index: number) => {
-    // Implement the logic for pressing in
+    setHoveredRating(index);
+    Animated.spring(animatedScales[index], {
+      toValue: 1.2,
+      useNativeDriver: true,
+      tension: 200,
+      friction: 3,
+    }).start();
   };
 
   const handlePressOut = (index: number) => {
-    // Implement the logic for pressing out
+    setHoveredRating(null);
+    Animated.spring(animatedScales[index], {
+      toValue: 1,
+      useNativeDriver: true,
+      tension: 200,
+      friction: 3,
+    }).start();
   };
 
   if (isLoading) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <Text>Cargando preguntas...</Text>
+      <View style={styles.container}>
+        <SkeletonSurveyQuestion />
       </View>
     );
   }
@@ -270,27 +301,51 @@ export default function SurveyQuestion() {
               </View>
             ) : (
               // Accord Rating Options
-              <View style={[styles.ratingContainer, isDesktop && styles.desktopRatingContainer]}>
-                {emojiRatings.map((emoji, index) => (
-                  <Animated.View
-                    key={index}
-                    style={{ transform: [{ scale: animatedScales[index] }] }}
-                  >
-                    <TouchableOpacity
-                      style={[
-                        styles.ratingButton,
-                        isDesktop && styles.desktopRatingButton,
-                        question.accord && answers[question.accord] === index + 1 ? styles.selectedRating : null,
-                      ].filter(Boolean)}
-                      onPress={() => handleRate(index + 1)}
-                      onPressIn={() => handlePressIn(index)}
-                      onPressOut={() => handlePressOut(index)}
+              <>
+                <View style={[styles.ratingContainer, isDesktop && styles.desktopRatingContainer]}>
+                  {emojiRatings.map((emoji, index) => (
+                    <Animated.View
+                      key={index}
+                      style={{ transform: [{ scale: animatedScales[index] }] }}
                     >
-                      <Text style={[styles.ratingText, isDesktop && styles.desktopRatingText]}>{emoji}</Text>
-                    </TouchableOpacity>
-                  </Animated.View>
-                ))}
-              </View>
+                      <TouchableOpacity
+                        style={[
+                          styles.ratingButton,
+                          isDesktop && styles.desktopRatingButton,
+                          question.accord && answers[question.accord] === index + 1 ? styles.selectedRating : null,
+                        ].filter(Boolean)}
+                        onPress={() => handleRate(index + 1)}
+                        onPressIn={() => handlePressIn(index)}
+                        onPressOut={() => handlePressOut(index)}
+                      >
+                        <Text style={[styles.ratingText, isDesktop && styles.desktopRatingText]}>{emoji}</Text>
+                      </TouchableOpacity>
+                    </Animated.View>
+                  ))}
+                </View>
+                
+                {/* Rating Labels */}
+                <View style={styles.ratingLabelsContainer}>
+                  <View style={styles.ratingScaleContainer}>
+                    <Text style={styles.scaleLabel}>{ratingLabels[0]}</Text>
+                    <View style={styles.scaleLine} />
+                    <Text style={styles.scaleLabel}>{ratingLabels[4]}</Text>
+                  </View>
+                  
+                  {/* Dynamic rating feedback */}
+                  <View style={styles.ratingFeedbackContainer}>
+                    {hoveredRating !== null ? (
+                      <Text style={styles.ratingFeedbackText}>
+                        {ratingLabels[hoveredRating]}: {ratingDescriptions[hoveredRating]}
+                      </Text>
+                    ) : (
+                      <Text style={styles.ratingPromptText}>
+                        Toca un emoji para valorar este aroma
+                      </Text>
+                    )}
+                  </View>
+                </View>
+              </>
             )}
             {question.type !== 'gender' && (
               <TouchableOpacity
@@ -521,5 +576,51 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
     color: '#222222',
+  },
+  ratingLabelsContainer: {
+    width: '100%',
+    marginTop: 20,
+    alignItems: 'center',
+  },
+  ratingScaleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+    width: '80%',
+  },
+  scaleLabel: {
+    fontSize: 12,
+    color: '#666',
+    fontWeight: '500',
+  },
+  scaleLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: '#E0E0E0',
+    marginHorizontal: 12,
+  },
+  ratingFeedbackContainer: {
+    minHeight: 50,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(128, 156, 172, 0.1)',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    width: '90%',
+  },
+  ratingFeedbackText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+    textAlign: 'center',
+    lineHeight: 22,
+  },
+  ratingPromptText: {
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
+    fontStyle: 'italic',
   },
 });

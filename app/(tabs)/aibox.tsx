@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, Animated, useWindowDimensions } from 'react-native'; // Import Animated and Platform
 import { router } from 'expo-router';
 import { COLORS, SPACING, FONTS, FONT_SIZES } from '../../types/constants';
+import { useAuth } from '../../src/context/AuthContext';
 
 const OCCASIONS = [
   { id: 1, title: 'Sexy', color: '#F5E6E6' },
@@ -18,6 +19,7 @@ const DESKTOP_BREAKPOINT = 768;
 
 export default function AIBoxScreen() {
   const { width } = useWindowDimensions();
+  const { isAuthenticated } = useAuth();
   const isDesktop = width >= DESKTOP_BREAKPOINT;
   const shakeAnimation = useRef(new Animated.Value(0)).current; // Animation value
 
@@ -35,6 +37,11 @@ export default function AIBoxScreen() {
   }, [shakeAnimation]); // Dependency array includes shakeAnimation
 
   const handleOpenPress = () => {
+    if (!isAuthenticated) {
+      // Show auth gate explaining the benefits of signing up
+      router.push('/survey-auth-gate');
+      return;
+    }
     router.push('/aibox-selection');
   };
 
@@ -72,7 +79,13 @@ export default function AIBoxScreen() {
                 { backgroundColor: occasion.color },
                 pressed && styles.occasionCardPressed,
               ]}
-              onPress={() => router.push({ pathname: '/occasion-selection', params: { occasionNames: occasion.title } })} // Pass occasion name
+              onPress={() => {
+                if (!isAuthenticated) {
+                  router.push('/survey-auth-gate');
+                  return;
+                }
+                router.push({ pathname: '/occasion-selection', params: { occasionNames: occasion.title } });
+              }} // Pass occasion name
             >
               <Text style={styles.occasionTitle}>{occasion.title}</Text>
             </Pressable>
@@ -86,7 +99,13 @@ export default function AIBoxScreen() {
             <Text style={styles.subtitle}>Crea tu Propia Selección</Text>
             <Text style={styles.mainTitle}>Box Personalizado</Text>
           </View>
-          <Pressable style={styles.openButton} onPress={() => router.push('../manual-box')}>
+          <Pressable style={styles.openButton} onPress={() => {
+            if (!isAuthenticated) {
+              router.push('/survey-auth-gate');
+              return;
+            }
+            router.push('../manual-box');
+          }}>
             <Text style={styles.openButtonText}>Configurar</Text>
           </Pressable>
         </View>

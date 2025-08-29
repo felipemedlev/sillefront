@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
+import { router } from 'expo-router';
 import BoxVisualizer from '../components/product/BoxVisualizer';
 import DecantSelector from '../components/product/DecantSelector';
 import PriceRangeSlider from '../components/product/PriceRangeSlider';
@@ -11,6 +12,7 @@ import AIBoxLoadingState from '../components/aibox/AIBoxLoadingState';
 import AIBoxErrorState from '../components/aibox/AIBoxErrorState';
 import AIBoxHeader from '../components/aibox/AIBoxHeader';
 import PerfumeSearchModal from '../components/product/PerfumeSearchModal';
+import { useAuth } from '../src/context/AuthContext';
 
 const styles = StyleSheet.create({
   container: {
@@ -24,6 +26,7 @@ const styles = StyleSheet.create({
 });
 
 export default function AIBoxSelectionScreen() {
+  const { isAuthenticated } = useAuth();
   const sliderContainerRef = React.useRef<View>(null);
   const [searchModalVisible, setSearchModalVisible] = React.useState(false);
   const [replaceIndex, setReplaceIndex] = React.useState<number | null>(null);
@@ -32,6 +35,18 @@ export default function AIBoxSelectionScreen() {
   // Track which perfumes were initially rendered to prevent them from reappearing
   const initialRenderRef = React.useRef<boolean>(false);
   const initialPerfumesRef = React.useRef<Set<string>>(new Set());
+
+  // Check authentication on mount
+  useEffect(() => {
+    if (!isAuthenticated) {
+      router.replace('/auth');
+    }
+  }, [isAuthenticated]);
+
+  // Don't render if not authenticated
+  if (!isAuthenticated) {
+    return null;
+  }
 
   return (
     <AIBoxProvider>

@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useRef } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput, ActivityIndicator, useWindowDimensions } from 'react-native';
 import { useCart } from '../../../context/CartContext';
 import { useAuth } from '../../../src/context/AuthContext';
@@ -121,6 +121,7 @@ const CartFooter: React.FC<CartFooterProps> = React.memo(({
 // --- CartScreen Component ---
 export default function CartScreen() {
   const router = useRouter();
+  const lastRefreshTime = useRef(0);
   const {
     cartItems,
     isLoading: isCartLoading,
@@ -147,9 +148,16 @@ export default function CartScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      console.log("Cart screen focused, refreshing cart...");
-      refreshCart();
-    }, [refreshCart])
+      const now = Date.now();
+      const timeSinceLastRefresh = now - lastRefreshTime.current;
+      
+      // Only refresh if it's been more than 2 seconds since last refresh
+      // and we're not currently loading (to avoid conflicts with ongoing operations)
+      if (!isCartLoading && timeSinceLastRefresh > 2000) {
+        lastRefreshTime.current = now;
+        refreshCart();
+      }
+    }, [refreshCart, isCartLoading])
   );
 
   const handleCheckoutPress = useCallback(() => {
@@ -159,7 +167,14 @@ export default function CartScreen() {
         params: { finalPrice: finalPrice },
       });
     } else {
-      router.push('/signup');
+      // Store checkout intent before redirecting to auth
+      router.push({
+        pathname: '/signup',
+        params: { 
+          returnUrl: 'checkout',
+          finalPrice: finalPrice.toString()
+        }
+      });
     }
   }, [user, finalPrice, router]);
 

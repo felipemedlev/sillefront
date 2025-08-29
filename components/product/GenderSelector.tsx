@@ -6,8 +6,7 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { SPACING, FONT_SIZES, COLORS } from '../../types/constants';
-import { LinearGradient } from 'expo-linear-gradient';
+import { SPACING, FONT_SIZES, COLORS, FONTS } from '../../types/constants';
 
 type Genero = 'masculino' | 'femenino';
 
@@ -21,41 +20,53 @@ const GenderSelector: React.FC<GenderSelectorProps> = ({ selectedGender, onSelec
     <TouchableOpacity
       style={[
         styles.generoOpcion,
-        selectedGender === 'masculino' && styles.generoOpcionSelected,
-        { borderColor: COLORS.GIFTBOX.MALE.PRIMARY }
+        selectedGender === 'masculino' && styles.generoOpcionSelected
       ]}
       onPress={() => onSelectGender('masculino')}
-      activeOpacity={0.7}
+      activeOpacity={0.8}
     >
-      <LinearGradient
-        colors={[COLORS.GIFTBOX.MALE.BG, COLORS.GIFTBOX.BACKGROUND_ALT]}
-        style={styles.generoGradient}
-      >
-        <View style={[styles.generoIconWrapper, { backgroundColor: COLORS.GIFTBOX.MALE.LIGHT }]}>
-          <Feather name="user" size={24} color="#fff" />
-        </View>
-        <Text style={[styles.generoLabel, { color: COLORS.GIFTBOX.MALE.PRIMARY }]}>Hombre</Text>
-      </LinearGradient>
+      <View style={[
+        styles.generoIconWrapper, 
+        { backgroundColor: selectedGender === 'masculino' ? COLORS.ACCENT : COLORS.BACKGROUND_ALT }
+      ]}>
+        <Feather 
+          name="user" 
+          size={20} 
+          color={selectedGender === 'masculino' ? '#fff' : COLORS.TEXT_SECONDARY} 
+        />
+      </View>
+      <Text style={[
+        styles.generoLabel, 
+        { color: selectedGender === 'masculino' ? COLORS.TEXT_PRIMARY : COLORS.TEXT_SECONDARY }
+      ]}>
+        Hombre
+      </Text>
     </TouchableOpacity>
 
     <TouchableOpacity
       style={[
         styles.generoOpcion,
-        selectedGender === 'femenino' && styles.generoOpcionSelected,
-        { borderColor: COLORS.GIFTBOX.FEMALE.PRIMARY }
+        selectedGender === 'femenino' && styles.generoOpcionSelected
       ]}
       onPress={() => onSelectGender('femenino')}
-      activeOpacity={0.7}
+      activeOpacity={0.8}
     >
-      <LinearGradient
-        colors={[COLORS.GIFTBOX.FEMALE.BG, COLORS.GIFTBOX.BACKGROUND_ALT]}
-        style={styles.generoGradient}
-      >
-        <View style={[styles.generoIconWrapper, { backgroundColor: COLORS.GIFTBOX.FEMALE.LIGHT }]}>
-          <Feather name="user" size={24} color="#fff" />
-        </View>
-        <Text style={[styles.generoLabel, { color: COLORS.GIFTBOX.FEMALE.PRIMARY }]}>Mujer</Text>
-      </LinearGradient>
+      <View style={[
+        styles.generoIconWrapper, 
+        { backgroundColor: selectedGender === 'femenino' ? '#D4A5A5' : COLORS.BACKGROUND_ALT }
+      ]}>
+        <Feather 
+          name="user" 
+          size={20} 
+          color={selectedGender === 'femenino' ? '#fff' : COLORS.TEXT_SECONDARY} 
+        />
+      </View>
+      <Text style={[
+        styles.generoLabel, 
+        { color: selectedGender === 'femenino' ? COLORS.TEXT_PRIMARY : COLORS.TEXT_SECONDARY }
+      ]}>
+        Mujer
+      </Text>
     </TouchableOpacity>
   </View>
 );
@@ -64,44 +75,42 @@ const styles = StyleSheet.create({
   generoContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginBottom: SPACING.MEDIUM,
     width: '100%',
     gap: SPACING.MEDIUM,
   },
   generoOpcion: {
     flex: 1,
-    maxWidth: 180,
+    maxWidth: 150,
+    backgroundColor: COLORS.BACKGROUND,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: COLORS.GIFTBOX.BORDER,
-    overflow: 'hidden',
-    elevation: 1,
-    shadowColor: COLORS.GIFTBOX.CARD_SHADOW,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 6,
-  },
-  generoOpcionSelected: {
-    borderWidth: 2,
-    elevation: 2,
-    shadowOpacity: 0.2,
-  },
-  generoGradient: {
+    borderColor: COLORS.BORDER,
     padding: SPACING.MEDIUM,
     alignItems: 'center',
-    paddingVertical: SPACING.MEDIUM,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 1,
+  },
+  generoOpcionSelected: {
+    borderColor: COLORS.ACCENT,
+    borderWidth: 2,
+    shadowOpacity: 0.1,
+    elevation: 2,
   },
   generoIconWrapper: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: SPACING.SMALL,
   },
   generoLabel: {
-    fontSize: FONT_SIZES.REGULAR,
+    fontSize: FONT_SIZES.SMALL,
     fontWeight: '600',
+    fontFamily: FONTS.INSTRUMENT_SANS,
   },
 });
 

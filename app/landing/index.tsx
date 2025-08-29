@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Dimensions, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useAuth } from '../../src/context/AuthContext';
 import {
   Button,
   Stepper,
@@ -14,6 +15,8 @@ import {
   IconButton
 } from '@mui/material';
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
+import AccountCircleIcon from '@mui/icons-material/AccountCircle';
+import LoginIcon from '@mui/icons-material/Login';
 
 // Import SVG Assets
 import Logo from '../../assets/images/Logo.svg';
@@ -58,6 +61,7 @@ const landingData: LandingItem[] = [
 
 const LandingScreen: React.FC = () => {
   const router = useRouter();
+  const { user, isAuthenticated } = useAuth();
   const theme = useTheme();
   const isDesktop = Platform.OS === 'web' && width >= DESKTOP_BREAKPOINT;
   const [activeStep, setActiveStep] = useState(0);
@@ -151,6 +155,40 @@ const LandingScreen: React.FC = () => {
             <ArrowBackIosNewIcon fontSize="small" />
           </IconButton>
         )}
+
+        {/* Authentication Button - Top Right */}
+        <Box sx={{
+          position: 'absolute',
+          right: 16,
+          top: 16,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 1,
+        }}>
+          {isAuthenticated ? (
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Typography variant="body2" sx={{ color: '#222222', fontSize: 14 }}>
+                {user?.email}
+              </Typography>
+              <IconButton
+                onClick={() => router.push('/(tabs)')}
+                sx={{ color: '#222222' }}
+                title="Ir a mi perfil"
+              >
+                <AccountCircleIcon />
+              </IconButton>
+            </Box>
+          ) : (
+            <IconButton
+              onClick={() => router.push('/(auth)/login')}
+              sx={{ color: '#222222' }}
+              title="Iniciar sesión"
+            >
+              <LoginIcon />
+            </IconButton>
+          )}
+        </Box>
+
         <Logo
           width={logoWidth}
           height="auto"
@@ -288,33 +326,78 @@ const LandingScreen: React.FC = () => {
           mt: 'auto',
           mb: isDesktop ? 5 : 3,
         }}>
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={handleNext}
-            sx={{
-              width: 200,
-              marginBottom: '10px',
-              bgcolor: '#222222',
-              '&:hover': {
-                bgcolor: '#333333',
-              },
-            }}
-          >
-            {currentLandingItem.buttonText}
-          </Button>
+          {/* Show different options for authenticated vs non-authenticated users */}
+          {isAuthenticated && activeStep === 0 ? (
+            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+              <Typography variant="body1" sx={{ 
+                textAlign: 'center', 
+                color: '#666',
+                fontSize: 16,
+                mb: 1
+              }}>
+                ¡Hola {user?.email?.split('@')[0]}! ¿Qué te gustaría hacer?
+              </Typography>
+              <Button
+                variant="contained"
+                onClick={() => router.push('/(tabs)')}
+                sx={{
+                  width: 220,
+                  marginBottom: '10px',
+                  bgcolor: '#222222',
+                  '&:hover': {
+                    bgcolor: '#333333',
+                  },
+                }}
+              >
+                Ver mis recomendaciones
+              </Button>
+              <Button
+                variant="outlined"
+                onClick={handleNext}
+                sx={{
+                  width: 220,
+                  color: '#222222',
+                  borderColor: '#222222',
+                  '&:hover': {
+                    borderColor: '#333333',
+                    bgcolor: 'rgba(34, 34, 34, 0.04)',
+                  },
+                }}
+              >
+                Hacer nuevo test
+              </Button>
+            </Box>
+          ) : (
+            <>
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={handleNext}
+                sx={{
+                  width: 200,
+                  marginBottom: '10px',
+                  bgcolor: '#222222',
+                  '&:hover': {
+                    bgcolor: '#333333',
+                  },
+                }}
+              >
+                {currentLandingItem.buttonText}
+              </Button>
 
-          {activeStep === landingData.length - 1 && (
-            <Button
-              variant="outlined"
-              color="secondary"
-              onClick={handleSkip}
-              sx={{
-                width: 200,
-              }}
-            >
-              Elegir mis decants
-            </Button>
+              {activeStep === landingData.length - 1 && (
+                <Button
+                  variant="outlined"
+                  color="secondary"
+                  onClick={handleSkip}
+                  sx={{
+                    width: 200,
+                  }}
+                >
+                  Elegir mis decants
+                </Button>
+              )}
+            </>
           )}
 
           {activeStep === 1 && (

@@ -166,18 +166,13 @@ const LandingScreen: React.FC = () => {
           gap: 1,
         }}>
           {isAuthenticated ? (
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Typography variant="body2" sx={{ color: '#222222', fontSize: 14 }}>
-                {user?.email}
-              </Typography>
-              <IconButton
-                onClick={() => router.push('/(tabs)')}
-                sx={{ color: '#222222' }}
-                title="Ir a mi perfil"
-              >
-                <AccountCircleIcon />
-              </IconButton>
-            </Box>
+            <IconButton
+              onClick={() => router.push('/(tabs)')}
+              sx={{ color: '#222222' }}
+              title="Ir a mi perfil"
+            >
+              <AccountCircleIcon />
+            </IconButton>
           ) : (
             <IconButton
               onClick={() => router.push('/(auth)/login')}
@@ -324,26 +319,23 @@ const LandingScreen: React.FC = () => {
           flexDirection: 'column',
           alignItems: 'center',
           mt: 'auto',
-          mb: isDesktop ? 5 : 3,
+          mb: isDesktop ? 5 : 4,
+          pb: 2,
         }}>
           {/* Show different options for authenticated vs non-authenticated users */}
           {isAuthenticated && activeStep === 0 ? (
             <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
-              <Typography variant="body1" sx={{ 
-                textAlign: 'center', 
-                color: '#666',
-                fontSize: 16,
-                mb: 1
-              }}>
-                ¡Hola {user?.email?.split('@')[0]}! ¿Qué te gustaría hacer?
-              </Typography>
               <Button
                 variant="contained"
                 onClick={() => router.push('/(tabs)')}
                 sx={{
-                  width: 220,
+                  width: 180,
+                  height: 40,
                   marginBottom: '10px',
                   bgcolor: '#222222',
+                  fontSize: '14px',
+                  textTransform: 'none',
+                  lineHeight: 1.2,
                   '&:hover': {
                     bgcolor: '#333333',
                   },
@@ -355,9 +347,12 @@ const LandingScreen: React.FC = () => {
                 variant="outlined"
                 onClick={handleNext}
                 sx={{
-                  width: 220,
+                  width: 180,
+                  height: 40,
                   color: '#222222',
                   borderColor: '#222222',
+                  fontSize: '14px',
+                  textTransform: 'none',
                   '&:hover': {
                     borderColor: '#333333',
                     bgcolor: 'rgba(34, 34, 34, 0.04)',

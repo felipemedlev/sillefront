@@ -5,6 +5,7 @@ import { useSurveyContext } from '../../context/SurveyContext';
 import { SkeletonSurveyQuestion } from '../../components/ui/SkeletonLoader';
 import Logo from '../../assets/images/Logo.svg';
 import { Ionicons } from '@expo/vector-icons';
+import { shouldUseNativeDriver } from '../../src/utils/animation';
 
 // Type for question (matches backend)
 // QuestionType is now implicitly handled by the context
@@ -40,7 +41,7 @@ const getAccordTranslation = (accord?: string): string => {
   // assuming your keys in accordTranslations are lowercase.
   // Adjust if your API sends varying cases and you want to handle that.
   const lowerAccord = accord.toLowerCase();
-  return accordTranslations[lowerAccord] || accord;// Fallback to original if no translation found
+  return accordTranslations[lowerAccord] || accord; // Fallback to original if no translation found
 };
 
 // Map images using lowercase accord names as keys
@@ -50,16 +51,16 @@ const imageMap: { [key: string]: any } = { // Added type annotation
   'woody': require('../../assets/images/survey_woody.png'),
   'floral': require('../../assets/images/survey_floral.png'),
   'vanilla': require('../../assets/images/survey_vanilla.png'),
-  'smoky': require('../../assets/images/survey_smoky.png'),
+  'smoky': require('../../assets/images/survey_smoky.jpg'),
   'lavender': require('../../assets/images/survey_lavender.png'),
   'fruity': require('../../assets/images/survey_fruity.png'),
   'cinnamon': require('../../assets/images/survey_cinnamon.png'),
   'warm spicy': require('../../assets/images/survey_spicy.png'),
-  'leather': require('../../assets/images/survey_leather.png'),
-  'honey': require('../../assets/images/survey_honey.png'),
-  'coffee': require('../../assets/images/survey_coffee.png'),
-  'earthy': require('../../assets/images/survey_earthy.png'),
-  'powdery': require('../../assets/images/survey_powdery.png'),
+  'leather': require('../../assets/images/survey_leather.jpg'),
+  'honey': require('../../assets/images/survey_honey.jpg'),
+  'coffee': require('../../assets/images/survey_coffee.jpg'),
+  'earthy': require('../../assets/images/survey_earthy.jpg'),
+  'powdery': require('../../assets/images/survey_powdery.jpg'),
 };
 
 const emojiRatings = ['😖', '😒', '😐', '🙂', '😍'];
@@ -117,13 +118,13 @@ export default function SurveyQuestion() {
     Animated.parallel([
       Animated.spring(fadeAnim, {
         toValue: 1,
-        useNativeDriver: true,
+        useNativeDriver: shouldUseNativeDriver,
         tension: 50,
         friction: 7,
       }),
       Animated.spring(slideAnim, {
         toValue: 0,
-        useNativeDriver: true,
+        useNativeDriver: shouldUseNativeDriver,
         tension: 50,
         friction: 7,
       }),
@@ -238,7 +239,7 @@ export default function SurveyQuestion() {
           <Ionicons name="chevron-back" size={32} color="#000000" />
         </TouchableOpacity>
         <View style={styles.logoContainer}>
-          <Logo width={isDesktop ? 160 : 120} height="auto" preserveAspectRatio="xMidYMid meet" />
+          <Logo width={isDesktop ? 160 : 120} height={isDesktop ? 48 : 36} preserveAspectRatio="xMidYMid meet" />
         </View>
       </View>
 
@@ -246,7 +247,7 @@ export default function SurveyQuestion() {
       {question ? (
         <>
           {/* Image Section (Only for non-gender questions) */}
-          {question.type !== 'gender' && (
+          {question.type !== 'gender' ? (
             <View style={styles.imageContainer}>
               <View style={styles.imageWrapper}>
                 {question.accord && imageMap[question.accord.toLowerCase()] ? (
@@ -255,10 +256,10 @@ export default function SurveyQuestion() {
                     style={styles.image}
                     resizeMode="contain"
                   />
-                ) : null /* Render nothing if no image found */}
+                ) : null}
               </View>
             </View>
-          )}
+          ) : null}
 
           {/* Animated Content Section (Text, Options/Ratings) */}
           <Animated.View style={[styles.content, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
@@ -270,14 +271,14 @@ export default function SurveyQuestion() {
               </Text>
             ) : (
               <Text style={[styles.question, isDesktop && styles.desktopQuestion]}>
-                {`Te gustan los aromas ${getAccordTranslation(question.accord)}?`}
+                Te gustan los aromas {getAccordTranslation(question.accord) || ''}?
               </Text>
             )}
 
             {/* Description (Only for non-gender questions) */}
-            {question.type !== 'gender' && question.description && (
+            {question.type !== 'gender' && question.description ? (
               <Text style={styles.description}>{question.description}</Text>
-            )}
+            ) : null}
 
             {/* Options Area */}
             {question.type === 'gender' ? (
@@ -290,7 +291,7 @@ export default function SurveyQuestion() {
                         styles.genderButton,
                         isDesktop && styles.desktopGenderButton,
                         answers['gender'] === option.id ? styles.selectedGender : null,
-                      ].filter(Boolean)} // Filter nulls
+                      ].filter(Boolean)}
                       onPress={() => handleRate(option.id)}
                     >
                       <Text style={[styles.genderEmoji, isDesktop && styles.desktopGenderEmoji]}>{option.emoji}</Text>
@@ -318,7 +319,7 @@ export default function SurveyQuestion() {
                         onPressIn={() => handlePressIn(index)}
                         onPressOut={() => handlePressOut(index)}
                       >
-                        <Text style={[styles.ratingText, isDesktop && styles.desktopRatingText]}>{emoji}</Text>
+                        <Text style={[styles.ratingText, isDesktop && styles.desktopRatingText]}>{emoji || '🙂'}</Text>
                       </TouchableOpacity>
                     </Animated.View>
                   ))}
@@ -327,14 +328,14 @@ export default function SurveyQuestion() {
                 {/* Rating Labels */}
                 <View style={styles.ratingLabelsContainer}>
                   <View style={styles.ratingScaleContainer}>
-                    <Text style={styles.scaleLabel}>{ratingLabels[0]}</Text>
+                    <Text style={styles.scaleLabel}>{ratingLabels[0] || 'Odio'}</Text>
                     <View style={styles.scaleLine} />
-                    <Text style={styles.scaleLabel}>{ratingLabels[4]}</Text>
+                    <Text style={styles.scaleLabel}>{ratingLabels[4] || 'Amo'}</Text>
                   </View>
                   
                   {/* Dynamic rating feedback */}
                   <View style={styles.ratingFeedbackContainer}>
-                    {hoveredRating !== null ? (
+                    {hoveredRating !== null && ratingLabels[hoveredRating] && ratingDescriptions[hoveredRating] ? (
                       <Text style={styles.ratingFeedbackText}>
                         {ratingLabels[hoveredRating]}: {ratingDescriptions[hoveredRating]}
                       </Text>
@@ -347,14 +348,14 @@ export default function SurveyQuestion() {
                 </View>
               </>
             )}
-            {question.type !== 'gender' && (
+            {question.type !== 'gender' ? (
               <TouchableOpacity
                 style={[styles.noAnswerButton, isDesktop && styles.desktopNoAnswerButton]}
                 onPress={handleNoAnswer}
               >
                 <Text style={[styles.noAnswerText, isDesktop && styles.desktopNoAnswerText]}>🙄 No sé</Text>
               </TouchableOpacity>
-            )}
+            ) : null}
 
           </Animated.View>
         </>

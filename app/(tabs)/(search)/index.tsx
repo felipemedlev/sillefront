@@ -230,11 +230,8 @@ export default function SearchScreen() {
               external_id: String((perfume as any).external_id ?? (perfume as any).id), // Ensure external_id is present and string
               name: perfume.name || 'Unknown Name',
               brand: brandObj.name, // Use the name string from the brand object
-              thumbnail_url: (perfume as any).thumbnail_url ?? (perfume as any).thumbnail_url ?? '', // Keep snake_case
-              full_size_url: (perfume as any).full_size_url ?? (perfume as any).full_size_url ?? '', // Keep snake_case
-              // Add camelCase versions for component compatibility
-              thumbnail_url: (perfume as any).thumbnail_url ?? (perfume as any).thumbnail_url ?? '',
-              full_size_url: (perfume as any).full_size_url ?? (perfume as any).full_size_url ?? '',
+              thumbnail_url: (perfume as any).thumbnail_url ?? '', // Keep snake_case
+              full_size_url: (perfume as any).full_size_url ?? '', // Keep snake_case
 
               // --- Ratings and Numbers (use snake_case keys from Perfume type) ---
               match_percentage: formattedMatch, // Use formatted integer percentage

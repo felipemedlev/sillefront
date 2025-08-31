@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { Slot, useRouter, useSegments, useRootNavigationState } from 'expo-router';
 import * as Font from 'expo-font';
-import { StatusBar } from 'expo-status-bar';
 import { View, ActivityIndicator, Text, StyleSheet } from 'react-native';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
@@ -110,7 +109,6 @@ function ProtectedRoutes() {
 
     // Protection logic based on segments
     const inAuthGroup = firstSegment === '(auth)';
-    const inTabsGroup = firstSegment === '(tabs)';
     const inProfileSection = segments.length > 1 && segments[1] === '(profile)';
     const inRatingsSection = segments.length > 1 && segments[1] === '(ratings)';
     const isCheckoutRoute = firstSegment === 'checkout';

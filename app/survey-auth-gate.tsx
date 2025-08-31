@@ -77,7 +77,7 @@ export default function SurveyAuthGate() {
           <View style={styles.logoContainer}>
             <Logo 
               width={width * 0.2} 
-              height="auto" 
+              height={width * 0.06} 
               preserveAspectRatio="xMidYMid meet" 
             />
             <Text style={styles.logoText}>¡Perfecto!</Text>

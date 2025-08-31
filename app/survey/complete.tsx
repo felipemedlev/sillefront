@@ -62,7 +62,7 @@ export default function CompleteScreen() {
       ]}>
         <Logo
           width={isDesktop ? width * 0.07 : width * 0.15}
-          height="auto"
+          height={isDesktop ? width * 0.02 : width * 0.045}
           preserveAspectRatio="xMidYMid meet"
         />
         <Animated.Text style={[styles.welcomeText]}>

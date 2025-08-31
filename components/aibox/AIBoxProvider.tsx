@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { fetchRecommendations, ApiRecommendation, fetchPerfumesByExternalIds } from '../../src/services/api';
 import { Perfume } from '../../types/perfume';
 import { useSurveyContext } from '../../context/SurveyContext';
+import { useAuth } from '../../src/context/AuthContext';
 
 export type AIBoxProviderProps = {
   children: (props: {
@@ -64,6 +65,7 @@ const getPerfumePrice = (perfume: Perfume | undefined): number => {
 
 export const AIBoxProvider: React.FC<AIBoxProviderProps> = ({ children }) => {
   const { submitSurveyIfAuthenticated } = useSurveyContext();
+  const { isAuthenticated } = useAuth();
   const [decantCount, setDecantCount] = useState<4 | 8>(4);
   const [decantSize, setDecantSize] = useState<3 | 5 | 10>(5);
   const [rangoPrecio, setRangoPrecio] = useState<[number, number]>([0, 5000]);
@@ -82,13 +84,29 @@ export const AIBoxProvider: React.FC<AIBoxProviderProps> = ({ children }) => {
     [recommendedPerfumes]
   );
 
+  // Add debounce state to prevent rapid successive calls
+  const [lastApiCall, setLastApiCall] = useState<number>(0);
+  
   // Data Fetching Function
   const loadRecommendations = useCallback(async (filters?: { priceRange?: { min: number; max: number } | null; occasions?: string[] }) => {
+    const now = Date.now();
+    // Debounce API calls - don't allow calls within 500ms of each other
+    if (now - lastApiCall < 500) {
+      return;
+    }
+    
+    setLastApiCall(now);
     setIsLoading(true);
     setError(null);
 
     try {
-      console.log('AIBox: Starting recommendation fetch sequence');
+      // Check if user is authenticated before making API call
+      if (!isAuthenticated) {
+        console.log('AIBox: User not authenticated, cannot fetch recommendations');
+        setError("Inicia sesión para ver recomendaciones personalizadas basadas en tu encuesta.");
+        setIsLoading(false);
+        return;
+      }
 
       // Survey submission is now handled by SurveyContext upon authentication change.
       // We proceed directly to fetching recommendations.
@@ -128,8 +146,6 @@ export const AIBoxProvider: React.FC<AIBoxProviderProps> = ({ children }) => {
         throw new Error("Could not extract external IDs from recommendations.");
       }
 
-      console.log(`AIBox: Fetching full details for ${externalIds.length} perfumes with external IDs`);
-
       // Fetch full perfume details using external IDs
       const fullPerfumeDetailsData = await fetchPerfumesByExternalIds(externalIds);
 
@@ -159,14 +175,6 @@ export const AIBoxProvider: React.FC<AIBoxProviderProps> = ({ children }) => {
       }).filter(p => p.match_percentage !== null) // Filter out any perfumes without match percentage
         .sort((a, b) => (b.match_percentage ?? 0) - (a.match_percentage ?? 0)); // Re-sort by match percentage DESC
 
-      // console.log(`AIBox: Normalized and merged ${finalRecommendedPerfumes.length} perfume objects with full details`);
-
-      // Log the top 5 perfumes for debugging
-      // console.log('AIBox: Top 5 perfumes with full details (after merge & sort):');
-      finalRecommendedPerfumes.slice(0, 5).forEach((p: Perfume, i: number) => {
-        // console.log(`  ${i+1}. ${p.name} - ${p.match_percentage}% match, ID=${p.id}, ExternalID=${p.external_id}, Similar IDs: ${p.similar_perfume_ids?.length ?? 0}`);
-      });
-
       setRecommendedPerfumes(finalRecommendedPerfumes);
 
     } catch (err: any) {
@@ -175,7 +183,7 @@ export const AIBoxProvider: React.FC<AIBoxProviderProps> = ({ children }) => {
     } finally {
       setIsLoading(false);
     }
-  }, []); // Removed submitSurveyIfAuthenticated dependency, relies on SurveyContext logic
+  }, [isAuthenticated, lastApiCall]); // Added dependencies for auth checking and debouncing
 
   // Renamed: This function now handles the *completion* of the price range change
   const handlePriceChangeFinish = useCallback(async (values: number[]) => {
@@ -262,13 +270,16 @@ export const AIBoxProvider: React.FC<AIBoxProviderProps> = ({ children }) => {
     return () => clearInterval(intervalId);
   }, [isLoading]);
 
-  // Load recommendations on mount
+  // Load recommendations when auth status or occasions change
   useEffect(() => {
-    // Load recommendations once when the provider mounts.
-    // Assumes AuthContext initializes first and SurveyContext handles
-    // survey submission based on auth state if needed.
-    loadRecommendations({ priceRange: { min: rangoPrecio[0], max: rangoPrecio[1] }, occasions: selectedOccasionNames });
-  }, [loadRecommendations]); // Add loadRecommendations as dependency
+    if (isAuthenticated) {
+      // Load recommendations with or without occasions
+      loadRecommendations({ 
+        priceRange: { min: rangoPrecio[0], max: rangoPrecio[1] }, 
+        occasions: selectedOccasionNames.length > 0 ? selectedOccasionNames : undefined 
+      });
+    }
+  }, [isAuthenticated, selectedOccasionNames.join(',')]); // Only depend on auth and occasions (join for stable comparison)
 
   return children({
     isLoading,

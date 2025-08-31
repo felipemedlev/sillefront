@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { View, StyleSheet, ScrollView, Pressable, Text, ActivityIndicator } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -7,6 +7,7 @@ import PerfumeSearchModal from '../components/product/PerfumeSearchModal';
 import { Perfume, BasicPerfumeInfo } from '../types/perfume';
 import { useCart } from '../context/CartContext';
 import { useSnackbar } from '../context/SnackbarContext';
+import { useAuth } from '../src/context/AuthContext';
 import DecantSelector from '../components/product/DecantSelector';
 import PriceRangeSlider from '../components/product/PriceRangeSlider';
 import PerfumeList from '../components/product/PerfumeList';
@@ -15,7 +16,7 @@ import BoxVisualizer from '../components/product/BoxVisualizer';
 import AIBoxProvider from '../components/aibox/AIBoxProvider';
 
 type DecantCount = 4 | 8;
-type DecantSize = 3 | 5 | 10;
+// type DecantSize = 3 | 5 | 10; // Unused, commented out
 
 const styles = StyleSheet.create({
   container: {
@@ -50,6 +51,7 @@ const OccasionSelectionContent: React.FC = () => {
   const { occasionNames } = useLocalSearchParams<{ occasionNames: string }>();
   const { addItemToCart } = useCart();
   const { showSnackbar } = useSnackbar();
+  const { isAuthenticated } = useAuth();
 
   const [selectedPerfumeId, setSelectedPerfumeId] = useState<string | null>(null);
   const [swappingPerfumeId, setSwappingPerfumeId] = useState<string | null>(null);
@@ -72,10 +74,10 @@ const OccasionSelectionContent: React.FC = () => {
     setSelectedPerfumeId(perfumeId);
   }, []);
 
-  const handleSwapPress = useCallback((perfumeId: string) => {
-    setSwappingPerfumeId(perfumeId);
-    setSelectedPerfumeId(perfumeId);
-  }, []);
+  // const handleSwapPress = useCallback((perfumeId: string) => {
+  //   setSwappingPerfumeId(perfumeId);
+  //   setSelectedPerfumeId(perfumeId);
+  // }, []); // Commented out - unused
 
   const handleSimilarPerfumeSelect = useCallback((newPerfumeId: string, setSelectedPerfumeIdsFromContext: (ids: string[] | ((prev: string[]) => string[])) => void) => {
     if (swappingPerfumeId) {
@@ -184,14 +186,41 @@ const OccasionSelectionContent: React.FC = () => {
       return selectedPerfumeId ? finder(selectedPerfumeId) : null;
   };
 
-  const useShowModalEffect = (finder: (id: string) => Perfume | undefined) => {
-      const perfumeForModal = getSelectedPerfume(finder);
-      useEffect(() => {
-          if (perfumeForModal && modalRef.current) {
-              modalRef.current.show(perfumeForModal);
-          }
-      }, [perfumeForModal]);
-  };
+  // Modal display state management - use ref to avoid render loops
+  const [modalPerfume, setModalPerfume] = useState<Perfume | null>(null);
+  const contextRef = useRef<any>(null);
+  
+  useEffect(() => {
+    if (modalPerfume && modalRef.current) {
+      modalRef.current.show(modalPerfume);
+    }
+  }, [modalPerfume]);
+
+  // Initialize occasions when component mounts and context is available
+  useEffect(() => {
+    if (occasionNames && contextRef.current && contextRef.current.setSelectedOccasionNames) {
+      const decodedOccasionName = decodeURIComponent(occasionNames);
+      const occasionNameList = decodedOccasionName.split(',');
+      contextRef.current.setSelectedOccasionNames(occasionNameList);
+    }
+  }, [occasionNames]);
+
+  // Redirect to auth gate if user is not authenticated
+  useEffect(() => {
+    if (!isAuthenticated) {
+      router.replace('/survey-auth-gate');
+    }
+  }, [isAuthenticated]);
+
+  // Don't render anything if not authenticated (will redirect)
+  if (!isAuthenticated) {
+    return (
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center', backgroundColor: '#F5F5F7' }]}>
+        <ActivityIndicator size="large" />
+        <Text style={{ marginTop: 10 }}>Verificando autenticación...</Text>
+      </View>
+    );
+  }
 
   return (
     <AIBoxProvider>
@@ -207,23 +236,31 @@ const OccasionSelectionContent: React.FC = () => {
           setDecantSize,
           setRangoPrecio,
           setSelectedPerfumeIds,
-          handlePriceChangeFinish,
-          loadRecommendations,
-          setSelectedOccasionNames
+          handlePriceChangeFinish
         } = contextProps;
 
-        const combinedPerfumes = useMemo(() => {
-          const allPerfumesMap = new Map<string, Perfume>();
-          recommendedPerfumes.forEach(p => allPerfumesMap.set(String(p.id), p));
-          manuallyAddedPerfumes.forEach(p => allPerfumesMap.set(String(p.id), p));
-          return Array.from(allPerfumesMap.values());
-        }, [recommendedPerfumes, manuallyAddedPerfumes]);
+        // Store context in ref for use in effects (avoid render loops)
+        contextRef.current = contextProps;
 
-        const findPerfumeByIdLocal = useCallback((idToFind: string): Perfume | undefined => {
+        // Move these computations outside of hooks
+        const allPerfumesMap = new Map<string, Perfume>();
+        recommendedPerfumes.forEach(p => allPerfumesMap.set(String(p.id), p));
+        manuallyAddedPerfumes.forEach(p => allPerfumesMap.set(String(p.id), p));
+        const combinedPerfumes = Array.from(allPerfumesMap.values());
+
+        const findPerfumeByIdLocal = (idToFind: string): Perfume | undefined => {
           return combinedPerfumes.find(p => String(p.id) === String(idToFind));
-        }, [combinedPerfumes]);
+        };
 
-        const handleAddToCartInternal = useCallback(async () => {
+        // Update modal perfume when selection changes (simple check to avoid loops)
+        const currentPerfume = selectedPerfumeId ? findPerfumeByIdLocal(selectedPerfumeId) : null;
+        if (currentPerfume && modalPerfume?.id !== currentPerfume.id) {
+          setTimeout(() => setModalPerfume(currentPerfume), 0);
+        } else if (!currentPerfume && modalPerfume) {
+          setTimeout(() => setModalPerfume(null), 0);
+        }
+
+        const handleAddToCartInternal = async () => {
           const totalPrice = contextCalculateTotalPrice();
           const perfumesInBox: BasicPerfumeInfo[] = contextSelectedPerfumeIds
             .map(id => findPerfumeByIdLocal(id))
@@ -264,33 +301,17 @@ const OccasionSelectionContent: React.FC = () => {
             console.error("Error adding Occasion Box to cart:", cartError);
             showSnackbar("Error al añadir.");
           }
-        }, [
-          addItemToCart, occasionNames, showSnackbar,
-          contextCalculateTotalPrice, contextSelectedPerfumeIds, contextDecantCount, contextDecantSize,
-          findPerfumeByIdLocal,
-        ]);
+        };
 
-        useEffect(() => {
-          const decodedOccasionName = occasionNames ? decodeURIComponent(occasionNames) : null;
-          if (decodedOccasionName) {
-            const occasionNameList = decodedOccasionName.split(',');
-            setSelectedOccasionNames(occasionNameList);
-            loadRecommendations({ occasions: occasionNameList, priceRange: { min: rangoPrecio[0], max: rangoPrecio[1] } });
-          } else {
-            console.warn("Occasion name parameter missing.");
-          }
-        }, [occasionNames, setSelectedOccasionNames, loadRecommendations]);
-
-        useShowModalEffect(findPerfumeByIdLocal);
-        const perfumeForModalDisplay = getSelectedPerfume(findPerfumeByIdLocal);
-
+        // Regular computations that don't need hooks
         const decodedOccasionTitle = occasionNames ? decodeURIComponent(occasionNames) : 'Selección';
 
-        const handleRangeChangeWrapper = useCallback((values: number[]) => {
+        // Simple function that doesn't need useCallback inside render prop
+        const handleRangeChangeWrapper = (values: number[]) => {
           if (values.length === 2) {
             setRangoPrecio(values as [number, number]);
           }
-        }, [setRangoPrecio]);
+        };
 
         if (isLoading) {
           return (
@@ -349,10 +370,10 @@ const OccasionSelectionContent: React.FC = () => {
               />
             </>
 
-            {perfumeForModalDisplay && (
+            {modalPerfume && (
               <PerfumeModal
                 ref={modalRef}
-                perfume={perfumeForModalDisplay}
+                perfume={modalPerfume}
                 onClose={handleModalDismiss}
                 isSwapping={!!swappingPerfumeId}
                 onSimilarPerfumeSelect={(newId) => handleSimilarPerfumeSelect(newId, setSelectedPerfumeIds)}

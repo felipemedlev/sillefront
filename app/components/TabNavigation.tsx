@@ -1,6 +1,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Animated, TouchableOpacity, Platform } from 'react-native';
 import { Feather } from '@expo/vector-icons';
+import { shouldUseNativeDriver } from '../../src/utils/animation';
 
 type TabType = 'aibox' | 'giftbox';
 
@@ -54,7 +55,7 @@ export default function TabNavigation({ activeTab, onTabPress, isDesktop }: TabN
   useEffect(() => {
     Animated.spring(lineAnim, {
       toValue: activeTab === 'aibox' ? 0 : 1,
-      useNativeDriver: true,
+      useNativeDriver: shouldUseNativeDriver,
       tension: 65,
       friction: 10,
     }).start();
@@ -64,7 +65,7 @@ export default function TabNavigation({ activeTab, onTabPress, isDesktop }: TabN
     onTabPress(tab);
     Animated.spring(lineAnim, {
       toValue: tab === 'aibox' ? 0 : 1,
-      useNativeDriver: true,
+      useNativeDriver: shouldUseNativeDriver,
       tension: 65,
       friction: 10,
     }).start();

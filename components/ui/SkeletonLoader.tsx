@@ -1,6 +1,7 @@
 import React, { useRef, useEffect } from 'react';
 import { View, Animated, StyleSheet, Dimensions } from 'react-native';
 import { COLORS, SPACING } from '../../types/constants';
+import { shouldUseNativeDriver } from '../../src/utils/animation';
 
 const { width } = Dimensions.get('window');
 
@@ -25,12 +26,12 @@ export const SkeletonItem: React.FC<SkeletonLoaderProps> = ({
         Animated.timing(opacity, {
           toValue: 1,
           duration: 800,
-          useNativeDriver: true,
+          useNativeDriver: shouldUseNativeDriver,
         }),
         Animated.timing(opacity, {
           toValue: 0.3,
           duration: 800,
-          useNativeDriver: true,
+          useNativeDriver: shouldUseNativeDriver,
         }),
       ]).start(() => animateLoop());
     };

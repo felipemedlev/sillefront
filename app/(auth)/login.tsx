@@ -18,7 +18,7 @@ import { useAuth } from '../../src/context/AuthContext';
 import { useSurveyContext } from '../../context/SurveyContext';
 import { useRatings } from '../../context/RatingsContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { STORAGE_KEYS } from '../../types/constants';
+// import { STORAGE_KEYS } from '../../types/constants'; // Unused
 import { COLORS, FONTS, SPACING, FONT_SIZES } from '../../types/constants';
 
 const { width } = Dimensions.get('window');

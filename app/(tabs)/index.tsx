@@ -3,6 +3,7 @@ import { View, StyleSheet, Animated, useWindowDimensions, Platform } from 'react
 import AIBoxScreen from './aibox';
 import GiftBoxScreen from './giftbox';
 import TabNavigation from '../components/TabNavigation';
+import { shouldUseNativeDriver } from '../../src/utils/animation';
 
 const DESKTOP_BREAKPOINT = 768;
 
@@ -19,13 +20,13 @@ export default function HomeScreen() {
     Animated.parallel([
       Animated.spring(fadeAnim, {
         toValue: 1,
-        useNativeDriver: true,
+        useNativeDriver: shouldUseNativeDriver,
         tension: 50,
         friction: 7,
       }),
       Animated.spring(slideAnim, {
         toValue: 0,
-        useNativeDriver: true,
+        useNativeDriver: shouldUseNativeDriver,
         tension: 50,
         friction: 7,
       }),

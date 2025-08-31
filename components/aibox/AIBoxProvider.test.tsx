@@ -48,7 +48,7 @@ describe('AIBoxProvider', () => {
     (api.fetchPerfumesByExternalIds as jest.Mock).mockClear().mockResolvedValue([]);
   });
 
-  it('should call loadRecommendations with correct filters when handleMaxPriceChange is called', async () => {
+  it('should call loadRecommendations with correct filters when handlePriceChangeFinish is called', async () => {
     let providerProps: any; // To store props passed to children
 
     // Render the provider with a child function to capture the props
@@ -72,12 +72,12 @@ describe('AIBoxProvider', () => {
 
     // Define the new price range and expected occasion IDs (initially empty)
     const newPriceValues = [100, 4000];
-    const expectedOccasionIds: number[] = []; // Assuming occasions are initially empty
+    const expectedOccasionNames: string[] = []; // Assuming occasions are initially empty
 
-    // Simulate calling handleMaxPriceChange
+    // Simulate calling handlePriceChangeFinish
     // Use act to wrap state updates and async operations
     await act(async () => {
-      providerProps.handleMaxPriceChange(newPriceValues);
+      providerProps.handlePriceChangeFinish(newPriceValues);
     });
 
     // Verify loadRecommendations (which calls fetchRecommendations) was called again
@@ -86,12 +86,12 @@ describe('AIBoxProvider', () => {
     // Verify it was called with the correct filters
     expect(mockFetchRecommendations).toHaveBeenCalledWith({
       priceRange: { min: newPriceValues[0], max: newPriceValues[1] },
-      occasions: expectedOccasionIds,
+      occasions: expectedOccasionNames,
     });
 
     // --- Test with pre-selected occasions ---
     mockFetchRecommendations.mockClear();
-    const preSelectedOccasions = [3, 7];
+    const preSelectedOccasions = ['work', 'evening'];
 
     // Simulate setting occasion IDs (assuming setSelectedOccasionIds works)
     // We need to re-render or update the state simulation if testing state changes directly
@@ -100,21 +100,21 @@ describe('AIBoxProvider', () => {
     // or re-render with updated initial state (more complex setup).
     // Simpler approach: Modify the test setup to initialize with occasions or directly test loadRecommendations call logic.
 
-    // Let's re-run the price change, assuming selectedOccasionIds state is now [3, 7]
+    // Let's re-run the price change, assuming selectedOccasionNames state is now ['work', 'evening']
     // This requires modifying the provider's internal state or re-rendering,
     // which is complex without direct access.
     // A more direct test might involve calling loadRecommendations directly if possible,
-    // or focusing the test purely on handleMaxPriceChange triggering the call.
+    // or focusing the test purely on handlePriceChangeFinish triggering the call.
 
-    // Re-simulate calling handleMaxPriceChange, assuming the occasion state was updated
+    // Re-simulate calling handlePriceChangeFinish, assuming the occasion state was updated
     // (This part is conceptually demonstrating the check, actual implementation might need refactoring for testability)
 
     // We'll manually trigger loadRecommendations again as if occasions changed
     // This isn't ideal but tests the filter passing for now.
     const newPriceValues2 = [150, 3000];
     await act(async () => {
-       // Simulate state update for occasions before calling handleMaxPriceChange again
-       // In a real scenario, this would happen via setSelectedOccasionIds
+       // Simulate state update for occasions before calling handlePriceChangeFinish again
+       // In a real scenario, this would happen via setSelectedOccasionNames
        // For the test, we can cheat slightly by calling loadRecommendations directly
        // with the assumed state after the price change.
        providerProps.setRangoPrecio(newPriceValues2 as [number, number]); // Update price state first

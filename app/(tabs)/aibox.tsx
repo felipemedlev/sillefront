@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, ScrollView, Pressable, Animated, useWindowDimen
 import { router } from 'expo-router';
 import { COLORS, SPACING, FONTS, FONT_SIZES } from '../../types/constants';
 import { useAuth } from '../../src/context/AuthContext';
+import { shouldUseNativeDriver } from '../../src/utils/animation';
 
 const OCCASIONS = [
   { id: 1, title: 'Sexy', color: '#F5E6E6' },
@@ -26,13 +27,13 @@ export default function AIBoxScreen() {
   useEffect(() => {
     // Start the shake animation when the component mounts
     Animated.sequence([
-      Animated.timing(shakeAnimation, { toValue: 50, duration: 150, useNativeDriver: true }),
-      Animated.timing(shakeAnimation, { toValue: -50, duration: 250, useNativeDriver: true }),
-      Animated.timing(shakeAnimation, { toValue: 50, duration: 250, useNativeDriver: true }),
-      Animated.timing(shakeAnimation, { toValue: 50, duration: 150, useNativeDriver: true }),
-      Animated.timing(shakeAnimation, { toValue: -50, duration: 250, useNativeDriver: true }),
-      Animated.timing(shakeAnimation, { toValue: 50, duration: 250, useNativeDriver: true }),
-      Animated.timing(shakeAnimation, { toValue: 0, duration: 150, useNativeDriver: true })
+      Animated.timing(shakeAnimation, { toValue: 50, duration: 150, useNativeDriver: shouldUseNativeDriver }),
+      Animated.timing(shakeAnimation, { toValue: -50, duration: 250, useNativeDriver: shouldUseNativeDriver }),
+      Animated.timing(shakeAnimation, { toValue: 50, duration: 250, useNativeDriver: shouldUseNativeDriver }),
+      Animated.timing(shakeAnimation, { toValue: 50, duration: 150, useNativeDriver: shouldUseNativeDriver }),
+      Animated.timing(shakeAnimation, { toValue: -50, duration: 250, useNativeDriver: shouldUseNativeDriver }),
+      Animated.timing(shakeAnimation, { toValue: 50, duration: 250, useNativeDriver: shouldUseNativeDriver }),
+      Animated.timing(shakeAnimation, { toValue: 0, duration: 150, useNativeDriver: shouldUseNativeDriver })
     ]).start();
   }, [shakeAnimation]); // Dependency array includes shakeAnimation
 

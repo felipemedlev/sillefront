@@ -3,6 +3,7 @@ import { View, Text, Animated, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SkeletonBoxVisualizer } from '../ui/SkeletonLoader';
 import { COLORS, FONTS, FONT_SIZES, SPACING } from '../../types/constants';
+import { shouldUseNativeDriver } from '../../src/utils/animation';
 
 type AIBoxLoadingStateProps = {
   loadingMessage: string;
@@ -17,7 +18,7 @@ const AIBoxLoadingState: React.FC<AIBoxLoadingStateProps> = ({ loadingMessage })
     Animated.timing(fadeAnim, {
       toValue: 1,
       duration: 600,
-      useNativeDriver: true,
+      useNativeDriver: shouldUseNativeDriver,
     }).start();
 
     // Pulse animation for the icon
@@ -26,12 +27,12 @@ const AIBoxLoadingState: React.FC<AIBoxLoadingStateProps> = ({ loadingMessage })
         Animated.timing(pulseAnim, {
           toValue: 1.2,
           duration: 1000,
-          useNativeDriver: true,
+          useNativeDriver: shouldUseNativeDriver,
         }),
         Animated.timing(pulseAnim, {
           toValue: 1,
           duration: 1000,
-          useNativeDriver: true,
+          useNativeDriver: shouldUseNativeDriver,
         }),
       ]).start(() => pulseLoop());
     };

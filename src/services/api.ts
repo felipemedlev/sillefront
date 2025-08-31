@@ -116,13 +116,13 @@ export interface ApiCartItemAddPayload {
   price: number;
   quantity: 1;
   box_configuration: {
-    perfumes: Array<{
+    perfumes: {
       external_id?: string;
       perfume_id_backend?: number;
       name?: string;
       brand?: string;
       thumbnail_url?: string;
-    }>;
+    }[];
     decant_size: number;
     decant_count: number;
   };
@@ -338,7 +338,7 @@ const handleResponse = async (response: Response) => {
     let errorData;
     try {
       errorData = await response.json();
-    } catch (e) {
+    } catch {
       errorData = { detail: response.statusText || 'Network response was not ok' };
     }
     console.error('API Error:', response.status, errorData);
@@ -462,7 +462,8 @@ export const logout = async () => {
       headers: await createHeaders(true),
     });
     await handleResponse(response);
-  } catch (error) {
+  } catch {
+    // Ignore logout errors - user will be logged out regardless
   } finally {
     await removeToken();
   }

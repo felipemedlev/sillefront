@@ -43,6 +43,7 @@ export default function AIBoxSelectionScreen() {
     }
   }, [isAuthenticated]);
 
+
   // Don't render if not authenticated
   if (!isAuthenticated) {
     return null;
@@ -69,17 +70,14 @@ export default function AIBoxSelectionScreen() {
         loadRecommendations
       }) => {
         // Track initial recommended perfumes to prevent removed ones from reappearing
-        React.useEffect(() => {
-          if (!isLoading && recommendedPerfumes.length > 0 && !initialRenderRef.current) {
-            initialRenderRef.current = true;
-            // Store initially selected perfumes
-            selectedPerfumeIds.forEach(id => {
-              initialPerfumesRef.current.add(id);
-            });
-
-            console.log(`Initial perfumes: ${Array.from(initialPerfumesRef.current).join(', ')}`);
-          }
-        }, [isLoading, recommendedPerfumes, selectedPerfumeIds]);
+        // This logic was moved here to avoid hook rules violations
+        if (!isLoading && recommendedPerfumes.length > 0 && !initialRenderRef.current) {
+          initialRenderRef.current = true;
+          selectedPerfumeIds.forEach(id => {
+            initialPerfumesRef.current.add(id);
+          });
+          console.log(`Initial perfumes: ${Array.from(initialPerfumesRef.current).join(', ')}`);
+        }
 
         // Wrapper to handle type mismatch between slider's number[] and state's [number, number]
         const handleSliderValueChange = (values: number[]) => {

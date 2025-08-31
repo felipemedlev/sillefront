@@ -186,7 +186,7 @@ const LandingScreen: React.FC = () => {
 
         <Logo
           width={logoWidth}
-          height="auto"
+          height={logoWidth * 0.3}
           preserveAspectRatio="xMidYMid meet"
         />
         <Typography

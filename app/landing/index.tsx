@@ -345,7 +345,7 @@ const LandingScreen: React.FC = () => {
               </Button>
               <Button
                 variant="outlined"
-                onClick={handleNext}
+                onClick={() => router.push('/survey/1')}
                 sx={{
                   width: 180,
                   height: 40,

@@ -51,7 +51,7 @@ export default function ProfileLayout() {
           flex: 1,
           justifyContent: 'center',
           alignItems: 'center',
-          backgroundColor: COLORS.BACKGROUND
+          backgroundColor: '#FFFEFC'
         }}
       >
         <ActivityIndicator size="large" color={COLORS.ACCENT} />
@@ -64,11 +64,10 @@ export default function ProfileLayout() {
     // If SurveyContext depends on user being logged in, this structure is fine.
     // Otherwise, it could potentially wrap individual screens if needed.
     <>
-      {isDesktop && <View style={{ marginTop: '5%' }} />}
       <Stack
         screenOptions={{
           headerShown: false,
-          contentStyle: { backgroundColor: COLORS.BACKGROUND } // Use constant
+          contentStyle: { backgroundColor: '#FFFEFC' } // Match other screens
         }}
       >
         {/* Define screens within the profile stack */}

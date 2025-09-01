@@ -135,7 +135,7 @@ export default function PersonalInfoScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.BACKGROUND_ALT,
+    backgroundColor: '#FFFEFC',
   },
   scrollContent: {
     padding: SPACING.LARGE,
@@ -165,7 +165,7 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.LARGE,
   },
   readOnlyInput: {
-    backgroundColor: COLORS.BACKGROUND_ALT, // Slightly different background for read-only
+    backgroundColor: '#FFFEFC', // Slightly different background for read-only
     color: COLORS.TEXT_SECONDARY,
   },
   textArea: {

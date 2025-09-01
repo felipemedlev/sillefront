@@ -116,7 +116,7 @@ export default function PurchasesScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.BACKGROUND_ALT,
+    backgroundColor: '#FFFEFC',
   },
   listContentContainer: {
     padding: SPACING.MEDIUM,
@@ -284,7 +284,7 @@ const styles = StyleSheet.create({
      height: 40,
      borderRadius: 6,
      marginRight: SPACING.MEDIUM,
-     backgroundColor: COLORS.BACKGROUND_ALT, // Placeholder bg
+     backgroundColor: '#FFFEFC', // Placeholder bg
    },
    perfumeInfo: {
      flex: 1,

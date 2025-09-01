@@ -64,6 +64,9 @@ const theme = createTheme({
   components: {
     MuiCssBaseline: {
       styleOverrides: {
+        'html, body': {
+          backgroundColor: '#FFFEFC !important',
+        },
         '@font-face': {
           fontFamily: 'InstrumentSans',
           src: `url(${require('../assets/fonts/InstrumentSans-Regular.ttf')}) format('truetype')`,
@@ -161,11 +164,14 @@ function FontLoader({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const loadFonts = async () => {
       try {
-        await Font.loadAsync({
-          [FONTS.INSTRUMENT_SANS]: require('../assets/fonts/InstrumentSans-Regular.ttf'),
-          [FONTS.INSTRUMENT_SERIF]: require('../assets/fonts/InstrumentSerif-Regular.ttf'),
-          [FONTS.INSTRUMENT_SERIF_ITALIC]: require('../assets/fonts/InstrumentSerif-Italic.ttf'),
-        });
+        // Load fonts in parallel for better performance
+        const fontPromises = [
+          Font.loadAsync({ [FONTS.INSTRUMENT_SANS]: require('../assets/fonts/InstrumentSans-Regular.ttf') }),
+          Font.loadAsync({ [FONTS.INSTRUMENT_SERIF]: require('../assets/fonts/InstrumentSerif-Regular.ttf') }),
+          Font.loadAsync({ [FONTS.INSTRUMENT_SERIF_ITALIC]: require('../assets/fonts/InstrumentSerif-Italic.ttf') }),
+        ];
+        
+        await Promise.all(fontPromises);
         setFontState({ isLoading: false, error: null });
       } catch (error) {
         const appError = handleError(error);
@@ -196,7 +202,7 @@ function FontLoader({ children }: { children: React.ReactNode }) {
 
 export default function RootLayout() {
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
+    <GestureHandlerRootView style={{ flex: 1, backgroundColor: '#FFFEFC' }}>
       <ThemeProvider theme={theme}>
         <CssBaseline />
         <FontLoader>

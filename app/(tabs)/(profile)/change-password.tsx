@@ -107,7 +107,7 @@ export default function ChangePasswordScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.BACKGROUND_ALT,
+    backgroundColor: '#FFFEFC',
   },
   scrollContent: {
     padding: SPACING.LARGE,

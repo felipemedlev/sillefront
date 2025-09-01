@@ -124,9 +124,14 @@ export default function ProfileScreen() {
     }
   }
 
+  const containerStyle = {
+    ...styles.container,
+    paddingTop: Platform.OS === 'android' ? SPACING.MEDIUM : isDesktop ? 100 : SPACING.LARGE,
+  };
+
   return (
     <ScrollView style={styles.scrollView}>
-      <View style={styles.container}>
+      <View style={containerStyle}>
         {/* Enhanced Profile Header with MUI Avatar */}
         <Paper
           sx={{
@@ -249,11 +254,10 @@ export default function ProfileScreen() {
 
 const styles = StyleSheet.create({
   scrollView: {
-    backgroundColor: COLORS.BACKGROUND_ALT,
+    backgroundColor: '#FFFEFC',
   },
   container: {
-    backgroundColor: COLORS.BACKGROUND_ALT,
-    paddingTop: Platform.OS === 'android' ? SPACING.MEDIUM : SPACING.LARGE,
+    backgroundColor: '#FFFEFC',
     paddingBottom: SPACING.MEDIUM,
   },
   header: {
@@ -314,6 +318,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: '#FFFEFC',
   },
   menuItem: {
     flexDirection: 'row',

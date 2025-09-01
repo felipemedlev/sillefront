@@ -2,6 +2,7 @@ import React from 'react';
 import { View, TextInput, StyleSheet, TouchableOpacity, Text } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { COLORS, FONT_SIZES } from '../../types/constants';
+import { useResponsive } from '../../src/utils/responsive';
 
 interface SearchBarProps {
   value: string;
@@ -12,13 +13,15 @@ interface SearchBarProps {
 }
 
 export default function SearchBar({ value, onChangeText, placeholder = 'Buscar perfumes...', onManualBoxPress, onFilterPress }: SearchBarProps) {
+  const { isDesktop, isLargeDesktop, padding } = useResponsive();
+  
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, isDesktop && styles.containerDesktop, { paddingHorizontal: padding.horizontal }]}>
       <View style={styles.searchRow}>
         <View style={styles.searchContainer}>
           <Feather name="search" size={20} color="#666" style={styles.searchIcon} />
           <TextInput
-            style={styles.input}
+            style={[styles.input, { fontSize: isLargeDesktop ? 18 : isDesktop ? 17 : 16 }]}
             value={value}
             onChangeText={onChangeText}
             placeholder={placeholder}
@@ -39,7 +42,7 @@ export default function SearchBar({ value, onChangeText, placeholder = 'Buscar p
         onPress={onManualBoxPress}
       >
         <Feather name="box" size={18} color={COLORS.BACKGROUND} style={styles.buttonIcon} />
-        <Text style={styles.buttonText}>Mi Box Personalizado</Text>
+        <Text style={[styles.buttonText, { fontSize: isLargeDesktop ? 18 : isDesktop ? 17 : FONT_SIZES.REGULAR }]}>Mi Box Personalizado</Text>
       </TouchableOpacity>
     </View>
   );
@@ -51,6 +54,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFEFC',
     borderBottomWidth: 1,
     borderBottomColor: '#F0F0F0',
+  },
+  containerDesktop: {
+    maxWidth: 1200,
+    alignSelf: 'center',
+    paddingVertical: 24,
   },
   searchRow: { // New style for the row containing search and filter
     flexDirection: 'row',

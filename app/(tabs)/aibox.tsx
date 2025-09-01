@@ -143,7 +143,7 @@ const styles = StyleSheet.create({
   },
   secondCard: { // Made less prominent
     width: '100%',
-    backgroundColor: COLORS.BACKGROUND_ALT, // Different background
+    backgroundColor: '#FFFEFC', // Different background
     borderRadius: 16,
     marginTop: SPACING.LARGE, // Increased margin top
     padding: SPACING.MEDIUM, // Reduced padding

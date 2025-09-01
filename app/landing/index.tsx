@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
-import { Dimensions, Platform } from 'react-native';
+import { Platform, View, Text, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../../src/context/AuthContext';
+import { ResponsiveContainer } from '../../components/layout/ResponsiveContainer';
+import { useResponsive } from '../../src/utils/responsive';
 import {
   Button,
   Stepper,
@@ -25,9 +27,6 @@ import Landing1 from '../../assets/images/landing1.svg';
 import Landing2 from '../../assets/images/landing2.svg';
 import Landing3 from '../../assets/images/landing3.svg';
 import DecantPopup from '../../components/landing/DecantPopup';
-
-const { width, height } = Dimensions.get('window');
-const DESKTOP_BREAKPOINT = 768;
 
 // Define landing page content data type
 interface LandingItem {
@@ -63,11 +62,13 @@ const LandingScreen: React.FC = () => {
   const router = useRouter();
   const { user, isAuthenticated } = useAuth();
   const theme = useTheme();
-  const isDesktop = Platform.OS === 'web' && width >= DESKTOP_BREAKPOINT;
+  const { width, height, isDesktop, isLargeDesktop, getFontSize, getSpacing } = useResponsive();
   const [activeStep, setActiveStep] = useState(0);
   const [showDecantPopup, setShowDecantPopup] = useState(false);
-  const logoWidth = isDesktop ? width * 0.15 : width * 0.25;
-  const svgHeight = isDesktop ? '25%' : '18%';
+  
+  // Responsive sizing
+  const logoWidth = isLargeDesktop ? width * 0.12 : isDesktop ? width * 0.15 : width * 0.25;
+  const svgHeight = isLargeDesktop ? '30%' : isDesktop ? '25%' : '18%';
 
   // Handle next step button click
   const handleNext = () => {
@@ -115,6 +116,8 @@ const LandingScreen: React.FC = () => {
       overflow: 'hidden',
       position: 'relative',
       bgcolor: '#FFFEFC',
+      display: 'flex',
+      flexDirection: 'column',
     }}>
       {/* Background SVG */}
       <Box sx={{
@@ -192,7 +195,7 @@ const LandingScreen: React.FC = () => {
         <Typography
           sx={{
             fontFamily: 'InstrumentSerifItalic',
-            fontSize: 22,
+            fontSize: isLargeDesktop ? 26 : isDesktop ? 24 : 22,
             mt: 0.5,
           }}
         >
@@ -224,14 +227,16 @@ const LandingScreen: React.FC = () => {
 
       {/* Content Section with Transition */}
       <Box sx={{
+        flex: 1,
         width: '100%',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        justifyContent: 'center',
+        justifyContent: 'flex-start',
         px: 2,
-        mt: 0,
+        mt: 2,
         transition: 'opacity 0.3s ease, transform 0.3s ease',
+        overflow: 'auto',
       }}>
         {/* Desktop stepper (horizontal) */}
         {isDesktop && (
@@ -239,8 +244,9 @@ const LandingScreen: React.FC = () => {
             activeStep={activeStep}
             alternativeLabel
             sx={{
-              width: '80%',
-              mb: 0,
+              width: isLargeDesktop ? '60%' : '80%',
+              mb: 2,
+              maxWidth: 600,
             }}
           >
             {landingData.map((_, index) => (
@@ -256,84 +262,69 @@ const LandingScreen: React.FC = () => {
           width: '100%',
           display: 'flex',
           justifyContent: 'center',
-          mb: 0,
+          mb: isDesktop ? 0.5 : 0.5,
+          maxWidth: isLargeDesktop ? '50%' : isDesktop ? '70%' : '90%',
+          alignSelf: 'center',
         }}>
           <ImageComponent
-            width={width * 0.9}
-            height={height * 0.3}
+            width={isLargeDesktop ? width * 0.4 : isDesktop ? width * 0.6 : width * 0.9}
+            height={height * (isDesktop ? 0.35 : 0.3)}
             preserveAspectRatio="xMidYMid meet"
           />
         </Box>
 
         {/* Content text */}
-        <Paper
-          elevation={0}
-          sx={{
-            width: isDesktop ? '80%' : '90%',
-            bgcolor: 'transparent',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            mb: 4,
-          }}
-        >
-          <Typography
-            variant="h5"
-            component="h1"
-            sx={{
-              fontFamily: 'InstrumentSans',
-              fontWeight: 'bold',
-              fontSize: 22,
-              color: '#222222',
-              textAlign: 'center',
-              mb: 2,
-              lineHeight: 1.2,
-            }}
-          >
+        <View style={[
+          styles.contentContainer,
+          { 
+            width: isLargeDesktop ? '60%' : isDesktop ? '80%' : '90%',
+            maxWidth: 800,
+            marginBottom: isDesktop ? 8 : 24,
+          }
+        ]}>
+          <Text style={[
+            styles.title,
+            { 
+              fontSize: isLargeDesktop ? 26 : isDesktop ? 24 : 22,
+            }
+          ]}>
             {currentLandingItem.title}
-          </Typography>
+          </Text>
 
-          {activeStep === 1 ? (
-            renderDecantText(currentLandingItem.description)
-          ) : (
-            <Typography
-              variant="body1"
-              sx={{
-                fontFamily: 'InstrumentSans',
-                fontSize: 18,
-                textAlign: 'center',
-                color: '#717171',
-                minHeight: 60,
-                lineHeight: 1.4,
-              }}
-            >
-              {currentLandingItem.description}
-            </Typography>
-          )}
-        </Paper>
+          <Text style={[
+            styles.description,
+            { 
+              fontSize: isLargeDesktop ? 20 : isDesktop ? 19 : 18,
+              minHeight: isDesktop ? 80 : 60,
+            }
+          ]}>
+            {currentLandingItem.description}
+          </Text>
+        </View>
 
         {/* Action buttons */}
         <Box sx={{
           width: '100%',
+          maxWidth: 400,
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          mt: 'auto',
-          mb: isDesktop ? 5 : 4,
+          mt: isDesktop ? 1.5 : 'auto',
+          mb: isDesktop ? 2 : 4,
           pb: 2,
+          alignSelf: 'center',
         }}>
           {/* Show different options for authenticated vs non-authenticated users */}
           {isAuthenticated && activeStep === 0 ? (
-            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
               <Button
                 variant="contained"
                 onClick={() => router.push('/(tabs)')}
                 sx={{
-                  width: 180,
-                  height: 40,
-                  marginBottom: '10px',
+                  width: isLargeDesktop ? 220 : isDesktop ? 200 : 180,
+                  height: isLargeDesktop ? 50 : isDesktop ? 45 : 40,
                   bgcolor: '#222222',
-                  fontSize: '14px',
+                  fontSize: isLargeDesktop ? 16 : isDesktop ? 15 : 14,
                   textTransform: 'none',
                   lineHeight: 1.2,
                   '&:hover': {
@@ -347,11 +338,11 @@ const LandingScreen: React.FC = () => {
                 variant="outlined"
                 onClick={() => router.push('/survey/1')}
                 sx={{
-                  width: 180,
-                  height: 40,
+                  width: isLargeDesktop ? 220 : isDesktop ? 200 : 180,
+                  height: isLargeDesktop ? 50 : isDesktop ? 45 : 40,
                   color: '#222222',
                   borderColor: '#222222',
-                  fontSize: '14px',
+                  fontSize: isLargeDesktop ? 16 : isDesktop ? 15 : 14,
                   textTransform: 'none',
                   '&:hover': {
                     borderColor: '#333333',
@@ -369,9 +360,11 @@ const LandingScreen: React.FC = () => {
                 color="primary"
                 onClick={handleNext}
                 sx={{
-                  width: 200,
-                  marginBottom: '10px',
+                  width: isLargeDesktop ? 240 : isDesktop ? 220 : 200,
+                  height: isLargeDesktop ? 50 : isDesktop ? 45 : 40,
+                  marginBottom: 1,
                   bgcolor: '#222222',
+                  fontSize: isLargeDesktop ? 18 : isDesktop ? 17 : 16,
                   '&:hover': {
                     bgcolor: '#333333',
                   },
@@ -386,7 +379,9 @@ const LandingScreen: React.FC = () => {
                   color="secondary"
                   onClick={handleSkip}
                   sx={{
-                    width: 200,
+                    width: isLargeDesktop ? 240 : isDesktop ? 220 : 200,
+                    height: isLargeDesktop ? 50 : isDesktop ? 45 : 40,
+                    fontSize: isLargeDesktop ? 18 : isDesktop ? 17 : 16,
                   }}
                 >
                   Elegir mis decants
@@ -402,7 +397,7 @@ const LandingScreen: React.FC = () => {
               sx={{
                 color: '#0000EE',
                 textDecoration: 'underline',
-                fontSize: 16,
+                fontSize: isLargeDesktop ? 18 : isDesktop ? 17 : 16,
                 fontWeight: 500,
                 cursor: 'pointer',
                 mt: 1,
@@ -422,5 +417,28 @@ const LandingScreen: React.FC = () => {
     </Box>
   );
 };
+
+const styles = StyleSheet.create({
+  contentContainer: {
+    backgroundColor: 'transparent',
+    alignItems: 'center',
+    marginBottom: 24,
+    alignSelf: 'center',
+  },
+  title: {
+    fontFamily: 'InstrumentSans',
+    fontWeight: 'bold',
+    color: '#222222',
+    textAlign: 'center',
+    marginBottom: 12,
+    lineHeight: 26,
+  },
+  description: {
+    fontFamily: 'InstrumentSans',
+    textAlign: 'center',
+    color: '#717171',
+    lineHeight: 25,
+  },
+});
 
 export default LandingScreen;

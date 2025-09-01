@@ -256,7 +256,7 @@ export default function CartScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.BACKGROUND_ALT,
+    backgroundColor: '#FFFEFC',
   },
   centerContent: {
     justifyContent: 'center',

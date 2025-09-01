@@ -1,13 +1,11 @@
 import React from 'react';
-import { View, StyleSheet, Platform, Dimensions } from 'react-native';
+import { View, StyleSheet, Platform } from 'react-native';
 import { Tabs } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
-
-const DESKTOP_BREAKPOINT = 768;
+import { useResponsive } from '../../src/utils/responsive';
 
 export default function TabsLayout() {
-  const { width } = Dimensions.get('window');
-  const isDesktop = width >= DESKTOP_BREAKPOINT;
+  const { width, isDesktop, isLargeDesktop, getFontSize } = useResponsive();
 return (
     <View style={styles.container}>
       <View style={styles.content}>
@@ -18,12 +16,23 @@ return (
               tabBarStyle: {
                 position: 'absolute',
                 ...(Platform.OS === 'web' ? {
-                  ...(isDesktop ? {
+                  ...(isLargeDesktop ? {
+                    top: 30,
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    width: '70%',
+                    maxWidth: 800,
+                    height: 60,
+                    borderRadius: 50,
+                    paddingTop: 0,
+                  } : isDesktop ? {
                     top: 20,
-                    left: 50,
-                    right: 50,
-                    height: 50,
-                    borderRadius: 43,
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    width: '80%',
+                    maxWidth: 600,
+                    height: 55,
+                    borderRadius: 45,
                     paddingTop: 0,
                   } : {
                     bottom: 0,
@@ -48,7 +57,7 @@ return (
                 }),
                 elevation: 0,
                 backgroundColor: '#FFFFFF',
-                boxShadow: '0 1px 2px rgba(0, 0, 0, 0.1)',
+                boxShadow: isDesktop ? '0 2px 8px rgba(0, 0, 0, 0.15)' : '0 1px 2px rgba(0, 0, 0, 0.1)',
                 zIndex: 999,
                 ...Platform.select({
                   ios: {
@@ -66,14 +75,14 @@ return (
               tabBarActiveTintColor: '#000000',
               tabBarInactiveTintColor: '#999999',
               tabBarLabelStyle: {
-                fontSize: isDesktop ? 14 : 11,
+                fontSize: isLargeDesktop ? 16 : isDesktop ? 14 : 11,
                 fontWeight: '400',
                 marginTop: 0,
-                marginBottom: Platform.OS === 'web' ? 8 : 4,
+                marginBottom: Platform.OS === 'web' ? (isDesktop ? 12 : 8) : 4,
               },
               tabBarIconStyle: {
-                marginTop: 0,
-                marginBottom: 0,
+                marginTop: isDesktop ? 4 : 0,
+                marginBottom: isDesktop ? 4 : 0,
               },
               tabBarItemStyle: {
                 paddingVertical: 0,
@@ -88,7 +97,7 @@ return (
               options={{
                 title: 'Inicio',
                 tabBarIcon: ({ color, size }) => (
-                  <Feather name="home" size={isDesktop ? size + 4 : size} color={color} />
+                  <Feather name="home" size={isLargeDesktop ? size + 6 : isDesktop ? size + 4 : size} color={color} />
                 ),
                 href: '/home',
               }}
@@ -98,7 +107,7 @@ return (
               options={{
                 title: 'Buscar',
                 tabBarIcon: ({ color, size }) => (
-                  <Feather name="search" size={isDesktop ? size + 4 : size} color={color} />
+                  <Feather name="search" size={isLargeDesktop ? size + 6 : isDesktop ? size + 4 : size} color={color} />
                 ),
               }}
             />
@@ -107,7 +116,7 @@ return (
               options={{
                 title: 'Ratings',
                 tabBarIcon: ({ color, size }) => (
-                  <Feather name="star" size={isDesktop ? size + 4 : size} color={color} />
+                  <Feather name="star" size={isLargeDesktop ? size + 6 : isDesktop ? size + 4 : size} color={color} />
                 ),
               }}
             />
@@ -116,7 +125,7 @@ return (
               options={{
                 title: 'Carrito',
                 tabBarIcon: ({ color, size }) => (
-                  <Feather name="shopping-cart" size={isDesktop ? size + 4 : size} color={color} />
+                  <Feather name="shopping-cart" size={isLargeDesktop ? size + 6 : isDesktop ? size + 4 : size} color={color} />
                 ),
               }}
             />
@@ -125,7 +134,7 @@ return (
               options={{
                 title: 'Perfil',
                 tabBarIcon: ({ color, size }) => (
-                  <Feather name="user" size={isDesktop ? size + 4 : size} color={color} />
+                  <Feather name="user" size={isLargeDesktop ? size + 6 : isDesktop ? size + 4 : size} color={color} />
                 ),
               }}
             />
@@ -141,7 +150,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     position: 'relative',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#FFFEFC',
   },
   content: {
     flex: 1,

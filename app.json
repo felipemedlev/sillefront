@@ -45,6 +45,9 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "apiBaseUrl": "https://sille-backend.onrender.com/api"
     }
   }
 }

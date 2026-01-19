@@ -41,7 +41,7 @@ type SurveyContextType = {
 const SurveyContext = createContext<SurveyContextType | undefined>(undefined);
 
 export const SurveyProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, user, logout } = useAuth();
   const [answers, setAnswers] = useState<SurveyAnswers>({});
   const [questions, setQuestions] = useState<ApiSurveyQuestion[]>([]);
   const [isLoadingQuestions, setIsLoadingQuestions] = useState(true);
@@ -77,24 +77,25 @@ export const SurveyProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   // Listen for authentication state changes from AuthContext
   useEffect(() => {
-    console.log('SurveyContext: Auth state check -', { isAuthenticated, user: !!user, wasAuthenticated });
-    
-    // Handle transition to authenticated state
-    if (isAuthenticated && !wasAuthenticated && Object.keys(answers).length > 0) {
-      // Check if we've recently submitted
-      const now = Date.now();
-      const timeSinceLastSubmission = now - lastSubmissionTime.current;
+    console.log('SurveyContext: Auth state check -', { isAuthenticated, user: !!user, wasAuthenticated, pendingUpload });
 
-      if (timeSinceLastSubmission > MIN_SUBMISSION_INTERVAL) {
-        console.log('User authenticated with pending survey data - attempting submission');
-        setTimeout(() => {
-          if (!isSubmitting.current) {
-            submitSurveyIfAuthenticated();
-          }
-        }, 300);
-        setPendingUpload(false);
-      } else {
-        console.log(`Skipping auth-triggered submission (last submission was ${Math.round(timeSinceLastSubmission/1000)}s ago)`);
+    // Handle transition to authenticated state OR if we have pending uploads
+    if (isAuthenticated && Object.keys(answers).length > 0) {
+      if (!wasAuthenticated || pendingUpload) {
+        // Check if we've recently submitted
+        const now = Date.now();
+        const timeSinceLastSubmission = now - lastSubmissionTime.current;
+
+        if (timeSinceLastSubmission > MIN_SUBMISSION_INTERVAL) {
+          console.log('User authenticated with pending survey data - attempting submission');
+          setTimeout(() => {
+            if (!isSubmitting.current) {
+              submitSurveyIfAuthenticated();
+            }
+          }, 300);
+        } else {
+          console.log(`Skipping auth-triggered submission (last submission was ${Math.round(timeSinceLastSubmission / 1000)}s ago)`);
+        }
       }
     }
 
@@ -106,7 +107,7 @@ export const SurveyProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     // Update the previous auth state
     setWasAuthenticated(isAuthenticated);
-  }, [isAuthenticated, user, answers]);
+  }, [isAuthenticated, user, answers, pendingUpload]);
 
   // Fetch questions from API on mount
   useEffect(() => {
@@ -137,6 +138,7 @@ export const SurveyProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
         if (storedAnswersWeb) {
           setAnswers(JSON.parse(storedAnswersWeb));
+          setPendingUpload(true); // Assume pending until verified/synced
           return;
         }
 
@@ -145,6 +147,7 @@ export const SurveyProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         if (storedAnswers) {
           const parsedAnswers = JSON.parse(storedAnswers);
           setAnswers(parsedAnswers);
+          setPendingUpload(true); // Assume pending until verified/synced
 
           // Also save to localStorage for future use
           localStorage.setItem(SURVEY_ANSWERS_KEY, storedAnswers);
@@ -218,7 +221,7 @@ export const SurveyProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       const token = await authUtils.getToken();
       if (!token || token.trim() === '') {
         console.log('Token missing or invalid');
-        setIsAuthenticated(false);
+        logout(); // Use logout() instead of invalid setIsAuthenticated
         isSubmitting.current = false;
         return false;
       }
@@ -230,8 +233,9 @@ export const SurveyProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         const result = await submitSurveyResponse(answers);
 
         // Check if the response indicates actual server-side saving
-        if (result && result.user) {
+        if (result) {
           console.log('Survey successfully saved to server');
+          setPendingUpload(false); // Mark as synced
           isSubmitting.current = false;
           return true;
         } else {
@@ -243,7 +247,7 @@ export const SurveyProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         // Handle auth-related errors
         if (error.status === 401 || error.status === 403) {
           console.error('Authentication error during survey submission');
-          setIsAuthenticated(false);
+          logout(); // Use logout() instead of invalid setIsAuthenticated
           isSubmitting.current = false;
           return false;
         }
@@ -275,10 +279,10 @@ export const SurveyProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         totalQuestions: questions.length,
         answeredCount: Object.keys(answers).length
       };
-      
+
       // Save to AsyncStorage
       await AsyncStorage.setItem(SURVEY_PROGRESS_KEY, JSON.stringify(progressData));
-      
+
       // Save to localStorage for web
       if (typeof window !== 'undefined') {
         localStorage.setItem(SURVEY_PROGRESS_KEY, JSON.stringify(progressData));
@@ -295,12 +299,12 @@ export const SurveyProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       if (typeof window !== 'undefined') {
         storedProgress = localStorage.getItem(SURVEY_PROGRESS_KEY);
       }
-      
+
       // Fall back to AsyncStorage
       if (!storedProgress) {
         storedProgress = await AsyncStorage.getItem(SURVEY_PROGRESS_KEY);
       }
-      
+
       if (storedProgress) {
         const progressData = JSON.parse(storedProgress);
         // Check if progress is recent (within 7 days)

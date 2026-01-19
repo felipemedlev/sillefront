@@ -3,6 +3,7 @@ import { View, Dimensions, Text, StyleSheet, TouchableOpacity, Image, Animated, 
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSurveyContext } from '../../context/SurveyContext';
 import { SkeletonSurveyQuestion } from '../../components/ui/SkeletonLoader';
+import { SurveyProgressBar } from './SurveyProgressBar';
 import Logo from '../../assets/images/Logo.svg';
 import { Ionicons } from '@expo/vector-icons';
 import { shouldUseNativeDriver } from '../../src/utils/animation';
@@ -134,22 +135,22 @@ export default function SurveyQuestion() {
   // No Redirect needed here anymore. Loading/Error states below handle it.
 
   // Helper: submit answer to backend after updating local state
-  const submitAndNavigate = async (key: string, value: number | string, nextQuestionId: number) => {
+  const submitAndNavigate = async (key: string, value: number | string, nextQuestion: any) => {
     const updatedAnswers = { ...answers, [key]: value };
     // Removed the immediate API call. Submission will happen post-login/signup.
     setAnswer(key, value);
-    
+
     // Save progress
     try {
       await saveProgress(questionId);
     } catch (error) {
       console.error('Error saving progress:', error);
     }
-    
-    if (nextQuestionId <= questions.length) {
+
+    if (nextQuestion) {
       router.push({
         pathname: '/survey/[id]',
-        params: { id: String(nextQuestionId) },
+        params: { id: String(nextQuestion.id) },
       });
     } else {
       router.push('/survey/complete');
@@ -158,18 +159,29 @@ export default function SurveyQuestion() {
 
   const handleRate = (rating: number | string) => {
     if (!question) return;
-    const nextQuestionId = parseInt(questionId) + 1;
+
+    // Find current index and next question based on the array order
+    const currentIdx = questions.findIndex(q => q.id === question.id);
+    const nextQuestion = questions[currentIdx + 1];
+
+    // Determine the ID to navigate to
+    // If there is no next question, we're done (navigate to complete)
+    // We don't blindly increment ID because IDs might not be sequential or sorted
+
     if (question.type === 'gender') {
-      submitAndNavigate('gender', rating as string, nextQuestionId);
+      submitAndNavigate('gender', rating as string, nextQuestion);
     } else if (question.accord) {
-      submitAndNavigate(question.accord, rating as number, nextQuestionId);
+      submitAndNavigate(question.accord, rating as number, nextQuestion);
     }
   };
 
   const handleNoAnswer = () => {
     if (!question || !question.accord) return;
-    const nextQuestionId = parseInt(questionId) + 1;
-    submitAndNavigate(question.accord, -1, nextQuestionId);
+
+    const currentIdx = questions.findIndex(q => q.id === question.id);
+    const nextQuestion = questions[currentIdx + 1];
+
+    submitAndNavigate(question.accord, -1, nextQuestion);
   };
 
   const handlePressIn = (index: number) => {
@@ -213,7 +225,7 @@ export default function SurveyQuestion() {
   }
 
   if (!question) {
-      return null;
+    return null;
   }
 
 
@@ -242,6 +254,14 @@ export default function SurveyQuestion() {
           <Logo width={isDesktop ? 160 : 120} height={isDesktop ? 48 : 36} preserveAspectRatio="xMidYMid meet" />
         </View>
       </View>
+
+      {/* Progress Bar */}
+      {currentIndex >= 0 && questions && questions.length > 0 && (
+        <SurveyProgressBar
+          currentStep={currentIndex + 1}
+          totalSteps={questions.length}
+        />
+      )}
 
       {/* Conditional Rendering: Only render content if 'question' is loaded */}
       {question ? (
@@ -324,26 +344,13 @@ export default function SurveyQuestion() {
                     </Animated.View>
                   ))}
                 </View>
-                
+
                 {/* Rating Labels */}
                 <View style={styles.ratingLabelsContainer}>
                   <View style={styles.ratingScaleContainer}>
                     <Text style={styles.scaleLabel}>{ratingLabels[0] || 'Odio'}</Text>
                     <View style={styles.scaleLine} />
                     <Text style={styles.scaleLabel}>{ratingLabels[4] || 'Amo'}</Text>
-                  </View>
-                  
-                  {/* Dynamic rating feedback */}
-                  <View style={styles.ratingFeedbackContainer}>
-                    {hoveredRating !== null && ratingLabels[hoveredRating] && ratingDescriptions[hoveredRating] ? (
-                      <Text style={styles.ratingFeedbackText}>
-                        {ratingLabels[hoveredRating]}: {ratingDescriptions[hoveredRating]}
-                      </Text>
-                    ) : (
-                      <Text style={styles.ratingPromptText}>
-                        Toca un emoji para valorar este aroma
-                      </Text>
-                    )}
                   </View>
                 </View>
               </>

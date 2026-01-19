@@ -207,8 +207,7 @@ export const SurveyProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       return false;
     }
 
-    // Update last submission time
-    lastSubmissionTime.current = Date.now();
+    // Mark as submitting immediately to prevent race conditions
     isSubmitting.current = true;
 
     try {
@@ -235,6 +234,9 @@ export const SurveyProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         isSubmitting.current = false;
         return false;
       }
+
+      // Update last submission time ONLY when we are actually proceeding with an authenticated submission
+      lastSubmissionTime.current = Date.now();
 
       // Log submission attempt with timestamp
       console.log(`[SurveyContext] Attempting to submit survey at ${new Date().toISOString()}`);

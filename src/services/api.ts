@@ -31,12 +31,12 @@ export interface ApiRating {
 }
 
 export interface ApiPredefinedBox {
-    id: number;
-    title: string;
-    description: string | null;
-    icon: string | null;
-    gender: 'masculino' | 'femenino' | null;
-    perfumes: ApiPerfumeSummary[];
+  id: number;
+  title: string;
+  description: string | null;
+  icon: string | null;
+  gender: 'masculino' | 'femenino' | null;
+  perfumes: ApiPerfumeSummary[];
 }
 
 // --- Recommendation API Types ---
@@ -48,16 +48,16 @@ export interface ApiRecommendation {
 
 // --- Survey API Types ---
 export type ApiSurveyQuestion = {
+  id: string;
+  type?: 'gender';
+  question?: string;
+  options?: {
     id: string;
-    type?: 'gender';
-    question?: string;
-    options?: {
-        id: string;
-        label: string;
-        emoji: string;
-    }[];
-    accord?: string;
-    description?: string;
+    label: string;
+    emoji: string;
+  }[];
+  accord?: string;
+  description?: string;
 };
 
 export type ApiSurveyAnswer = { [key: string]: number | string };
@@ -130,112 +130,126 @@ export interface ApiCartItemAddPayload {
 // --- Survey API Functions ---
 
 export const fetchSurveyQuestions = async (): Promise<ApiSurveyQuestion[]> => {
-    const headers = await createHeaders(false);
-    const url = `${API_BASE_URL}/survey/questions/`;
-    const response = await fetch(url, {
-        method: 'GET',
-        headers,
-    });
-    return handleResponse(response);
+  const headers = await createHeaders(false);
+  const url = `${API_BASE_URL}/survey/questions/`;
+  const response = await fetch(url, {
+    method: 'GET',
+    headers,
+  });
+  return handleResponse(response);
 };
 
 export const fetchSurveyQuestion = async (questionId: string): Promise<ApiSurveyQuestion> => {
-    const headers = await createHeaders(false);
-    const url = `${API_BASE_URL}/survey/questions/${questionId}/`;
-    const response = await fetch(url, {
-        method: 'GET',
-        headers,
-    });
-    return handleResponse(response);
+  const headers = await createHeaders(false);
+  const url = `${API_BASE_URL}/survey/questions/${questionId}/`;
+  const response = await fetch(url, {
+    method: 'GET',
+    headers,
+  });
+  return handleResponse(response);
 };
 
 export const submitSurveyResponse = async (answers: ApiSurveyAnswer): Promise<any> => {
-    const headers = await createHeaders(true);
-    const url = `${API_BASE_URL}/survey/`;
-    const response = await fetch(url, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({ response_data: answers }),
-    });
-    return handleResponse(response);
+  const headers = await createHeaders(true);
+  const url = `${API_BASE_URL}/survey/`;
+
+  // Debug logging
+  console.log('[API] submitSurveyResponse called');
+  console.log('[API] Payload:', JSON.stringify({ response_data: answers }));
+
+  // Check if Authorization header is present (safely)
+  const authHeader = (headers as any)['Authorization'];
+  console.log('[API] Auth Header present:', !!authHeader);
+  if (authHeader) {
+    console.log('[API] Auth Token prefix:', authHeader.substring(0, 15) + '...');
+  } else {
+    console.warn('[API] WARNING: No Authorization header in survey submission!');
+  }
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({ response_data: answers }),
+  });
+  return handleResponse(response);
 };
 
 export const placeOrder = async (payload: ApiOrderCreatePayload): Promise<ApiOrder> => {
-    const headers = await createHeaders(true);
-    const url = `${API_BASE_URL}/orders/`;
-    const response = await fetch(url, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(payload),
-    });
-    return handleResponse(response);
+  const headers = await createHeaders(true);
+  const url = `${API_BASE_URL}/orders/`;
+  const response = await fetch(url, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(payload),
+  });
+  return handleResponse(response);
 };
 export const addItemToBackendCart = async (payload: ApiCartItemAddPayload): Promise<ApiCart> => {
-    const headers = await createHeaders(true);
-    const url = `${API_BASE_URL}/cart/items/`;
-    const response = await fetch(url, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(payload),
-    });
-    return handleResponse(response);
+  const headers = await createHeaders(true);
+  const url = `${API_BASE_URL}/cart/items/`;
+  const response = await fetch(url, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(payload),
+  });
+  return handleResponse(response);
 };
 
 export const removeItemFromBackendCart = async (cartItemBackendId: number): Promise<ApiCart> => {
-    const headers = await createHeaders(true);
-    const url = `${API_BASE_URL}/cart/items/${cartItemBackendId}/`;
-    const response = await fetch(url, {
-        method: 'DELETE',
-        headers,
-    });
-    
-    // Handle the DELETE response - it might return 204 No Content
-    if (response.status === 204) {
-        // Item was deleted successfully, now fetch the updated cart
-        const updatedCart = await fetchUserCart();
-        if (updatedCart) {
-            return updatedCart;
-        } else {
-            // Cart is now empty - return a minimal ApiCart structure
-            return { 
-                id: 0, 
-                user: { id: 0, email: '' }, 
-                items: [], 
-                created_at: new Date().toISOString(),
-                updated_at: new Date().toISOString() 
-            };
-        }
+  const headers = await createHeaders(true);
+  const url = `${API_BASE_URL}/cart/items/${cartItemBackendId}/`;
+  const response = await fetch(url, {
+    method: 'DELETE',
+    headers,
+  });
+
+  // Handle the DELETE response - it might return 204 No Content
+  if (response.status === 204) {
+    // Item was deleted successfully, now fetch the updated cart
+    const updatedCart = await fetchUserCart();
+    if (updatedCart) {
+      return updatedCart;
+    } else {
+      // Cart is now empty - return a minimal ApiCart structure
+      return {
+        id: 0,
+        user: { id: 0, email: '' },
+        items: [],
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
     }
-    
-    return handleResponse(response);
+  }
+
+  return handleResponse(response);
 };
 
 export const clearBackendCart = async (): Promise<ApiCart | null> => {
-    const headers = await createHeaders(true);
-    const url = `${API_BASE_URL}/cart/clear/`;
-    const response = await fetch(url, {
-        method: 'DELETE',
-        headers,
-    });
-    return handleResponse(response);
+  const headers = await createHeaders(true);
+  const url = `${API_BASE_URL}/cart/clear/`;
+  const response = await fetch(url, {
+    method: 'DELETE',
+    headers,
+  });
+  return handleResponse(response);
 };
 
 export const fetchUserCart = async (): Promise<ApiCart | null> => {
-    const headers = await createHeaders(true);
-    const url = `${API_BASE_URL}/cart/`;
-    try {
-        const response = await fetch(url, {
-            method: 'GET',
-            headers,
-        });
-        if (response.status === 404) {
-            return null;
-        }
-        return handleResponse(response);
-    } catch (error) {
-        console.error("Error fetching user cart:", error);
-        throw error;
+  const headers = await createHeaders(true);
+  const url = `${API_BASE_URL}/cart/`;
+  try {
+    const response = await fetch(url, {
+      method: 'GET',
+      headers,
+    });
+    if (response.status === 404) {
+      return null;
     }
+    return handleResponse(response);
+  } catch (error) {
+    console.error("Error fetching user cart:", error);
+    throw error;
+  }
 };
 
 export const API_BASE_URL = Constants.expoConfig?.extra?.apiBaseUrl || 'http://127.0.0.1:8000/api';
@@ -303,24 +317,24 @@ const transformprice_per_ml = (data: any): any => {
               newData['price_per_ml'] = null;
             }
           } else {
-             console.warn(`[API WARN] Unexpected type for price_per_ml: ${typeof value}, value: ${value}`);
-             newData['price_per_ml'] = null;
+            console.warn(`[API WARN] Unexpected type for price_per_ml: ${typeof value}, value: ${value}`);
+            newData['price_per_ml'] = null;
           }
           priceTransformed = true;
 
         } else if (key === 'price_per_ml' && !priceTransformed) {
-           if (typeof value === 'number' || (typeof value === 'string' && value.trim() !== '')) {
-             priceValue = parseFloat(value as string);
-             if (!isNaN(priceValue)) {
-               newData[key] = priceValue * 2;
-             } else {
-               console.warn(`[API WARN] Could not parse price_per_ml value: ${value}`);
-               newData[key] = null;
-             }
-           } else {
-             console.warn(`[API WARN] Unexpected type for price_per_ml: ${typeof value}, value: ${value}`);
-             newData[key] = null;
-           }
+          if (typeof value === 'number' || (typeof value === 'string' && value.trim() !== '')) {
+            priceValue = parseFloat(value as string);
+            if (!isNaN(priceValue)) {
+              newData[key] = priceValue * 2;
+            } else {
+              console.warn(`[API WARN] Could not parse price_per_ml value: ${value}`);
+              newData[key] = null;
+            }
+          } else {
+            console.warn(`[API WARN] Unexpected type for price_per_ml: ${typeof value}, value: ${value}`);
+            newData[key] = null;
+          }
 
         } else {
           newData[key] = transformprice_per_ml(value);
@@ -356,7 +370,7 @@ const handleResponse = async (response: Response) => {
   try {
     const text = await response.text();
     if (!text) {
-        return null;
+      return null;
     }
     jsonData = JSON.parse(text);
   } catch (e) {
@@ -366,11 +380,11 @@ const handleResponse = async (response: Response) => {
 
   let transformedData;
   try {
-      transformedData = transformprice_per_ml(jsonData);
-      return transformedData;
+    transformedData = transformprice_per_ml(jsonData);
+    return transformedData;
   } catch (transformError) {
-      console.error('Error transforming price_per_ml:', transformError);
-      throw new Error('Failed to transform API response data');
+    console.error('Error transforming price_per_ml:', transformError);
+    throw new Error('Failed to transform API response data');
   }
 };
 

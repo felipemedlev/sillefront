@@ -193,9 +193,17 @@ export const SurveyProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   // Check if user is authenticated and submit survey if they are
   const submitSurveyIfAuthenticated = async (): Promise<boolean> => {
+    console.log('[SurveyContext] submitSurveyIfAuthenticated called');
+    console.log('[SurveyContext] Current state:', {
+      isAuthenticated,
+      user: user ? { id: user.id, email: user.email } : null,
+      answersCount: Object.keys(answers).length,
+      isSubmitting: isSubmitting.current
+    });
+
     // Prevent duplicate submissions
     if (isSubmitting.current) {
-      console.log('Submission already in progress, skipping');
+      console.log('[SurveyContext] Submission already in progress, skipping');
       return false;
     }
 
@@ -206,59 +214,61 @@ export const SurveyProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     try {
       // Check auth status
       if (!isAuthenticated) {
-        console.log('Not authenticated, storing answers locally only');
+        console.log('[SurveyContext] Not authenticated, storing answers locally only');
         isSubmitting.current = false;
         return false;
       }
 
       if (Object.keys(answers).length === 0) {
-        console.log('No answers to submit');
+        console.log('[SurveyContext] No answers to submit');
         isSubmitting.current = false;
         return false;
       }
 
       // Additional validation - verify the token is still valid
       const token = await authUtils.getToken();
+      console.log('[SurveyContext] Token from storage:', token ? 'Present' : 'Missing');
+
       if (!token || token.trim() === '') {
-        console.log('Token missing or invalid');
+        console.log('[SurveyContext] Token missing or invalid');
         logout(); // Use logout() instead of invalid setIsAuthenticated
         isSubmitting.current = false;
         return false;
       }
 
       // Log submission attempt with timestamp
-      console.log(`Attempting to submit survey at ${new Date().toISOString()}`);
+      console.log(`[SurveyContext] Attempting to submit survey at ${new Date().toISOString()}`);
 
       try {
         const result = await submitSurveyResponse(answers);
 
         // Check if the response indicates actual server-side saving
         if (result) {
-          console.log('Survey successfully saved to server');
+          console.log('[SurveyContext] Survey successfully saved to server');
           setPendingUpload(false); // Mark as synced
           isSubmitting.current = false;
           return true;
         } else {
-          console.log('Survey API returned success but data may not have been saved');
+          console.log('[SurveyContext] Survey API returned success but data may not have been saved');
           isSubmitting.current = false;
           return false;
         }
       } catch (error: any) {
         // Handle auth-related errors
         if (error.status === 401 || error.status === 403) {
-          console.error('Authentication error during survey submission');
+          console.error('[SurveyContext] Authentication error during survey submission');
           logout(); // Use logout() instead of invalid setIsAuthenticated
           isSubmitting.current = false;
           return false;
         }
 
         // Other errors
-        console.error('Error submitting survey:', error);
+        console.error('[SurveyContext] Error submitting survey:', error);
         isSubmitting.current = false;
         return false;
       }
     } catch (error) {
-      console.error('Error in submitSurveyIfAuthenticated:', error);
+      console.error('[SurveyContext] Error in submitSurveyIfAuthenticated:', error);
       isSubmitting.current = false;
       return false;
     }

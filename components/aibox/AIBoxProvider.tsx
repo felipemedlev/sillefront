@@ -25,6 +25,7 @@ export type AIBoxProviderProps = {
     handlePriceChangeFinish: (values: number[]) => void; // Renamed: Triggers reload on finish
     loadRecommendations: (filters?: { priceRange?: { min: number; max: number } | null; occasions?: string[] }) => Promise<void>; // Update loadRecommendations signature for occasion names
   }) => React.ReactNode;
+  initialOccasions?: string[]; // Add initialOccasions prop
 };
 
 // Normalization helper for perfume data
@@ -63,13 +64,13 @@ const getPerfumePrice = (perfume: Perfume | undefined): number => {
   return isNaN(price) ? 0 : price;
 };
 
-export const AIBoxProvider: React.FC<AIBoxProviderProps> = ({ children }) => {
+export const AIBoxProvider: React.FC<AIBoxProviderProps> = ({ children, initialOccasions = [] }) => {
   const { submitSurveyIfAuthenticated } = useSurveyContext();
   const { isAuthenticated } = useAuth();
   const [decantCount, setDecantCount] = useState<4 | 8>(4);
   const [decantSize, setDecantSize] = useState<3 | 5 | 10>(5);
   const [rangoPrecio, setRangoPrecio] = useState<[number, number]>([0, 5000]);
-  const [selectedOccasionNames, setSelectedOccasionNames] = useState<string[]>([]); // Use state for selected occasion names
+  const [selectedOccasionNames, setSelectedOccasionNames] = useState<string[]>(initialOccasions); // Initialize with prop
   const [selectedPerfumeIds, setSelectedPerfumeIds] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [recommendedPerfumes, setRecommendedPerfumes] = useState<Perfume[]>([]);
@@ -86,7 +87,7 @@ export const AIBoxProvider: React.FC<AIBoxProviderProps> = ({ children }) => {
 
   // Add debounce state to prevent rapid successive calls
   const [lastApiCall, setLastApiCall] = useState<number>(0);
-  
+
   // Data Fetching Function
   const loadRecommendations = useCallback(async (filters?: { priceRange?: { min: number; max: number } | null; occasions?: string[] }) => {
     const now = Date.now();
@@ -94,7 +95,7 @@ export const AIBoxProvider: React.FC<AIBoxProviderProps> = ({ children }) => {
     if (now - lastApiCall < 500) {
       return;
     }
-    
+
     setLastApiCall(now);
     setIsLoading(true);
     setError(null);
@@ -274,9 +275,9 @@ export const AIBoxProvider: React.FC<AIBoxProviderProps> = ({ children }) => {
   useEffect(() => {
     if (isAuthenticated) {
       // Load recommendations with or without occasions
-      loadRecommendations({ 
-        priceRange: { min: rangoPrecio[0], max: rangoPrecio[1] }, 
-        occasions: selectedOccasionNames.length > 0 ? selectedOccasionNames : undefined 
+      loadRecommendations({
+        priceRange: { min: rangoPrecio[0], max: rangoPrecio[1] },
+        occasions: selectedOccasionNames.length > 0 ? selectedOccasionNames : undefined
       });
     }
   }, [isAuthenticated, selectedOccasionNames.join(',')]); // Only depend on auth and occasions (join for stable comparison)

@@ -223,7 +223,7 @@ const OccasionSelectionContent: React.FC = () => {
   }
 
   return (
-    <AIBoxProvider>
+    <AIBoxProvider initialOccasions={occasionNames ? decodeURIComponent(occasionNames).split(',') : []}>
       {(contextProps) => {
         const {
           isLoading, error, loadingMessage, recommendedPerfumes,

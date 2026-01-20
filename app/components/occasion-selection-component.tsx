@@ -164,8 +164,8 @@ const OccasionSelectionContent: React.FC = () => {
       let updatedSelectedIds = prevSelectedIds.filter(id => String(id) !== String(perfumeIdToRemove));
       // Ensure removedPerfumeIds used for check is the latest state *after* adding perfumeIdToRemove
       const currentRemovedForCheck = removedPerfumeIds.includes(String(perfumeIdToRemove))
-                                     ? [...removedPerfumeIds]
-                                     : [...removedPerfumeIds, String(perfumeIdToRemove)];
+        ? [...removedPerfumeIds]
+        : [...removedPerfumeIds, String(perfumeIdToRemove)];
 
       if (updatedSelectedIds.length < currentDecantCount) {
         const nextId = getNextAvailableRecommendedPerfumeId(updatedSelectedIds, currentRemovedForCheck, allRecommended);
@@ -183,13 +183,13 @@ const OccasionSelectionContent: React.FC = () => {
   }, []);
 
   const getSelectedPerfume = (finder: (id: string) => Perfume | undefined) => {
-      return selectedPerfumeId ? finder(selectedPerfumeId) : null;
+    return selectedPerfumeId ? finder(selectedPerfumeId) : null;
   };
 
   // Modal display state management - use ref to avoid render loops
   const [modalPerfume, setModalPerfume] = useState<Perfume | null>(null);
   const contextRef = useRef<any>(null);
-  
+
   useEffect(() => {
     if (modalPerfume && modalRef.current) {
       modalRef.current.show(modalPerfume);
@@ -286,6 +286,7 @@ const OccasionSelectionContent: React.FC = () => {
             },
             price: totalPrice,
             thumbnail_url: perfumesInBox[0]?.thumbnail_url,
+            quantity: 1 as const,
           };
 
           try {

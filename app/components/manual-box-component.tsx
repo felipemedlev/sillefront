@@ -65,6 +65,7 @@ export default function ManualBoxScreen() {
       },
       price: totalPrice,
       thumbnail_url: perfumesInBox[0]?.thumbnail_url, // Use first perfume's image
+      quantity: 1 as const,
     };
 
     try {

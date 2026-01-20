@@ -73,6 +73,7 @@ const PredefinedBoxModal: React.FC<PredefinedBoxModalProps> = ({
       },
       price: totalPrice,
       thumbnail_url: perfumesInBox[0]?.thumbnail_url, // Use first perfume's image
+      quantity: 1 as const,
     };
 
     try {
@@ -138,8 +139,8 @@ const PredefinedBoxModal: React.FC<PredefinedBoxModalProps> = ({
                 <View style={styles.perfumeInfo}>
                   <Text style={styles.perfumeName}>{perfume.name}</Text>
                   <Text style={styles.perfumeBrand}>{perfume.brand}</Text>
-                  <Text style={styles.perfumePrice}>${(perfume.price_per_ml ?? 0).toLocaleString(undefined, {maximumFractionDigits: 0})}/mL</Text>
-                  <Text style={styles.perfumeTotalPrice}>Total: ${((perfume.price_per_ml ?? 0) * 5).toLocaleString(undefined, {maximumFractionDigits: 0})}</Text>
+                  <Text style={styles.perfumePrice}>${(perfume.price_per_ml ?? 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}/mL</Text>
+                  <Text style={styles.perfumeTotalPrice}>Total: ${((perfume.price_per_ml ?? 0) * 5).toLocaleString(undefined, { maximumFractionDigits: 0 })}</Text>
                 </View>
               </View>
             ))}
@@ -149,7 +150,7 @@ const PredefinedBoxModal: React.FC<PredefinedBoxModalProps> = ({
           <View style={styles.footer}>
             <View style={styles.priceContainer}>
               <Text style={styles.totalPriceLabel}>Precio Total:</Text>
-              <Text style={styles.totalPriceValue}>${totalPrice.toLocaleString(undefined, {maximumFractionDigits: 0})}</Text>
+              <Text style={styles.totalPriceValue}>${totalPrice.toLocaleString(undefined, { maximumFractionDigits: 0 })}</Text>
             </View>
             <Pressable style={styles.addToCartButton} onPress={handleAddToCart}>
               <Text style={styles.addToCartButtonText}>Añadir al carro</Text>

@@ -107,6 +107,7 @@ export const AIBoxInteractions: React.FC<AIBoxInteractionsProps> = ({
       },
       price: totalPrice,
       thumbnail_url: perfumesInBox[0]?.thumbnail_url,
+      quantity: 1 as const,
     };
 
     try {

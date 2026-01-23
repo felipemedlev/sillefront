@@ -203,11 +203,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFEFC',
   },
   scrollContentContainer: {
-    paddingBottom: SPACING.XLARGE,
+    paddingBottom: 70,
   },
   content: {
     paddingHorizontal: SPACING.LARGE,
-    paddingTop: SPACING.LARGE,
+    paddingTop: SPACING.MEDIUM,
     maxWidth: 1200,
     marginHorizontal: 'auto',
     width: '100%',
@@ -223,7 +223,7 @@ const styles = StyleSheet.create({
   pageSubtitle: {
     fontSize: FONT_SIZES.REGULAR,
     color: COLORS.TEXT_SECONDARY,
-    marginBottom: SPACING.XLARGE,
+    marginBottom: SPACING.MEDIUM,
     textAlign: 'center',
     fontFamily: FONTS.INSTRUMENT_SANS,
     lineHeight: 22,

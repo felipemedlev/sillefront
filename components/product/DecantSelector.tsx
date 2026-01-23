@@ -6,14 +6,14 @@ import {
   TouchableOpacity,
   Pressable, // Import Pressable
 } from 'react-native';
-import { SPACING, FONT_SIZES, COLORS } from '../../types/constants';
+import { SPACING, FONT_SIZES, COLORS, GiftboxTheme } from '../../types/constants';
 
 interface DecantSelectorProps {
   decantCount: 4 | 8;
   onSelectDecant: (count: 4 | 8) => void;
   decantSize?: 3 | 5 | 10;
   onDecantSize?: (size: 3 | 5 | 10) => void;
-  genderColors?: typeof COLORS.GIFTBOX.MALE | typeof COLORS.GIFTBOX.FEMALE;
+  genderColors?: GiftboxTheme;
 }
 
 const DecantSelector: React.FC<DecantSelectorProps> = ({
@@ -48,31 +48,31 @@ const DecantSelector: React.FC<DecantSelectorProps> = ({
         </TouchableOpacity>
       ))}
     </View>
-  {/* Decant Size Selector - Only show if onDecantSize is provided */}
-  {onDecantSize && (
-    <View style={[styles.section, styles.filterSection]}>
-      <View style={styles.sizeContainer}>
-        {[3, 5, 10].map((size) => (
-          <Pressable
-            key={size}
-            style={[
-              styles.sizeButton,
-              decantSize === size && styles.sizeButtonActive,
-              // Apply gender-specific active color if needed, similar to count button
-              decantSize === size && { backgroundColor: genderColors?.PRIMARY || COLORS.GIFTBOX.MALE.PRIMARY }
-            ]}
-            onPress={() => onDecantSize(size as 3 | 5 | 10)} // Use the prop function
-            disabled={!onDecantSize} // Disable if no handler provided
-          >
-            <Text style={[
-              styles.sizeText,
-              decantSize === size && styles.sizeTextActive,
-            ]}>{size}ml</Text>
-          </Pressable>
-        ))}
+    {/* Decant Size Selector - Only show if onDecantSize is provided */}
+    {onDecantSize && (
+      <View style={[styles.section, styles.filterSection]}>
+        <View style={styles.sizeContainer}>
+          {[3, 5, 10].map((size) => (
+            <Pressable
+              key={size}
+              style={[
+                styles.sizeButton,
+                decantSize === size && styles.sizeButtonActive,
+                // Apply gender-specific active color if needed, similar to count button
+                decantSize === size && { backgroundColor: genderColors?.PRIMARY || COLORS.GIFTBOX.MALE.PRIMARY }
+              ]}
+              onPress={() => onDecantSize(size as 3 | 5 | 10)} // Use the prop function
+              disabled={!onDecantSize} // Disable if no handler provided
+            >
+              <Text style={[
+                styles.sizeText,
+                decantSize === size && styles.sizeTextActive,
+              ]}>{size}ml</Text>
+            </Pressable>
+          ))}
+        </View>
       </View>
-    </View>
-  )}
+    )}
   </> // Close the wrapper Fragment/View
 );
 

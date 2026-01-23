@@ -26,17 +26,17 @@ const GenderSelector: React.FC<GenderSelectorProps> = ({ selectedGender, onSelec
       activeOpacity={0.8}
     >
       <View style={[
-        styles.generoIconWrapper, 
+        styles.generoIconWrapper,
         { backgroundColor: selectedGender === 'masculino' ? COLORS.ACCENT : COLORS.BACKGROUND_ALT }
       ]}>
-        <Feather 
-          name="user" 
-          size={20} 
-          color={selectedGender === 'masculino' ? '#fff' : COLORS.TEXT_SECONDARY} 
+        <Feather
+          name="user"
+          size={20}
+          color={selectedGender === 'masculino' ? '#fff' : COLORS.TEXT_SECONDARY}
         />
       </View>
       <Text style={[
-        styles.generoLabel, 
+        styles.generoLabel,
         { color: selectedGender === 'masculino' ? COLORS.TEXT_PRIMARY : COLORS.TEXT_SECONDARY }
       ]}>
         Hombre
@@ -46,23 +46,26 @@ const GenderSelector: React.FC<GenderSelectorProps> = ({ selectedGender, onSelec
     <TouchableOpacity
       style={[
         styles.generoOpcion,
-        selectedGender === 'femenino' && styles.generoOpcionSelected
+        selectedGender === 'femenino' && [
+          styles.generoOpcionSelected,
+          { borderColor: '#D4A5A5' }
+        ]
       ]}
       onPress={() => onSelectGender('femenino')}
       activeOpacity={0.8}
     >
       <View style={[
-        styles.generoIconWrapper, 
+        styles.generoIconWrapper,
         { backgroundColor: selectedGender === 'femenino' ? '#D4A5A5' : COLORS.BACKGROUND_ALT }
       ]}>
-        <Feather 
-          name="user" 
-          size={20} 
-          color={selectedGender === 'femenino' ? '#fff' : COLORS.TEXT_SECONDARY} 
+        <Feather
+          name="user"
+          size={20}
+          color={selectedGender === 'femenino' ? '#fff' : COLORS.TEXT_SECONDARY}
         />
       </View>
       <Text style={[
-        styles.generoLabel, 
+        styles.generoLabel,
         { color: selectedGender === 'femenino' ? COLORS.TEXT_PRIMARY : COLORS.TEXT_SECONDARY }
       ]}>
         Mujer

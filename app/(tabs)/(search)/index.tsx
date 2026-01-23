@@ -41,7 +41,7 @@ const initialFilters: ActiveFilters = {
 
 type SortDirection = 'asc' | 'desc' | null;
 interface ActiveSort {
-  field: keyof Perfume | 'matchPercentage' | null;
+  field: keyof Perfume | null;
   direction: SortDirection;
 }
 const initialSort: ActiveSort = { field: null, direction: null };
@@ -57,6 +57,7 @@ export default function SearchScreen() {
   const [selectedPerfume, setSelectedPerfume] = useState<Perfume | null>(null);
   const [activeFilters, setActiveFilters] = useState<ActiveFilters>(initialFilters);
   const [activeSort, setActiveSort] = useState<ActiveSort>(initialSort);
+  const [debouncedSort, setDebouncedSort] = useState<ActiveSort>(initialSort); // Add debounced sort state
   const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false); // Renamed from isFilterModalVisible
   const modalRef = useRef<PerfumeModalRef>(null);
   const { width } = useWindowDimensions();
@@ -90,14 +91,22 @@ export default function SearchScreen() {
     return () => clearTimeout(timeout);
   }, [activeFilters]);
 
+  // Debounce sort (optional, but good for consistency)
+  React.useEffect(() => {
+    const timeout = setTimeout(() => {
+      setDebouncedSort(activeSort);
+    }, 50);
+    return () => clearTimeout(timeout);
+  }, [activeSort]);
 
-  const loadPerfumes = async (pageToLoad = 1, query = debouncedSearchQuery, filters = debouncedFilters) => {
+
+  const loadPerfumes = async (pageToLoad = 1, query = debouncedSearchQuery, filters = debouncedFilters, sort = debouncedSort) => {
     // Reset list only if it's a new search/filter (page 1)
     const isNewQuery = pageToLoad === 1;
     if (isNewQuery) {
-       // setPerfumes([]); // Removed: Clearing is handled by the update logic below
-       setHasNextPage(true); // Assume there are results initially
-       setPage(1); // Reset page number
+      // setPerfumes([]); // Removed: Clearing is handled by the update logic below
+      setHasNextPage(true); // Assume there are results initially
+      setPage(1); // Reset page number
     }
 
     // Prevent fetching more if already loading or no more pages for the *current* query/filters
@@ -108,8 +117,14 @@ export default function SearchScreen() {
     setIsLoading(true);
 
     try {
+      // map sort to backend string
+      let ordering = null;
+      if (sort.field && sort.direction) {
+        ordering = sort.direction === 'desc' ? `-${sort.field}` : sort.field;
+      }
+
       // Pass search and filters to the API call
-      const data = await fetchPerfumes(pageToLoad, 20, query, filters);
+      const data = await fetchPerfumes(pageToLoad, 20, query, filters, ordering);
       // console.log(`Fetched perfumes page ${pageToLoad}, results count:`, data.results?.length || 0);
       const newResults = data.results ?? [];
 
@@ -128,12 +143,12 @@ export default function SearchScreen() {
     }
   };
 
-  // Load perfumes when debounced search/filters change
+  // Load perfumes when debounced search/filters/sort change
   React.useEffect(() => {
     // Load page 1 with the new debounced query and filters
     // console.log("Effect triggered: Loading page 1 due to query/filter change.", { debouncedSearchQuery, debouncedFilters });
-    loadPerfumes(1, debouncedSearchQuery, debouncedFilters);
-  }, [debouncedSearchQuery, debouncedFilters]); // Depend on debounced values
+    loadPerfumes(1, debouncedSearchQuery, debouncedFilters, debouncedSort);
+  }, [debouncedSearchQuery, debouncedFilters, debouncedSort]); // Depend on debounced values
 
   // Fetch all brands on mount
   useEffect(() => {
@@ -167,7 +182,7 @@ export default function SearchScreen() {
     // Pass current debounced query/filters when loading more
     console.log('[SearchScreen] loadMorePerfumes called. isLoading:', isLoading, 'hasNextPage:', hasNextPage, 'Current Page:', page); // DEBUG LOG
     if (!isLoading && hasNextPage) {
-      loadPerfumes(page + 1, debouncedSearchQuery, debouncedFilters);
+      loadPerfumes(page + 1, debouncedSearchQuery, debouncedFilters, debouncedSort);
     }
   };
   // Removed duplicate state declarations
@@ -208,88 +223,65 @@ export default function SearchScreen() {
     return perfumes
       .filter(perfume => (perfume as any).external_id != null) // Ensure external_id exists
       .map(perfume => {
-          // Ensure brand is treated as an object { id: number, name: string }
-          // If the API returns brand as just an ID or name, this needs adjustment
-          const brandData = (perfume as any).brand;
-          // Ensure brandObj has a name property, default to stringified data if not an object
-          const brandObj = typeof brandData === 'object' && brandData !== null && brandData.name ? brandData : { name: String(brandData ?? 'Unknown Brand') };
+        // Ensure brand is treated as an object { id: number, name: string }
+        // If the API returns brand as just an ID or name, this needs adjustment
+        const brandData = (perfume as any).brand;
+        // Ensure brandObj has a name property, default to stringified data if not an object
+        const brandObj = typeof brandData === 'object' && brandData !== null && brandData.name ? brandData : { name: String(brandData ?? 'Unknown Brand') };
 
-          const priceStr = (perfume as any).price_per_ml ?? (perfume as any).price_per_ml; // Check both possible keys from API/previous state
-          // Attempt to parse the price string to a number, handle null explicitly
-          const priceNum = priceStr === null || priceStr === undefined ? null : parseFloat(String(priceStr));
+        const priceStr = (perfume as any).price_per_ml ?? (perfume as any).price_per_ml; // Check both possible keys from API/previous state
+        // Attempt to parse the price string to a number, handle null explicitly
+        const priceNum = priceStr === null || priceStr === undefined ? null : parseFloat(String(priceStr));
 
-          // Calculate and format match percentage
-          const rawMatch = (perfume as any).match_percentage ?? (perfume as any).matchPercentage; // Check both keys, NO MOCK FALLBACK
-          // If rawMatch exists (not null/undefined), format it; otherwise, default to 0
-          const formattedMatch = rawMatch !== null && rawMatch !== undefined ? Math.round(rawMatch * 100) : 0;
+        // Calculate and format match percentage
+        const rawMatch = (perfume as any).match_percentage ?? (perfume as any).matchPercentage; // Check both keys, NO MOCK FALLBACK
+        // If rawMatch exists (not null/undefined), format it; otherwise, default to 0
+        const formattedMatch = rawMatch !== null && rawMatch !== undefined ? Math.round(rawMatch * 100) : 0;
 
-          // Construct the final object conforming to the Perfume type
-          const finalPerfume: Perfume = {
-              // Base info (ensure correct types)
-              id: String((perfume as any).external_id ?? (perfume as any).id), // Use external_id primarily, fallback to id
-              external_id: String((perfume as any).external_id ?? (perfume as any).id), // Ensure external_id is present and string
-              name: perfume.name || 'Unknown Name',
-              brand: brandObj.name, // Use the name string from the brand object
-              thumbnail_url: (perfume as any).thumbnail_url ?? '', // Keep snake_case
-              full_size_url: (perfume as any).full_size_url ?? '', // Keep snake_case
+        // Construct the final object conforming to the Perfume type
+        const finalPerfume: Perfume = {
+          // Base info (ensure correct types)
+          id: String((perfume as any).external_id ?? (perfume as any).id), // Use external_id primarily, fallback to id
+          external_id: String((perfume as any).external_id ?? (perfume as any).id), // Ensure external_id is present and string
+          name: perfume.name || 'Unknown Name',
+          brand: brandObj.name, // Use the name string from the brand object
+          thumbnail_url: (perfume as any).thumbnail_url ?? '', // Keep snake_case
+          full_size_url: (perfume as any).full_size_url ?? '', // Keep snake_case
 
-              // --- Ratings and Numbers (use snake_case keys from Perfume type) ---
-              match_percentage: formattedMatch, // Use formatted integer percentage
-              price_per_ml: priceNum === null || isNaN(priceNum) ? undefined : priceNum, // Ensure null or NaN becomes undefined
-              overall_rating: (perfume as any).overall_rating,
-              price_value_rating: (perfume as any).price_value_rating,
-              sillage_rating: (perfume as any).sillage_rating,
-              longevity_rating: (perfume as any).longevity_rating,
+          // --- Ratings and Numbers (use snake_case keys from Perfume type) ---
+          match_percentage: formattedMatch, // Use formatted integer percentage
+          price_per_ml: priceNum === null || isNaN(priceNum) ? undefined : priceNum, // Ensure null or NaN becomes undefined
+          overall_rating: (perfume as any).overall_rating,
+          price_value_rating: (perfume as any).price_value_rating,
+          sillage_rating: (perfume as any).sillage_rating,
+          longevity_rating: (perfume as any).longevity_rating,
 
-              // --- Details (use keys from Perfume type) ---
-              description: perfume.description,
-              accords: perfume.accords,
-              top_notes: (perfume as any).top_notes,
-              middle_notes: (perfume as any).middle_notes,
-              base_notes: (perfume as any).base_notes,
-              similar_perfume_ids: ((perfume as any).similar_perfume_ids ?? (perfume as any).similarPerfumes ?? []).map(String), // Use snake_case key
-              occasions: perfume.occasions,
-              gender: perfume.gender,
-              best_for: (perfume as any).best_for,
-              season: perfume.season,
-          };
+          // --- Details (use keys from Perfume type) ---
+          description: perfume.description,
+          accords: perfume.accords,
+          top_notes: (perfume as any).top_notes,
+          middle_notes: (perfume as any).middle_notes,
+          base_notes: (perfume as any).base_notes,
+          similar_perfume_ids: ((perfume as any).similar_perfume_ids ?? (perfume as any).similarPerfumes ?? []).map(String), // Use snake_case key
+          occasions: perfume.occasions,
+          gender: perfume.gender,
+          best_for: (perfume as any).best_for,
+          season: perfume.season,
+        };
 
-          // Clean up potential undefined values that might cause issues if explicitly set
-          Object.keys(finalPerfume).forEach(key => {
-              if ((finalPerfume as any)[key] === undefined) {
-                  delete (finalPerfume as any)[key];
-              }
-          });
-          return finalPerfume;
+        // Clean up potential undefined values that might cause issues if explicitly set
+        Object.keys(finalPerfume).forEach(key => {
+          if ((finalPerfume as any)[key] === undefined) {
+            delete (finalPerfume as any)[key];
+          }
+        });
+        return finalPerfume;
       });
   }, [perfumes]);
 
   // Client-side filtering removed - handled by backend
 
-  // --- Sorted Perfumes ---
-  // Sorting should ideally also be done server-side via query params (?ordering=...)
-  // For now, keep client-side sorting on the fetched results.
-  const sortedPerfumes = useMemo(() => {
-    // Sort the mapped perfumes (perfumesWithMatch)
-    if (!activeSort.field || !activeSort.direction) return perfumesWithMatch;
-    const sorted = [...perfumesWithMatch].sort((a, b) => {
-      const aVal = activeSort.field === 'matchPercentage' ? (a as any).matchPercentage : (a as any)[activeSort.field as keyof Perfume];
-      const bVal = activeSort.field === 'matchPercentage' ? (b as any).matchPercentage : (b as any)[activeSort.field as keyof Perfume];
 
-      if (aVal == null && bVal == null) return 0;
-      if (aVal == null) return 1;
-      if (bVal == null) return -1;
-
-      if (typeof aVal === 'string' && typeof bVal === 'string') {
-        return activeSort.direction === 'asc' ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
-      }
-      if (typeof aVal === 'number' && typeof bVal === 'number') {
-        return activeSort.direction === 'asc' ? aVal - bVal : bVal - aVal;
-      }
-      return 0;
-    });
-    return sorted;
-  }, [perfumesWithMatch, activeSort]); // Depend on the mapped list
 
   const handlePerfumePress = (perfume: Perfume) => {
     setSelectedPerfume(perfume);
@@ -341,7 +333,7 @@ export default function SearchScreen() {
       </ScrollView>
 
       <SearchResults
-        perfumes={sortedPerfumes} // Use sorted list from backend results
+        perfumes={perfumesWithMatch} // Use list directly, as it's sorted by backend now
         onPerfumePress={handlePerfumePress}
         onEndReached={loadMorePerfumes}
         onEndReachedThreshold={0.5}
@@ -386,7 +378,7 @@ const styles = StyleSheet.create({
   },
   sortButton: {
     paddingVertical: 2,
-    paddingHorizontal:14,
+    paddingHorizontal: 14,
     marginHorizontal: 4,
     borderRadius: 10,
     borderWidth: 1,

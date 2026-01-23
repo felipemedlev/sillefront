@@ -79,36 +79,36 @@ export default function ProfileScreen() {
   const isLoading = isAuthLoading || isSubscriptionLoading || isLoadingRatings || isLoadingFavorites;
 
   if (isLoading) {
-     return (
-        <View style={[styles.container, styles.loadingContainer]}>
-            <ActivityIndicator size="large" color={COLORS.ACCENT} />
-            <Text style={styles.loadingText}>Cargando perfil...</Text>
-        </View>
-     );
+    return (
+      <View style={[styles.container, styles.loadingContainer]}>
+        <ActivityIndicator size="large" color={COLORS.ACCENT} />
+        <Text style={styles.loadingText}>Cargando perfil...</Text>
+      </View>
+    );
   }
 
   if (!user) {
-     return (
-        <View style={[styles.container, styles.loadingContainer]}>
-            <Text style={styles.loadingText}>Error al cargar datos del usuario.</Text>
-        </View>
-     );
+    return (
+      <View style={[styles.container, styles.loadingContainer]}>
+        <Text style={styles.loadingText}>Error al cargar datos del usuario.</Text>
+      </View>
+    );
   }
 
   // Dynamically create subscription menu item
   const subscriptionMenuItem: MenuItem = subscriptionStatus?.isActive
     ? {
-        id: 'subscription',
-        title: 'Administrar Suscripción',
-        icon: 'card-outline',
-        onPress: () => router.push({ pathname: '/subscription' as any }),
-      }
+      id: 'subscription',
+      title: 'Administrar Suscripción',
+      icon: 'card-outline',
+      onPress: () => router.push({ pathname: '/subscription' as any }),
+    }
     : {
-        id: 'subscription',
-        title: 'Ver Planes de Suscripción',
-        icon: 'card-outline',
-        onPress: () => router.push({ pathname: '/subscription' as any }),
-      };
+      id: 'subscription',
+      title: 'Ver Planes de Suscripción',
+      icon: 'card-outline',
+      onPress: () => router.push({ pathname: '/subscription' as any }),
+    };
 
   // Insert the subscription item into the menu array
   const finalMenuItems = [...menuItems];
@@ -185,25 +185,37 @@ export default function ProfileScreen() {
           <View style={styles.statsWrapper}>
             <View style={styles.statsContainer}>
               {/* Calificaciones */}
-              <View style={styles.statItem}>
+              <TouchableOpacity
+                style={styles.statItem}
+                onPress={() => router.push('/(tabs)/(ratings)')}
+                activeOpacity={0.7}
+              >
                 <Ionicons name="star" size={20} color={COLORS.ACCENT} style={styles.statIcon} />
                 <Text style={styles.statNumber}>{ratings.length}</Text>
                 <Text style={styles.statLabel}>Calificaciones</Text>
-              </View>
+              </TouchableOpacity>
               <Divider orientation="vertical" flexItem sx={{ height: 40, margin: '0 12px' }} />
               {/* Compras */}
-              <View style={styles.statItem}>
+              <TouchableOpacity
+                style={styles.statItem}
+                onPress={() => router.push('/(tabs)/(profile)/purchases')}
+                activeOpacity={0.7}
+              >
                 <Ionicons name="bag" size={20} color={COLORS.ACCENT} style={styles.statIcon} />
                 <Text style={styles.statNumber}>{MOCK_PURCHASES.length}</Text>
                 <Text style={styles.statLabel}>Compras</Text>
-              </View>
+              </TouchableOpacity>
               <Divider orientation="vertical" flexItem sx={{ height: 40, margin: '0 12px' }} />
               {/* Favoritos */}
-              <View style={styles.statItem}>
+              <TouchableOpacity
+                style={styles.statItem}
+                onPress={() => router.push('/(tabs)/(profile)/favorites')}
+                activeOpacity={0.7}
+              >
                 <Ionicons name="heart" size={20} color={COLORS.ACCENT} style={styles.statIcon} />
                 <Text style={styles.statNumber}>{favorites.length}</Text>
                 <Text style={styles.statLabel}>Favoritos</Text>
-              </View>
+              </TouchableOpacity>
             </View>
           </View>
         </Paper>

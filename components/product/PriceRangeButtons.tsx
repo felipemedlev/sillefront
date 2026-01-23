@@ -5,7 +5,7 @@ import {
   TouchableOpacity,
   ScrollView,
 } from 'react-native';
-import { SPACING, FONT_SIZES, COLORS } from '../../types/constants';
+import { SPACING, FONT_SIZES, COLORS, GiftboxTheme } from '../../types/constants';
 
 // Price range options
 const priceRanges = [
@@ -19,7 +19,7 @@ const priceRanges = [
 interface PriceRangeButtonsProps {
   currentRange: string;
   setCurrentRange: (range: string) => void;
-  genderColors: typeof COLORS.GIFTBOX.MALE | typeof COLORS.GIFTBOX.FEMALE;
+  genderColors: GiftboxTheme;
 }
 
 const PriceRangeButtons: React.FC<PriceRangeButtonsProps> = ({

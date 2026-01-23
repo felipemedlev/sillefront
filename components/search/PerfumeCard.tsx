@@ -31,20 +31,21 @@ export default function PerfumeCard({ perfume, matchPercentage, onPress, isDeskt
   const { addFavorite, removeFavorite, isFavorite } = useRatings();
   const { addPerfume, removePerfume, isPerfumeSelected, canAddMorePerfumes, decantCount } = useManualBox();
   const { showSnackbar } = useSnackbar(); // Use the SnackbarContext
-  const favorite = isFavorite(perfume.id);
-  const isSelected = isPerfumeSelected(perfume.id);
+  const targetId = (perfume as any).external_id || perfume.id;
+  const favorite = isFavorite(targetId);
+  const isSelected = isPerfumeSelected(targetId);
 
   const handleFavoriteToggle = useCallback(() => {
     if (favorite) {
-      removeFavorite(perfume.id);
+      removeFavorite(targetId);
     } else {
-      addFavorite(perfume.id);
+      addFavorite(targetId);
     }
-  }, [addFavorite, removeFavorite, perfume.id, favorite]);
+  }, [addFavorite, removeFavorite, targetId, favorite]);
 
   const handleManualBoxToggle = useCallback(() => {
     if (isSelected) {
-      removePerfume(perfume.id);
+      removePerfume(targetId);
       showSnackbar('Perfume removido del Box Personalizado', 'info'); // Normal notification
     } else if (canAddMorePerfumes()) {
       if ('brand' in perfume && 'name' in perfume && 'thumbnail_url' in perfume) {
@@ -66,7 +67,7 @@ export default function PerfumeCard({ perfume, matchPercentage, onPress, isDeskt
 
       showSnackbar(errorMessage, 'error'); // Red error message
     }
-  }, [isSelected, removePerfume, addPerfume, perfume, canAddMorePerfumes, decantCount, showSnackbar]);
+  }, [isSelected, removePerfume, addPerfume, perfume, canAddMorePerfumes, decantCount, showSnackbar, targetId]);
 
   // Use match_percentage (snake_case) consistent with potential API/type structure
   const displayMatch = matchPercentage ?? (perfume as any).match_percentage;

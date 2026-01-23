@@ -184,6 +184,22 @@ export const placeOrder = async (payload: ApiOrderCreatePayload): Promise<ApiOrd
   });
   return handleResponse(response);
 };
+
+export const fetchOrders = async (): Promise<ApiOrder[]> => {
+  const headers = await createHeaders(true);
+  const url = `${API_BASE_URL}/orders/`;
+  const response = await fetch(url, {
+    method: 'GET',
+    headers,
+  });
+
+  if (response.status === 404) {
+    return [];
+  }
+
+  const data = await handleResponse(response);
+  return Array.isArray(data) ? data : data.results || [];
+};
 export const addItemToBackendCart = async (payload: ApiCartItemAddPayload): Promise<ApiCart> => {
   const headers = await createHeaders(true);
   const url = `${API_BASE_URL}/cart/items/`;
@@ -392,7 +408,7 @@ const handleResponse = async (response: Response) => {
 
 type PerfumeFilters = {
   brands?: number[];
-  occasions?: string[];
+  occasions?: (string | number)[];
   priceRange?: { min?: number | null; max?: number | null } | null;
   genders?: string[];
   dayNights?: string[];
@@ -404,7 +420,8 @@ export const fetchPerfumes = async (
   page = 1,
   pageSize = 20,
   searchQuery = '',
-  filters: PerfumeFilters = {}
+  filters: PerfumeFilters = {},
+  ordering: string | null = null
 ) => {
   const headers = await createHeaders();
   const params = new URLSearchParams({
@@ -424,6 +441,8 @@ export const fetchPerfumes = async (
   if (filters.priceRange?.max != null) params.append('price_max', String(filters.priceRange.max));
 
   if (filters.ids?.length) params.append('id__in', filters.ids.map(String).join(','));
+
+  if (ordering) params.append('ordering', ordering);
 
   const url = `${API_BASE_URL}/perfumes/?${params.toString()}`;
 

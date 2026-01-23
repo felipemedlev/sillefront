@@ -6,13 +6,12 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { SPACING, FONT_SIZES, COLORS } from '../../types/constants';
-import { LinearGradient } from 'expo-linear-gradient';
+import { SPACING, FONT_SIZES, COLORS, GiftboxTheme } from '../../types/constants';
 import { ApiPredefinedBox } from '../../src/services/api';
 
 interface BoxCardProps {
   box: ApiPredefinedBox;
-  genderColors: typeof COLORS.GIFTBOX.MALE | typeof COLORS.GIFTBOX.FEMALE;
+  genderColors: GiftboxTheme;
   decantCount: 4 | 8;
   onPress: () => void;
   calculatePrice: (box: ApiPredefinedBox, count: 4 | 8) => number;
@@ -26,16 +25,11 @@ const BoxCard: React.FC<BoxCardProps> = ({
   calculatePrice
 }) => (
   <TouchableOpacity
-    style={styles.card}
+    style={[styles.card, { borderColor: genderColors.PRIMARY + '40' }]}
     activeOpacity={0.8}
     onPress={onPress}
   >
-    <LinearGradient
-      colors={[genderColors.BG, COLORS.GIFTBOX.BACKGROUND_ALT]}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
-      style={styles.cardGradient}
-    >
+    <View style={styles.cardContent}>
       <View style={styles.cardHeader}>
         <View style={[styles.cardIconContainer, { backgroundColor: genderColors.LIGHT }]}>
           <Feather
@@ -46,7 +40,7 @@ const BoxCard: React.FC<BoxCardProps> = ({
         </View>
         <Text style={styles.cardTitle}>{box.title}</Text>
       </View>
-      <Text style={styles.cardDescription}>{box.description}</Text>
+
       <View style={styles.cardFooter}>
         <Text style={[styles.cardPrice, { color: genderColors.PRIMARY }]}>
           {`$${Math.round(calculatePrice(box, decantCount)).toLocaleString()}`}
@@ -56,7 +50,7 @@ const BoxCard: React.FC<BoxCardProps> = ({
           <Feather name="chevron-right" size={14} color={genderColors.PRIMARY} />
         </View>
       </View>
-    </LinearGradient>
+    </View>
   </TouchableOpacity>
 );
 
@@ -65,47 +59,44 @@ const styles = StyleSheet.create({
     flexBasis: '100%',
     flexGrow: 1,
     maxWidth: 300,
-    borderRadius: 12,
-    overflow: 'hidden',
+    borderRadius: 16,
+    backgroundColor: COLORS.BACKGROUND,
+    borderWidth: 1,
+    borderColor: COLORS.BORDER,
     elevation: 2,
-    shadowColor: COLORS.GIFTBOX.CARD_SHADOW,
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
     shadowRadius: 8,
+    marginBottom: SPACING.SMALL,
   },
-  cardGradient: {
-    padding: SPACING.SMALL,
+  cardContent: {
+    padding: SPACING.MEDIUM,
   },
   cardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: SPACING.XSMALL / 2,
+    marginBottom: SPACING.SMALL,
   },
   cardIconContainer: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: SPACING.XSMALL,
+    marginRight: SPACING.SMALL,
   },
   cardTitle: {
     fontSize: FONT_SIZES.REGULAR,
-    fontWeight: '700',
-    color: COLORS.GIFTBOX.TEXT_PRIMARY,
+    fontWeight: '600',
+    color: COLORS.TEXT_PRIMARY,
     flex: 1,
-  },
-  cardDescription: {
-    fontSize: FONT_SIZES.SMALL,
-    color: COLORS.GIFTBOX.TEXT_SECONDARY,
-    lineHeight: FONT_SIZES.SMALL * 1.3,
-    marginBottom: SPACING.XSMALL / 2,
   },
   cardFooter: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginTop: SPACING.XSMALL / 2,
+    marginTop: SPACING.XSMALL,
   },
   cardPrice: {
     fontSize: FONT_SIZES.REGULAR,

@@ -1,5 +1,11 @@
 import { SubscriptionTierDetails } from './subscription';
 
+export interface GiftboxTheme {
+  PRIMARY: string;
+  LIGHT: string;
+  BG: string;
+}
+
 export const STORAGE_KEYS = {
   RATINGS: 'perfume_ratings',
   FAVORITES: 'perfume_favorites',

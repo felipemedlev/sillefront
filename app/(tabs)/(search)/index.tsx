@@ -1,5 +1,6 @@
 import React, { useState, useRef, useMemo, useEffect } from 'react'; // Add useEffect
 import { View, StyleSheet, TouchableOpacity, Text, ScrollView } from 'react-native'; // Add ScrollView
+import { useTranslation } from 'react-i18next'; // Import i18n hook
 import { useWindowDimensions } from 'react-native';
 import { fetchPerfumes, fetchBrands, fetchOccasions } from '../../../src/services/api'; // Import fetchOccasions
 import { Perfume } from '../../../types/perfume';
@@ -47,6 +48,7 @@ interface ActiveSort {
 const initialSort: ActiveSort = { field: null, direction: null };
 
 export default function SearchScreen() {
+  const { t } = useTranslation();
   const [perfumes, setPerfumes] = useState<Perfume[]>([]);
   const [page, setPage] = useState(1);
   const [hasNextPage, setHasNextPage] = useState(true);
@@ -210,13 +212,14 @@ export default function SearchScreen() {
   };
 
   // --- Sort Options ---
+  // --- Sort Options ---
   const sortOptions: { label: string; field: ActiveSort['field'] }[] = [
-    { label: 'Precio', field: 'price_per_ml' }, // Use price_per_ml to match backend model
-    { label: 'Match AI', field: 'match_percentage' },
-    { label: 'Valoración', field: 'overall_rating' },
-    { label: 'Duración', field: 'longevity_rating' },
-    { label: 'Estela', field: 'sillage_rating' },
-    { label: 'Calidad/Precio', field: 'price_value_rating' },
+    { label: t('common.price'), field: 'price_per_ml' },
+    { label: t('common.match_ai'), field: 'match_percentage' },
+    { label: t('common.rating'), field: 'overall_rating' },
+    { label: t('common.longevity'), field: 'longevity_rating' },
+    { label: t('common.sillage'), field: 'sillage_rating' },
+    { label: t('common.value_for_money'), field: 'price_value_rating' },
   ];
 
   const perfumesWithMatch = useMemo(() => {
@@ -299,7 +302,8 @@ export default function SearchScreen() {
         value={searchQuery}
         onChangeText={setSearchQuery}
         onManualBoxPress={handleManualBoxPress}
-        onFilterPress={() => setIsFilterDrawerOpen(true)} // Updated to use new state
+        onFilterPress={() => setIsFilterDrawerOpen(true)}
+        placeholder={t('common.search_placeholder')}
       />
 
       {/* Sort Buttons */}

@@ -8,6 +8,7 @@ import { useRatings } from '../../../context/RatingsContext';
 import { MOCK_PURCHASES } from '../../../data/mockPurchases';
 import { COLORS, FONTS, SPACING, FONT_SIZES } from '../../../types/constants';
 import { Paper, Avatar, Divider } from '@mui/material';
+import LanguageSelector from '../../../components/ui/LanguageSelector';
 
 type MenuItem = {
   id: string;
@@ -163,6 +164,9 @@ export default function ProfileScreen() {
               {user.email.charAt(0).toUpperCase()}
             </Avatar>
             <Text style={styles.userName}>{user.name || user.email}</Text>
+            <View style={{ marginTop: 8 }}>
+              <LanguageSelector />
+            </View>
             {/* <Text style={styles.userEmail}>{user.email}</Text> */}
           </View>
         </Paper>

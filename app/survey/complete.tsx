@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Dimensions, StyleSheet, Animated, View, Text, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import Logo from '../../assets/images/Logo.svg';
@@ -7,6 +8,7 @@ import { useAuth } from '../../src/context/AuthContext';
 
 export default function CompleteScreen() {
   const router = useRouter();
+  const { t } = useTranslation();
   const { submitSurveyIfAuthenticated } = useSurveyContext();
   const { isAuthenticated } = useAuth();
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -66,7 +68,7 @@ export default function CompleteScreen() {
           preserveAspectRatio="xMidYMid meet"
         />
         <Animated.Text style={[styles.welcomeText]}>
-          Bienvenido
+          {t('survey.welcome')}
         </Animated.Text>
       </Animated.View>
     </Animated.View>

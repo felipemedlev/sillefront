@@ -15,6 +15,7 @@ import { SnackbarProvider } from '../context/SnackbarContext';
 import { FontLoadingState, LayoutStyles } from '../types/layout';
 import { FONTS, COLORS, FONT_SIZES, SPACING } from '../types/constants';
 import { handleError } from '../types/error';
+import '../src/i18n'; // Initialize i18n
 
 // Create a theme instance
 const theme = createTheme({
@@ -170,7 +171,7 @@ function FontLoader({ children }: { children: React.ReactNode }) {
           Font.loadAsync({ [FONTS.INSTRUMENT_SERIF]: require('../assets/fonts/InstrumentSerif-Regular.ttf') }),
           Font.loadAsync({ [FONTS.INSTRUMENT_SERIF_ITALIC]: require('../assets/fonts/InstrumentSerif-Italic.ttf') }),
         ];
-        
+
         await Promise.all(fontPromises);
         setFontState({ isLoading: false, error: null });
       } catch (error) {

@@ -1,4 +1,5 @@
 import React, { useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   View,
   Text,
@@ -37,6 +38,7 @@ const getResponsiveFontSize = (base: number) => {
 
 export default function SurveyAuthGate() {
   const router = useRouter();
+  const { t } = useTranslation();
   const { isAuthenticated } = useAuth();
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(50)).current;
@@ -66,18 +68,18 @@ export default function SurveyAuthGate() {
   const features = [
     {
       icon: 'sparkles',
-      title: 'Recomendaciones personalizadas',
-      description: 'Descubre perfumes únicos seleccionados especialmente para ti'
+      title: t('survey_gate.features.recommendations_title'),
+      description: t('survey_gate.features.recommendations_desc')
     },
     {
       icon: 'heart',
-      title: 'Guarda tus favoritos',
-      description: 'Crea tu colección personal y nunca pierdas un perfume que te guste'
+      title: t('survey_gate.features.favorites_title'),
+      description: t('survey_gate.features.favorites_desc')
     },
     {
       icon: 'trending-up',
-      title: 'Mejora continua',
-      description: 'Nuestro algoritmo aprende de tus gustos para mejores sugerencias'
+      title: t('survey_gate.features.improvement_title'),
+      description: t('survey_gate.features.improvement_desc')
     }
   ];
 
@@ -109,7 +111,7 @@ export default function SurveyAuthGate() {
                 height={isSmallDevice ? width * 0.054 : width * 0.06}
                 preserveAspectRatio="xMidYMid meet"
               />
-              <Text style={styles.logoText}>¡Perfecto!</Text>
+              <Text style={styles.logoText}>{t('survey_gate.perfect')}</Text>
             </View>
 
             {/* Success Message */}
@@ -122,17 +124,17 @@ export default function SurveyAuthGate() {
                 />
               </View>
               <Text style={styles.successTitle}>
-                Survey Completado
+                {t('survey_gate.completed')}
               </Text>
               <Text style={styles.successSubtitle}>
-                Hemos procesado tus preferencias y encontrado perfumes increíbles para ti
+                {t('survey_gate.subtitle')}
               </Text>
             </View>
 
             {/* Features List */}
             <View style={styles.featuresContainer}>
               <Text style={styles.featuresTitle}>
-                Crea tu cuenta para acceder a:
+                {t('survey_gate.create_account')}
               </Text>
               {features.map((feature, index) => (
                 <Animated.View
@@ -172,7 +174,7 @@ export default function SurveyAuthGate() {
                 onPress={() => router.push('/(auth)/signup')}
               >
                 <Text style={styles.primaryButtonText}>
-                  Ver mis recomendaciones
+                  {t('survey_gate.buttons.see_recommendations')}
                 </Text>
                 <Ionicons name="arrow-forward" size={20} color="#fff" />
               </Pressable>
@@ -182,7 +184,7 @@ export default function SurveyAuthGate() {
                 onPress={() => router.push('/(auth)/login')}
               >
                 <Text style={styles.secondaryButtonText}>
-                  Ya tengo cuenta
+                  {t('survey_gate.buttons.have_account')}
                 </Text>
               </Pressable>
 
@@ -191,7 +193,7 @@ export default function SurveyAuthGate() {
                 onPress={() => router.push('/(tabs)')}
               >
                 <Text style={styles.skipButtonText}>
-                  Explorar sin cuenta
+                  {t('survey_gate.buttons.explore_guest')}
                 </Text>
               </Pressable>
             </View>

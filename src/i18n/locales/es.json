@@ -1,0 +1,154 @@
+{
+    "common": {
+        "loading": "Cargando...",
+        "error": "Error",
+        "search_placeholder": "Buscar perfume, marca o nota...",
+        "price": "Precio",
+        "match_ai": "Match AI",
+        "rating": "Valoración",
+        "longevity": "Duración",
+        "sillage": "Estela",
+        "value_for_money": "Calidad/Precio",
+        "apply": "Aplicar",
+        "reset": "Restablecer",
+        "cancel": "Cancelar"
+    },
+    "search": {
+        "sort_by": "Ordenar por",
+        "filters": "Filtros"
+    },
+    "perfume_modal": {
+        "match_label": "Match",
+        "swap_mode": "Modo Cambio",
+        "swap_instruction": "Selecciona un perfume similar para reemplazar",
+        "main_accords": "Acordes Principales",
+        "ratings_title": "Ratings",
+        "rating_general": "General:",
+        "rating_value": "Valor/Precio:",
+        "rating_longevity": "Duración:",
+        "rating_sillage": "Sillage:",
+        "features_title": "Características",
+        "best_for": "Mejor para",
+        "season": "Temporada",
+        "gender": "Género",
+        "description_title": "Descripción",
+        "olfactory_pyramid": "Piramide Olfativa",
+        "top_notes": "Notas de Salida",
+        "middle_notes": "Notas Medias",
+        "base_notes": "Notas de Fondo",
+        "similar_perfumes": "Perfumes Similares",
+        "similar_perfumes_swap": "Perfumes Similares para Cambiar",
+        "no_similar_found": "No se encontraron perfumes similares.",
+        "price_per_ml": "$/mL",
+        "price_unavailable": "Precio no disponible"
+    },
+    "enums": {
+        "gender": {
+            "male": "Hombre",
+            "female": "Mujer",
+            "unisex": "Unisex"
+        },
+        "season": {
+            "winter": "Invierno",
+            "spring": "Primavera",
+            "summer": "Verano",
+            "autumn": "Otoño",
+            "fall": "Otoño"
+        },
+        "best_for": {
+            "day": "Día",
+            "night": "Noche",
+            "both": "Ambos"
+        },
+        "longevity": {
+            "Baja": "Baja",
+            "Moderada": "Moderada",
+            "Duradera": "Duradera",
+            "Eterna": "Eterna"
+        },
+        "sillage": {
+            "Bajo": "Bajo",
+            "Moderado": "Moderado",
+            "Fuerte": "Fuerte",
+            "Intenso": "Intenso"
+        },
+        "rating_value": {
+            "Bajo": "Bajo",
+            "Regular": "Regular",
+            "Bueno": "Bueno",
+            "Excelente": "Excelente"
+        }
+    },
+    "survey": {
+        "welcome": "Bienvenido"
+    },
+    "survey_component": {
+        "question_gender": "¿Qué tipo de fragancias buscas?",
+        "question_accord": "Te gustan los aromas {{accord}}?",
+        "loading": "Cargando pregunta...",
+        "error": "Error al cargar pregunta",
+        "no_answer": "🙄 No sé",
+        "rating_labels": {
+            "hate": "Odio",
+            "dislike": "No me gusta",
+            "neutral": "Neutral",
+            "like": "Me gusta",
+            "love": "Amo"
+        },
+        "accords": {
+            "floral": "florales",
+            "woody": "amaderados",
+            "citrus": "cítricos",
+            "fruity": "frutales",
+            "spicy": "especiados",
+            "leather": "acuerados",
+            "sweet": "dulces",
+            "vanilla": "avainillados",
+            "smoky": "ahumados",
+            "lavender": "de lavanda",
+            "honey": "de miel",
+            "coffee": "de café",
+            "earthy": "terrosos",
+            "warm spicy": "especiados cálidos",
+            "powdery": "atalcados",
+            "cinnamon": "acanelados"
+        }
+    },
+    "survey_gate": {
+        "perfect": "¡Perfecto!",
+        "completed": "Survey Completado",
+        "subtitle": "Hemos procesado tus preferencias y encontrado perfumes increíbles para ti",
+        "create_account": "Crea tu cuenta para acceder a:",
+        "features": {
+            "recommendations_title": "Recomendaciones personalizadas",
+            "recommendations_desc": "Descubre perfumes únicos seleccionados especialmente para ti",
+            "favorites_title": "Guarda tus favoritos",
+            "favorites_desc": "Crea tu colección personal y nunca pierdas un perfume que te guste",
+            "improvement_title": "Mejora continua",
+            "improvement_desc": "Nuestro algoritmo aprende de tus gustos para mejores sugerencias"
+        },
+        "buttons": {
+            "see_recommendations": "Ver mis recomendaciones",
+            "have_account": "Ya tengo cuenta",
+            "explore_guest": "Explorar sin cuenta"
+        }
+    },
+    "landing": {
+        "step1_title": "Descubre perfumes según tus gustos",
+        "step1_desc": "Utilizamos inteligencia artificial para encontrar perfumes de acuerdo a tu perfil en base a un test inicial",
+        "step1_button": "Comenzar",
+        "step2_title": "Ordena un Box de muestras personalizadas",
+        "step2_desc": "Te enviaremos un box con decants según tus gustos. Elige formatos de 3, 5 o 10 ml y 4 u 8 decants. ¡Puedes cambiarlos si quieres!",
+        "step2_button": "Siguiente",
+        "step3_title": "Califica y mejora tus recomendaciones",
+        "step3_desc": "Evalúa tus fragancias y nuestro algoritmo ajustará tus sugerencias para que descubras nuevos aromas.",
+        "step3_button": "Realizar test inicial",
+        "top_title": "Descubre perfumes con AI",
+        "buttons": {
+            "see_recommendations": "Ver mis recomendaciones",
+            "take_test_again": "Hacer nuevo test",
+            "choose_decants": "Elegir mis decants"
+        },
+        "decant_question": "¿Qué es un decant?"
+    }
+}

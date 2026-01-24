@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Platform, View, Text, StyleSheet } from 'react-native';
+import { useTranslation } from 'react-i18next'; // Import useTranslation
 import { useRouter } from 'expo-router';
 import { useAuth } from '../../src/context/AuthContext';
 import { ResponsiveContainer } from '../../components/layout/ResponsiveContainer';
@@ -27,6 +28,7 @@ import Landing1 from '../../assets/images/landing1.svg';
 import Landing2 from '../../assets/images/landing2.svg';
 import Landing3 from '../../assets/images/landing3.svg';
 import DecantPopup from '../../components/landing/DecantPopup';
+import LanguageSelector from '../../components/ui/LanguageSelector';
 
 // Define landing page content data type
 interface LandingItem {
@@ -37,35 +39,37 @@ interface LandingItem {
 }
 
 // Landing page content data
-const landingData: LandingItem[] = [
-  {
-    title: "Descubre perfumes según tus gustos",
-    description: "Utilizamos inteligencia artificial para encontrar perfumes de acuerdo a tu perfil en base a un test inicial",
-    image: Landing1,
-    buttonText: "Comenzar",
-  },
-  {
-    title: "Ordena un Box de muestras personalizadas",
-    description: "Te enviaremos un box con decants según tus gustos. Elige formatos de 3, 5 o 10 ml y 4 u 8 decants. ¡Puedes cambiarlos si quieres!",
-    image: Landing2,
-    buttonText: "Siguiente",
-  },
-  {
-    title: "Califica y mejora tus recomendaciones",
-    description: "Evalúa tus fragancias y nuestro algoritmo ajustará tus sugerencias para que descubras nuevos aromas.",
-    image: Landing3,
-    buttonText: "Realizar test inicial",
-  },
-];
-
 const LandingScreen: React.FC = () => {
   const router = useRouter();
+  const { t } = useTranslation();
   const { user, isAuthenticated } = useAuth();
+
+  // Landing page content data (Moved inside component for i18n)
+  const landingData: LandingItem[] = [
+    {
+      title: t('landing.step1_title'),
+      description: t('landing.step1_desc'),
+      image: Landing1,
+      buttonText: t('landing.step1_button'),
+    },
+    {
+      title: t('landing.step2_title'),
+      description: t('landing.step2_desc'),
+      image: Landing2,
+      buttonText: t('landing.step2_button'),
+    },
+    {
+      title: t('landing.step3_title'),
+      description: t('landing.step3_desc'),
+      image: Landing3,
+      buttonText: t('landing.step3_button'),
+    },
+  ];
   const theme = useTheme();
   const { width, height, isDesktop, isLargeDesktop, getFontSize, getSpacing } = useResponsive();
   const [activeStep, setActiveStep] = useState(0);
   const [showDecantPopup, setShowDecantPopup] = useState(false);
-  
+
   // Responsive sizing
   const logoWidth = isLargeDesktop ? width * 0.12 : isDesktop ? width * 0.15 : width * 0.25;
   const svgHeight = isLargeDesktop ? '30%' : isDesktop ? '25%' : '18%';
@@ -168,6 +172,7 @@ const LandingScreen: React.FC = () => {
           alignItems: 'center',
           gap: 1,
         }}>
+          <LanguageSelector />
           {isAuthenticated ? (
             <IconButton
               onClick={() => router.push('/(tabs)')}
@@ -199,7 +204,7 @@ const LandingScreen: React.FC = () => {
             mt: 0.5,
           }}
         >
-          Descubre perfumes con AI
+          {t('landing.top_title')}
         </Typography>
       </Box>
 
@@ -276,7 +281,7 @@ const LandingScreen: React.FC = () => {
         {/* Content text */}
         <View style={[
           styles.contentContainer,
-          { 
+          {
             width: isLargeDesktop ? '60%' : isDesktop ? '80%' : '90%',
             maxWidth: 800,
             marginBottom: isDesktop ? 8 : 24,
@@ -284,7 +289,7 @@ const LandingScreen: React.FC = () => {
         ]}>
           <Text style={[
             styles.title,
-            { 
+            {
               fontSize: isLargeDesktop ? 26 : isDesktop ? 24 : 22,
             }
           ]}>
@@ -293,7 +298,7 @@ const LandingScreen: React.FC = () => {
 
           <Text style={[
             styles.description,
-            { 
+            {
               fontSize: isLargeDesktop ? 20 : isDesktop ? 19 : 18,
               minHeight: isDesktop ? 80 : 60,
             }
@@ -332,7 +337,7 @@ const LandingScreen: React.FC = () => {
                   },
                 }}
               >
-                Ver mis recomendaciones
+                {t('landing.buttons.see_recommendations')}
               </Button>
               <Button
                 variant="outlined"
@@ -350,7 +355,7 @@ const LandingScreen: React.FC = () => {
                   },
                 }}
               >
-                Hacer nuevo test
+                {t('landing.buttons.take_test_again')}
               </Button>
             </Box>
           ) : (
@@ -384,7 +389,7 @@ const LandingScreen: React.FC = () => {
                     fontSize: isLargeDesktop ? 18 : isDesktop ? 17 : 16,
                   }}
                 >
-                  Elegir mis decants
+                  {t('landing.buttons.choose_decants')}
                 </Button>
               )}
             </>
@@ -403,7 +408,7 @@ const LandingScreen: React.FC = () => {
                 mt: 1,
               }}
             >
-              ¿Qué es un decant?
+              {t('landing.decant_question')}
             </Typography>
           )}
         </Box>

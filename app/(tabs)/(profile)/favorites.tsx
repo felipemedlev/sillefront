@@ -48,7 +48,16 @@ export default function FavoritesScreen() {
       // So this API call is mainly for INITIAL load or ADDITION.
 
       const perfumes = await fetchPerfumesByExternalIds(favorites);
-      setFavoritePerfumes(perfumes);
+
+      // Normalize match_percentage if needed (API returns 0-1, we need 0-100)
+      const normalizedPerfumes = perfumes.map(p => ({
+        ...p,
+        match_percentage: p.match_percentage && p.match_percentage <= 1
+          ? Math.round(p.match_percentage * 100)
+          : p.match_percentage
+      }));
+
+      setFavoritePerfumes(normalizedPerfumes);
     } catch (error) {
       console.error("Error fetching favorite perfumes:", error);
     } finally {
